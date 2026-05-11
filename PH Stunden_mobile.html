@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+  <title>Stunden-Pro mit Verlauf & Detail-Export</title>
+
+  <style>
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0; padding: 0;
+      min-height: 100vh;
+      font-family: "Segoe UI", Arial, sans-serif;
+      background: linear-gradient(135deg, #d8c3a5 0%, #efe2d0 100%);
+      overflow-x: hidden;
+    }
+    body {
+      display: flex; justify-content: center; align-items: center;
+      padding: 10px;
+    }
+    .container {
+      width: 100%; max-width: 1100px;
+      background: rgba(255,255,255,0.92);
+      backdrop-filter: blur(10px);
+      border-radius: 24px; padding: 20px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+      border: 1px solid rgba(255,255,255,0.4);
+    }
+    h1 { text-align: center; margin: 0 0 3px 0; color: #6d1f2f; font-size: clamp(24px, 6vw, 30px); }
+    .subtitle { text-align: center; margin-bottom: 20px; color: #866c5c; font-size: 12px; }
+    .layout { display: grid; grid-template-columns: 1fr; gap: 15px; }
+    .sidebar, .history-panel, .booking-section { background: #f7f1ea; border-radius: 20px; padding: 18px; border: 2px solid #e4d3c0; }
+    h3 { margin-top: 0; color: #6d1f2f; font-size: 16px; margin-bottom: 12px; }
+    select, input { width: 100%; padding: 12px; border-radius: 10px; border: 2px solid #d8c3a5; background: #fffdf9; font-size: 16px; color: #4a3428; -webkit-appearance: none; appearance: none; }
+    select { background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%234a3428' stroke-width='2'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e"); background-repeat: no-repeat; background-position: right 10px center; background-size: 20px; padding-right: 40px; }
+    .field { margin-bottom: 14px; }
+    label { display: block; margin-bottom: 5px; color: #5a4635; font-weight: 600; font-size: 13px; }
+    .hint { font-size: 11px; color: #8c7b6d; margin-top: 2px; }
+    button { width: 100%; padding: 14px; border: none; border-radius: 12px; background: linear-gradient(135deg, #7c2439, #5d1728); color: white; font-size: 15px; font-weight: bold; cursor: pointer; transition: 0.2s; -webkit-appearance: none; }
+    button:active { transform: scale(0.98); }
+    button:hover { opacity: 0.9; }
+    .btn-secondary { background: #866c5c; font-size: 12px; padding: 10px; margin-bottom: 8px; }
+    .btn-danger { background: #a33c3c; font-size: 11px; padding: 8px; margin-top: 8px; }
+    .saldo-box { margin: 12px 0; background: white; border-radius: 12px; padding: 12px; text-align: center; border: 1px solid #ead9c6; }
+    .saldo-value { font-size: 20px; font-weight: bold; color: #6d1f2f; }
+    .history-list { list-style: none; padding: 0; margin-top: 10px; max-height: 400px; overflow-y: auto; }
+    .history-item { 
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 10px 0; border-bottom: 1px solid #e4d3c0; font-size: 14px;
+    }
+    .history-item span.time-val { font-family: monospace; font-weight: bold; margin-right: 10px; }
+    .delete-entry { 
+      background: #e3b8c2; color: #8a2037; border: none; padding: 4px 10px; 
+      border-radius: 6px; cursor: pointer; font-weight: bold; width: auto; font-size: 12px; flex-shrink: 0;
+    }
+    .delete-entry:active { background: #d697a6; }
+    #ergebnis { margin-top: 12px; text-align: center; font-weight: bold; color: #6d1f2f; min-height: 20px; }
+
+    /* Desktop layout */
+    @media (min-width: 1001px) {
+      .layout { grid-template-columns: 260px 1fr 320px; gap: 20px; }
+      .container { padding: 35px; }
+      h1 { font-size: 30px; }
+      h3 { font-size: 18px; margin-bottom: 15px; }
+      select, input { font-size: 14px; padding: 10px; }
+      button { font-size: 15px; padding: 14px; }
+      .btn-secondary { font-size: 12px; padding: 8px; }
+      .sidebar { padding: 20px; }
+      body { padding: 20px; }
+    }
+
+    /* Tablet landscape */
+    @media (min-width: 768px) and (max-width: 1000px) {
+      .layout { grid-template-columns: 1fr 1fr; gap: 15px; }
+    }
+
+    /* Touch target optimization */
+    @media (hover: none) {
+      button { padding: 16px; }
+      select, input { padding: 14px; font-size: 16px; }
+    }
+
+    /* Dark mode support */
+    @media (prefers-color-scheme: dark) {
+      body { background: linear-gradient(135deg, #3a3220 0%, #4a3f35 100%); }
+      .container { background: rgba(30, 28, 24, 0.95); }
+      h1, h3 { color: #f4c8d4; }
+      .subtitle { color: #d4a894; }
+      select, input { background: #2a2520; color: #f0e6d8; border-color: #5a4a3a; }
+      .sidebar, .history-panel, .booking-section { background: #2a2520; border-color: #5a4a3a; }
+      label { color: #d4a894; }
+      .saldo-box { background: #3a3220; border-color: #5a4a3a; }
+      .saldo-value { color: #f4c8d4; }
+      .history-item { border-bottom-color: #5a4a3a; }
+      #ergebnis { color: #f4c8d4; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h1>Stundenaufzeichnung</h1>
+    <div class="subtitle">Personalverwaltung Porterhouse</div>
+
+    <div class="layout">
+      <div class="sidebar">
+        <h3>Mitarbeiter</h3>
+        <div class="field">
+          <select id="mitarbeiterSelect" onchange="mitarbeiterWechseln()"></select>
+          <button id="deleteBtn" class="btn-danger" onclick="mitarbeiterLoeschen()" style="display:none;">Löschen</button>
+        </div>
+        <div id="neuerMitarbeiterBereich" style="display:none; background: #fff; padding: 10px; border-radius: 10px; border: 1px solid #d8c3a5; margin-bottom: 15px;">
+          <input type="text" id="neuerMitarbeiter" placeholder="Name" style="margin-bottom:5px;">
+          <input type="text" id="startSaldo" placeholder="Startsaldo (00:00)">
+        </div>
+        <div class="saldo-box">
+          <div style="font-size:11px; color:#866c5c;">Aktueller Saldo</div>
+          <div class="saldo-value" id="aktuellerSaldo">00:00</div>
+        </div>
+        <button class="btn-secondary" onclick="exportToCSV()">📥 Excel Export (Jahr)</button>
+        <button class="btn-secondary" onclick="document.getElementById('importFile').click()">📤 Import</button>
+        <input type="file" id="importFile" style="display:none" accept=".csv" onchange="importFromCSV(this)">
+      </div>
+
+      <div class="booking-section">
+        <h3>Buchung</h3>
+        <div class="field">
+          <label>Monat / Jahr (MM/JJ)</label>
+          <input type="text" id="buchungsDatum" placeholder="04/26" inputmode="numeric">
+        </div>
+        <div class="field">
+          <label>Soll-Stunden (Standard)</label>
+          <input type="text" id="soll" placeholder="160:00" inputmode="decimal">
+        </div>
+        <div class="field">
+          <label>Ist-Stunden (Geleistet)</label>
+          <input type="text" id="ist" placeholder="168:45" inputmode="decimal">
+        </div>
+        <div class="field">
+          <label>Auszahlung (Überstunden)</label>
+          <input type="text" id="auszahlung" placeholder="00:00" inputmode="decimal">
+        </div>
+        <button onclick="berechnen()">💾 Speichern & Saldo aktualisieren</button>
+        <div id="ergebnis"></div>
+      </div>
+
+      <div class="history-panel">
+        <h3>Verlauf</h3>
+        <label>Jahr wählen</label>
+        <select id="jahrFilter" onchange="updateVerlaufAnzeige()"></select>
+        <ul id="historyList" class="history-list"></ul>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let mitarbeiter = JSON.parse(localStorage.getItem("mitarbeiterDaten")) || {};
+    let sollStundenSpeicher = JSON.parse(localStorage.getItem("sollStundenDaten")) || {};
+    let verlaufDaten = JSON.parse(localStorage.getItem("verlaufDaten")) || {};
+    let verlaufDetails = JSON.parse(localStorage.getItem("verlaufDetails")) || {};
+
+    window.onload = function() {
+      const d = new Date(); d.setMonth(d.getMonth() - 1);
+      const mm = String(d.getMonth() + 1).padStart(2, '0');
+      const jj = String(d.getFullYear()).substring(2);
+      document.getElementById("buchungsDatum").value = `${mm}/${jj}`;
+      const jahrSelect = document.getElementById("jahrFilter");
+      for(let i = 2026; i >= 2025; i--) {
+        const opt = document.createElement("option"); opt.value = i; opt.textContent = i;
+        jahrSelect.appendChild(opt);
+      }
+      dropdownLaden();
+    };
+
+    function zeitZuMinuten(zeit) {
+      if (!zeit || zeit.trim() === "" || zeit === "0") return 0;
+      let neg = zeit.startsWith("-");
+      if (neg) zeit = zeit.substring(1);
+      const teile = zeit.split(":");
+      if (teile.length !== 2) return NaN;
+      const gesamt = (parseInt(teile[0], 10) * 60) + parseInt(teile[1], 10);
+      return neg ? -gesamt : gesamt;
+    }
+
+    function minutenZuZeit(min) {
+      const neg = min < 0; min = Math.abs(min);
+      const h = Math.floor(min / 60); const m = min % 60;
+      return (neg ? "-" : "") + String(h).padStart(2, "0") + ":" + String(m).padStart(2, "0");
+    }
+
+    function dropdownLaden() {
+      const select = document.getElementById("mitarbeiterSelect");
+      const aktueller = select.value;
+      select.innerHTML = '<option value="neu">+ Neuer Mitarbeiter</option>';
+      Object.keys(mitarbeiter).sort().forEach(n => {
+        const opt = document.createElement("option"); opt.value = n; opt.textContent = n;
+        select.appendChild(opt);
+      });
+      if (aktueller && mitarbeiter[aktueller] !== undefined) select.value = aktueller;
+      mitarbeiterWechseln();
+    }
+
+    function mitarbeiterWechseln() {
+      const select = document.getElementById("mitarbeiterSelect");
+      const name = select.value;
+      const isNew = name === "neu";
+      document.getElementById("neuerMitarbeiterBereich").style.display = isNew ? "block" : "none";
+      document.getElementById("deleteBtn").style.display = isNew ? "none" : "block";
+      if (!isNew) {
+        document.getElementById("aktuellerSaldo").textContent = minutenZuZeit(mitarbeiter[name] || 0);
+        document.getElementById("soll").value = sollStundenSpeicher[name] || "";
+      }
+      updateVerlaufAnzeige();
+    }
+
+    function updateVerlaufAnzeige() {
+      const name = document.getElementById("mitarbeiterSelect").value;
+      const jahr = document.getElementById("jahrFilter").value;
+      const list = document.getElementById("historyList");
+      list.innerHTML = "";
+      if (name === "neu" || !verlaufDaten[name] || !verlaufDaten[name][jahr]) return;
+
+      const monate = ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember"];
+      monate.forEach((mName, index) => {
+        const mKey = String(index + 1).padStart(2, '0');
+        if (verlaufDaten[name][jahr][mKey]) {
+          const stunden = verlaufDaten[name][jahr][mKey];
+          const li = document.createElement("li");
+          li.className = "history-item";
+          li.innerHTML = `<span>${mName}</span> <div><span class="time-val">${stunden}</span><button class="delete-entry" onclick="monatLoeschen('${name}', '${jahr}', '${mKey}')">X</button></div>`;
+          list.appendChild(li);
+        }
+      });
+    }
+
+    function monatLoeschen(name, jahr, monat) {
+      if (!confirm(`${monat}/${jahr} wirklich löschen? Der Saldo wird korrigiert.`)) return;
+      const details = verlaufDetails[name][jahr][monat];
+      const diffMin = zeitZuMinuten(details.ist) - zeitZuMinuten(details.soll);
+      mitarbeiter[name] -= diffMin;
+      delete verlaufDaten[name][jahr][monat];
+      delete verlaufDetails[name][jahr][monat];
+      localStorage.setItem("mitarbeiterDaten", JSON.stringify(mitarbeiter));
+      localStorage.setItem("verlaufDaten", JSON.stringify(verlaufDaten));
+      localStorage.setItem("verlaufDetails", JSON.stringify(verlaufDetails));
+      mitarbeiterWechseln();
+    }
+
+    function berechnen() {
+      const select = document.getElementById("mitarbeiterSelect");
+      const datumVal = document.getElementById("buchungsDatum").value;
+      const istVal = document.getElementById("ist").value || "00:00";
+      const sollVal = document.getElementById("soll").value || "00:00";
+      let name = select.value === "neu" ? document.getElementById("neuerMitarbeiter").value.trim() : select.value;
+      if (!name) return alert("Name fehlt!");
+      const dateParts = datumVal.split("/");
+      if (dateParts.length !== 2) return alert("Datum MM/JJ!");
+      const monatKey = dateParts[0], jahrKey = "20" + dateParts[1];
+      if (verlaufDaten[name] && verlaufDaten[name][jahrKey] && verlaufDaten[name][jahrKey][monatKey]) {
+        return alert("Monat existiert bereits! Bitte erst im Verlauf löschen.");
+      }
+      const basisSaldo = (select.value === "neu") ? zeitZuMinuten(document.getElementById("startSaldo").value) : (mitarbeiter[name] || 0);
+      const sollMin = zeitZuMinuten(sollVal), istMin = zeitZuMinuten(istVal), ausMin = zeitZuMinuten(document.getElementById("auszahlung").value || "00:00");
+      if (isNaN(sollMin) || isNaN(istMin) || isNaN(ausMin)) return alert("Format prüfen!");
+      mitarbeiter[name] = basisSaldo + (istMin - sollMin) - ausMin;
+      sollStundenSpeicher[name] = sollVal;
+      if (!verlaufDaten[name]) verlaufDaten[name] = {};
+      if (!verlaufDaten[name][jahrKey]) verlaufDaten[name][jahrKey] = {};
+      verlaufDaten[name][jahrKey][monatKey] = istVal;
+      if (!verlaufDetails[name]) verlaufDetails[name] = {};
+      if (!verlaufDetails[name][jahrKey]) verlaufDetails[name][jahrKey] = {};
+      verlaufDetails[name][jahrKey][monatKey] = { ist: istVal, soll: sollVal };
+      localStorage.setItem("mitarbeiterDaten", JSON.stringify(mitarbeiter));
+      localStorage.setItem("sollStundenDaten", JSON.stringify(sollStundenSpeicher));
+      localStorage.setItem("verlaufDaten", JSON.stringify(verlaufDaten));
+      localStorage.setItem("verlaufDetails", JSON.stringify(verlaufDetails));
+      document.getElementById("ergebnis").textContent = `✅ Gespeichert - Neuer Saldo: ${minutenZuZeit(mitarbeiter[name])}`;
+      setTimeout(() => { document.getElementById("ergebnis").textContent = ""; }, 3000);
+      dropdownLaden();
+      select.value = name;
+      mitarbeiterWechseln();
+      document.getElementById("ist").value = ""; document.getElementById("auszahlung").value = "";
+    }
+
+    function exportToCSV() {
+      const jahr = document.getElementById("jahrFilter").value;
+      let csv = "\ufeffMitarbeiter;Gesamtsaldo;Januar;Februar;März;April;Mai;Juni;Juli;August;September;Oktober;November;Dezember\r\n";
+      
+      Object.keys(mitarbeiter).sort().forEach(n => {
+        let zeile = `${n};${minutenZuZeit(mitarbeiter[n])}`;
+        
+        for (let i = 1; i <= 12; i++) {
+          const mKey = String(i).padStart(2, '0');
+          const wert = (verlaufDaten[n] && verlaufDaten[n][jahr] && verlaufDaten[n][jahr][mKey]) 
+                       ? verlaufDaten[n][jahr][mKey] 
+                       : "-";
+          zeile += ";" + wert;
+        }
+        csv += zeile + "\r\n";
+      });
+
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = `Stundenübersicht_${jahr}.csv`;
+      link.click();
+    }
+
+    function mitarbeiterLoeschen() {
+      const name = document.getElementById("mitarbeiterSelect").value;
+      if (confirm(`"${name}" wirklich löschen?`)) {
+        delete mitarbeiter[name]; delete sollStundenSpeicher[name]; delete verlaufDaten[name]; delete verlaufDetails[name];
+        localStorage.setItem("mitarbeiterDaten", JSON.stringify(mitarbeiter));
+        localStorage.setItem("sollStundenDaten", JSON.stringify(sollStundenSpeicher));
+        localStorage.setItem("verlaufDaten", JSON.stringify(verlaufDaten));
+        localStorage.setItem("verlaufDetails", JSON.stringify(verlaufDetails));
+        location.reload();
+      }
+    }
+
+    function importFromCSV(input) {
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const zeilen = e.target.result.split(/\r?\n/);
+        for (let i = 1; i < zeilen.length; i++) {
+          const sp = zeilen[i].split(";");
+          if (sp.length >= 2) {
+            const n = sp[0].trim(), s = zeitZuMinuten(sp[1].trim());
+            if (n && !isNaN(s)) { mitarbeiter[n] = s; }
+          }
+        }
+        localStorage.setItem("mitarbeiterDaten", JSON.stringify(mitarbeiter));
+        location.reload();
+      };
+      reader.readAsText(input.files[0]);
+    }
+  </script>
+</body>
+</html>
