@@ -1,182 +1,414 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
-    <title>Stunden-Pro | Porterhouse Cloud</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --primary-font: 'Inter', sans-serif;
-            --title-font: 'Playfair Display', serif;
-            --bg-color: #f8f5f2;
-            --card-bg: #ffffff;
-            --accent: #8b5a3c;
-            --text-main: #3d342d;
-            --border-color: #e2d7cc;
-            --danger: #c17373;
-        }
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        html, body { margin: 0; padding: 0; min-height: 100vh; font-family: var(--primary-font); background: var(--bg-color); color: var(--text-main); }
-        body { display: flex; justify-content: center; align-items: flex-start; padding: 15px; }
-        .container { width: 100%; max-width: 1100px; background: var(--card-bg); border-radius: 30px; padding: 25px; box-shadow: 0 20px 40px rgba(0,0,0,0.05); }
-        h1 { font-family: var(--title-font); text-align: center; margin: 0; color: var(--accent); font-size: 32px; }
-        .subtitle { text-align: center; margin-bottom: 25px; color: #a67c52; font-size: 12px; text-transform: uppercase; letter-spacing: 2px; }
-        .layout { display: grid; grid-template-columns: 1fr; gap: 20px; }
-        @media (min-width: 1001px) { .layout { grid-template-columns: 280px 1fr 320px; } }
-        .card { background: #fff; border-radius: 24px; padding: 20px; border: 1px solid var(--border-color); }
-        label { display: block; margin-bottom: 5px; font-weight: 600; font-size: 11px; text-transform: uppercase; color: #704a35; }
-        input, select { width: 100%; padding: 12px; border-radius: 12px; border: 1px solid var(--border-color); background: #fafafa; font-size: 16px; margin-bottom: 15px; font-family: var(--primary-font); }
-        button { width: 100%; padding: 15px; border: none; border-radius: 14px; background: var(--accent); color: white; font-weight: 600; cursor: pointer; transition: 0.3s; font-family: var(--primary-font); }
-        button:hover { opacity: 0.9; transform: translateY(-1px); }
-        .saldo-box { margin: 15px 0; background: #fdfaf7; border-radius: 16px; padding: 15px; text-align: center; border: 1px dashed var(--border-color); }
-        .saldo-value { font-size: 24px; font-weight: 600; color: var(--accent); }
-        .history-list { list-style: none; padding: 0; margin-top: 10px; max-height: 300px; overflow-y: auto; }
-        .history-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #eee; font-size: 14px; }
-        .btn-danger { background: #fdf2f2; color: var(--danger); font-size: 11px; padding: 8px; margin-top: 10px; }
-        .loading-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.8); display:flex; justify-content:center; align-items:center; z-index:1000; display:none; }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+  <title>Stunden-Pro | Porterhouse</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --primary-font: 'Inter', sans-serif;
+      --title-font: 'Playfair Display', serif;
+      --bg-color: #f8f5f2;
+      --card-bg: #ffffff;
+      --accent: #8b5a3c;
+      --accent-hover: #704a35;
+      --text-main: #3d342d;
+      --text-muted: #a67c52;
+      --border-color: #e2d7cc;
+      --danger: #c17373;
+    }
+
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+    html, body {
+      margin: 0; padding: 0; min-height: 100vh;
+      font-family: var(--primary-font);
+      background: var(--bg-color);
+      color: var(--text-main);
+      overflow-x: hidden;
+    }
+
+    body {
+      display: flex; justify-content: center; align-items: center;
+      padding: 15px;
+    }
+
+    .container {
+      width: 100%; max-width: 1100px;
+      background: var(--card-bg);
+      border-radius: 30px; padding: 25px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.05);
+      border: 1px solid rgba(220,200,170,0.2);
+    }
+
+    h1 { 
+      font-family: var(--title-font); 
+      text-align: center; margin: 0 0 5px 0; 
+      color: var(--accent); 
+      font-size: clamp(26px, 7vw, 36px); 
+      letter-spacing: -0.5px;
+    }
+
+    .subtitle { 
+      text-align: center; margin-bottom: 30px; 
+      color: var(--text-muted); font-size: 13px; 
+      text-transform: uppercase; letter-spacing: 2px; font-weight: 400;
+    }
+
+    .layout { display: grid; grid-template-columns: 1fr; gap: 20px; }
+
+    .sidebar, .history-panel, .booking-section { 
+      background: #ffffff; border-radius: 24px; padding: 25px; 
+      border: 1px solid var(--border-color);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.01);
+    }
+
+    h3 { 
+      font-family: var(--title-font); 
+      margin-top: 0; color: var(--accent); 
+      font-size: 20px; margin-bottom: 18px; 
+    }
+
+    label { 
+      display: block; margin-bottom: 8px; 
+      color: #704a35; font-weight: 600; font-size: 11px; 
+      text-transform: uppercase; letter-spacing: 1px;
+    }
+
+    input, select { 
+      width: 100%; padding: 14px 16px; border-radius: 12px; 
+      border: 1px solid var(--border-color); 
+      background: #fafafa; font-size: 16px; font-family: var(--primary-font);
+      transition: all 0.3s ease;
+      color: var(--text-main);
+      -webkit-appearance: none;
+    }
+
+    input:focus, select:focus {
+      outline: none; border-color: var(--accent); background: #fff;
+      box-shadow: 0 0 0 4px rgba(139, 90, 60, 0.1);
+    }
+
+    button { 
+      width: 100%; padding: 16px; border: none; border-radius: 14px; 
+      background: var(--accent); color: white; 
+      font-size: 15px; font-weight: 600; cursor: pointer; 
+      font-family: var(--primary-font); transition: 0.3s;
+    }
+
+    button:hover { transform: translateY(-2px); background: var(--accent-hover); box-shadow: 0 8px 20px rgba(139, 90, 60, 0.2); }
+    button:active { transform: translateY(0); }
+
+    .btn-secondary { background: #b89968; font-size: 13px; padding: 12px; margin-bottom: 10px; }
+    .btn-danger { background: #fdf2f2; color: var(--danger); font-size: 12px; padding: 10px; margin-top: 10px; border: 1px solid #f2dada; }
+    .btn-danger:hover { background: var(--danger); color: white; }
+
+    .saldo-box { 
+      margin: 20px 0; background: #fdfaf7; border-radius: 18px; 
+      padding: 18px; text-align: center; border: 1px dashed var(--border-color); 
+    }
+
+    .saldo-value { 
+      font-family: var(--primary-font); font-size: 28px; 
+      font-weight: 600; color: var(--accent); 
+    }
+
+    .history-list { list-style: none; padding: 0; margin-top: 15px; max-height: 350px; overflow-y: auto; }
+    .history-item { 
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 14px 0; border-bottom: 1px solid #f0f0f0; font-size: 15px;
+    }
+    .time-val { font-family: 'Inter', monospace; font-weight: 600; color: var(--accent); margin-right: 15px; }
+
+    .delete-entry { 
+      background: #fdf2f2; color: var(--danger); border: none; padding: 6px 12px; 
+      border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 12px;
+    }
+
+    #ergebnis { margin-top: 15px; text-align: center; font-weight: 600; color: #4a7c44; min-height: 20px; font-size: 14px; }
+
+    /* Desktop layout */
+    @media (min-width: 1001px) {
+      .layout { grid-template-columns: 280px 1fr 320px; gap: 25px; }
+      .container { padding: 40px; }
+      body { padding: 40px; }
+    }
+
+    /* Dark mode */
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg-color: #1a1614;
+        --card-bg: #25211e;
+        --text-main: #f5e6d3;
+        --border-color: #3d342d;
+      }
+      .sidebar, .history-panel, .booking-section { background: #25211e; }
+      input, select { background: #2d2824; color: #fff; }
+      .saldo-box { background: #2d2824; }
+      .history-item { border-bottom-color: #333; }
+      .btn-danger { background: #332222; border-color: #443333; }
+    }
+  </style>
 </head>
 <body>
-    <div id="loader" class="loading-overlay">Lade Cloud-Daten...</div>
-    <div class="container">
-        <h1>Stundenaufzeichnung</h1>
-        <div class="subtitle">Porterhouse Cloud Sync</div>
-        <div class="layout">
-            <div class="card">
-                <h3>Mitarbeiter</h3>
-                <select id="mitarbeiterSelect"></select>
-                <div id="newEmployeeArea" style="display:none;">
-                    <label>Name</label><input type="text" id="newName">
-                    <label>Start-Saldo</label><input type="text" id="startSaldo" placeholder="00:00">
-                </div>
-                <div class="saldo-box">
-                    <label>Aktueller Saldo</label>
-                    <div class="saldo-value" id="displaySaldo">00:00</div>
-                </div>
-                <button id="deleteEmpBtn" class="btn-danger" style="display:none;">Mitarbeiter löschen</button>
-            </div>
-            <div class="card">
-                <h3>Neue Buchung</h3>
-                <label>Zeitraum (MM/JJ)</label><input type="text" id="date" placeholder="05/26">
-                <label>Soll-Stunden</label><input type="text" id="soll" placeholder="160:00">
-                <label>Ist-Stunden</label><input type="text" id="ist" placeholder="168:00">
-                <label>Auszahlung</label><input type="text" id="pay" placeholder="00:00">
-                <button onclick="saveBooking()">Speichern & Synchronisieren</button>
-                <p id="msg" style="text-align:center; font-size:12px; color:green;"></p>
-            </div>
-            <div class="card">
-                <h3>Verlauf</h3>
-                <select id="yearFilter"><option value="2026">2026</option><option value="2025">2025</option></select>
-                <ul id="history" class="history-list"></ul>
-            </div>
+
+  <div class="container">
+    <h1>Stundenaufzeichnung</h1>
+    <div class="subtitle">Personalverwaltung Porterhouse</div>
+
+    <div class="layout">
+      <div class="sidebar">
+        <h3>Mitarbeiter</h3>
+        <div class="field">
+          <select id="mitarbeiterSelect" onchange="mitarbeiterWechseln()"></select>
+          <button id="deleteBtn" class="btn-danger" onclick="mitarbeiterLoeschen()" style="display:none;">Mitarbeiter löschen</button>
         </div>
+        
+        <div id="neuerMitarbeiterBereich" style="display:none; background: #fdfaf7; padding: 15px; border-radius: 15px; border: 1px solid var(--border-color); margin-bottom: 20px;">
+          <label>Neuer Name</label>
+          <input type="text" id="neuerMitarbeiter" placeholder="Vorname Nachname" style="margin-bottom:10px;">
+          <label>Start-Saldo</label>
+          <input type="text" id="startSaldo" placeholder="00:00">
+        </div>
+
+        <div class="saldo-box">
+          <div style="font-size:11px; color:var(--text-muted); text-transform: uppercase; letter-spacing: 1px;">Aktueller Saldo</div>
+          <div class="saldo-value" id="aktuellerSaldo">00:00</div>
+        </div>
+
+        <button class="btn-secondary" onclick="exportToCSV()">📥 Excel Export (Jahr)</button>
+        <button class="btn-secondary" onclick="document.getElementById('importFile').click()">📤 Daten Import</button>
+        <input type="file" id="importFile" style="display:none" accept=".csv" onchange="importFromCSV(this)">
+      </div>
+
+      <div class="booking-section">
+        <h3>Buchung erfassen</h3>
+        <div class="field">
+          <label>Monat / Jahr (MM/JJ)</label>
+          <input type="text" id="buchungsDatum" placeholder="04/26" inputmode="numeric">
+        </div>
+        <div class="field">
+          <label>Soll-Stunden</label>
+          <input type="text" id="soll" placeholder="160:00" inputmode="decimal">
+        </div>
+        <div class="field">
+          <label>Ist-Stunden (Geleistet)</label>
+          <input type="text" id="ist" placeholder="168:45" inputmode="decimal">
+        </div>
+        <div class="field">
+          <label>Auszahlung (Stunden)</label>
+          <input type="text" id="auszahlung" placeholder="00:00" inputmode="decimal">
+        </div>
+        <button onclick="berechnen()">💾 Saldo aktualisieren</button>
+        <div id="ergebnis"></div>
+      </div>
+
+      <div class="history-panel">
+        <h3>Verlauf</h3>
+        <label>Jahr filtern</label>
+        <select id="jahrFilter" onchange="updateVerlaufAnzeige()"></select>
+        <ul id="historyList" class="history-list"></ul>
+      </div>
     </div>
+  </div>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getDatabase, ref, set, onValue, update, remove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+  <script>
+    let mitarbeiter = JSON.parse(localStorage.getItem("mitarbeiterDaten")) || {};
+    let sollStundenSpeicher = JSON.parse(localStorage.getItem("sollStundenDaten")) || {};
+    let verlaufDaten = JSON.parse(localStorage.getItem("verlaufDaten")) || {};
+    let verlaufDetails = JSON.parse(localStorage.getItem("verlaufDetails")) || {};
 
-// Import the functions you need from the SDKs you need
-import { initializeApp } from "firebase/app";
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
+    window.onload = function() {
+      const d = new Date(); d.setMonth(d.getMonth() - 1);
+      const mm = String(d.getMonth() + 1).padStart(2, '0');
+      const jj = String(d.getFullYear()).substring(2);
+      document.getElementById("buchungsDatum").value = `${mm}/${jj}`;
+      
+      const jahrSelect = document.getElementById("jahrFilter");
+      for(let i = 2026; i >= 2024; i--) {
+        const opt = document.createElement("option"); opt.value = i; opt.textContent = i;
+        jahrSelect.appendChild(opt);
+      }
+      dropdownLaden();
+    };
 
-// Your web app's Firebase configuration
-const firebaseConfig = {
-  apiKey: "AIzaSyD2Q6LEBuofZl7lZNCx-pTLK1KdmW7butg",
-  authDomain: "porterhouse-stunden.firebaseapp.com",
-  databaseURL: "https://porterhouse-stunden-default-rtdb.europe-west1.firebasedatabase.app",
-  projectId: "porterhouse-stunden",
-  storageBucket: "porterhouse-stunden.firebasestorage.app",
-  messagingSenderId: "381533675405",
-  appId: "1:381533675405:web:ac97cfe492f8790dfae7c4"
-};
+    function zeitZuMinuten(zeit) {
+      if (!zeit || zeit.trim() === "" || zeit === "0") return 0;
+      let neg = zeit.startsWith("-");
+      if (neg) zeit = zeit.substring(1);
+      const teile = zeit.split(":");
+      if (teile.length !== 2) return NaN;
+      const gesamt = (parseInt(teile[0], 10) * 60) + parseInt(teile[1], 10);
+      return neg ? -gesamt : gesamt;
+    }
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-        };
+    function minutenZuZeit(min) {
+      const neg = min < 0; min = Math.abs(min);
+      const h = Math.floor(min / 60); const m = min % 60;
+      return (neg ? "-" : "") + String(h).padStart(2, "0") + ":" + String(m).padStart(2, "0");
+    }
 
-        const app = initializeApp(firebaseConfig);
-        const db = getDatabase(app);
-        let cloudData = {};
+    function dropdownLaden() {
+      const select = document.getElementById("mitarbeiterSelect");
+      const aktueller = select.value;
+      select.innerHTML = '<option value="neu">+ Neuer Mitarbeiter</option>';
+      Object.keys(mitarbeiter).sort().forEach(n => {
+        const opt = document.createElement("option"); opt.value = n; opt.textContent = n;
+        select.appendChild(opt);
+      });
+      if (aktueller && mitarbeiter[aktueller] !== undefined) select.value = aktueller;
+      mitarbeiterWechseln();
+    }
 
-        // Hilfsfunktionen
-        const t2m = (t) => { if(!t) return 0; let n=t.startsWith("-"); if(n) t=t.slice(1); let [h,m]=t.split(":").map(Number); let res=(h*60)+m; return n?-res:res; };
-        const m2t = (m) => { let n=m<0; m=Math.abs(m); return (n?"-":"")+String(Math.floor(m/60)).padStart(2,"0")+":"+String(m%60).padStart(2,"0"); };
+    function mitarbeiterWechseln() {
+      const select = document.getElementById("mitarbeiterSelect");
+      const name = select.value;
+      const isNew = name === "neu";
+      document.getElementById("neuerMitarbeiterBereich").style.display = isNew ? "block" : "none";
+      document.getElementById("deleteBtn").style.display = isNew ? "none" : "block";
+      if (!isNew) {
+        document.getElementById("aktuellerSaldo").textContent = minutenZuZeit(mitarbeiter[name] || 0);
+        document.getElementById("soll").value = sollStundenSpeicher[name] || "";
+      } else {
+        document.getElementById("aktuellerSaldo").textContent = "00:00";
+      }
+      updateVerlaufAnzeige();
+    }
 
-        // Echtzeit-Überwachung
-        onValue(ref(db, 'porterhouse'), (snap) => {
-            cloudData = snap.val() || {};
-            renderAll();
-            document.getElementById("loader").style.display = "none";
-        });
+    function updateVerlaufAnzeige() {
+      const name = document.getElementById("mitarbeiterSelect").value;
+      const jahr = document.getElementById("jahrFilter").value;
+      const list = document.getElementById("historyList");
+      list.innerHTML = "";
+      if (name === "neu" || !verlaufDaten[name] || !verlaufDaten[name][jahr]) return;
 
-        function renderAll() {
-            const sel = document.getElementById("mitarbeiterSelect");
-            const cur = sel.value;
-            sel.innerHTML = '<option value="neu">+ Neu</option>';
-            const emps = cloudData.mitarbeiter || {};
-            Object.keys(emps).sort().forEach(e => {
-                let o = document.createElement("option"); o.value = e; o.textContent = e; sel.appendChild(o);
-            });
-            if(cur) sel.value = cur;
-            updateUI();
+      const monate = ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember"];
+      monate.forEach((mName, index) => {
+        const mKey = String(index + 1).padStart(2, '0');
+        if (verlaufDaten[name][jahr][mKey]) {
+          const stunden = verlaufDaten[name][jahr][mKey];
+          const li = document.createElement("li");
+          li.className = "history-item";
+          li.innerHTML = `<span>${mName}</span> <div><span class="time-val">${stunden}</span><button class="delete-entry" onclick="monatLoeschen('${name}', '${jahr}', '${mKey}')">Löschen</button></div>`;
+          list.appendChild(li);
         }
+      });
+    }
 
-        function updateUI() {
-            const name = document.getElementById("mitarbeiterSelect").value;
-            const isN = name === "neu";
-            document.getElementById("newEmployeeArea").style.display = isN ? "block" : "none";
-            document.getElementById("deleteEmpBtn").style.display = isN ? "none" : "block";
-            
-            const saldo = isN ? 0 : (cloudData.mitarbeiter?.[name] || 0);
-            document.getElementById("displaySaldo").textContent = m2t(saldo);
-            
-            // Verlauf
-            const year = document.getElementById("yearFilter").value;
-            const hist = document.getElementById("history");
-            hist.innerHTML = "";
-            const logs = cloudData.verlauf?.[name]?.[year] || {};
-            Object.keys(logs).sort().forEach(m => {
-                let li = document.createElement("li"); li.className="history-item";
-                li.innerHTML = `<span>Monat ${m}</span> <span><b>${logs[m]}</b></span>`;
-                hist.appendChild(li);
-            });
+    function monatLoeschen(name, jahr, monat) {
+      if (!confirm(`${monat}/${jahr} wirklich löschen?`)) return;
+      const details = verlaufDetails[name][jahr][monat];
+      const diffMin = zeitZuMinuten(details.ist) - zeitZuMinuten(details.soll) - zeitZuMinuten(details.auszahlung || "00:00");
+      mitarbeiter[name] -= diffMin;
+      delete verlaufDaten[name][jahr][monat];
+      delete verlaufDetails[name][jahr][monat];
+      speichern();
+      mitarbeiterWechseln();
+    }
+
+    function berechnen() {
+      const select = document.getElementById("mitarbeiterSelect");
+      const datumVal = document.getElementById("buchungsDatum").value;
+      const istVal = document.getElementById("ist").value || "00:00";
+      const sollVal = document.getElementById("soll").value || "00:00";
+      const ausVal = document.getElementById("auszahlung").value || "00:00";
+      
+      let name = select.value === "neu" ? document.getElementById("neuerMitarbeiter").value.trim() : select.value;
+      if (!name) return alert("Name fehlt!");
+
+      const dateParts = datumVal.split("/");
+      if (dateParts.length !== 2) return alert("Datum im Format MM/JJ angeben!");
+      const monatKey = dateParts[0], jahrKey = "20" + dateParts[1];
+
+      if (verlaufDaten[name] && verlaufDaten[name][jahrKey] && verlaufDaten[name][jahrKey][monatKey]) {
+        return alert("Dieser Monat wurde bereits gebucht.");
+      }
+
+      const sollMin = zeitZuMinuten(sollVal), istMin = zeitZuMinuten(istVal), ausMin = zeitZuMinuten(ausVal);
+      if (isNaN(sollMin) || isNaN(istMin) || isNaN(ausMin)) return alert("Bitte Zeitformat prüfen (HH:MM)");
+
+      if (select.value === "neu") {
+        mitarbeiter[name] = zeitZuMinuten(document.getElementById("startSaldo").value || "00:00");
+      }
+
+      mitarbeiter[name] = (mitarbeiter[name] || 0) + (istMin - sollMin) - ausMin;
+      sollStundenSpeicher[name] = sollVal;
+
+      if (!verlaufDaten[name]) verlaufDaten[name] = {};
+      if (!verlaufDaten[name][jahrKey]) verlaufDaten[name][jahrKey] = {};
+      verlaufDaten[name][jahrKey][monatKey] = istVal;
+
+      if (!verlaufDetails[name]) verlaufDetails[name] = {};
+      if (!verlaufDetails[name][jahrKey]) verlaufDetails[name][jahrKey] = {};
+      verlaufDetails[name][jahrKey][monatKey] = { ist: istVal, soll: sollVal, auszahlung: ausVal };
+
+      speichern();
+      document.getElementById("ergebnis").textContent = "✅ Buchung erfolgreich gespeichert";
+      setTimeout(() => { document.getElementById("ergebnis").textContent = ""; }, 3000);
+      
+      dropdownLaden();
+      document.getElementById("mitarbeiterSelect").value = name;
+      mitarbeiterWechseln();
+      document.getElementById("ist").value = ""; 
+      document.getElementById("auszahlung").value = "";
+    }
+
+    function speichern() {
+      localStorage.setItem("mitarbeiterDaten", JSON.stringify(mitarbeiter));
+      localStorage.setItem("sollStundenDaten", JSON.stringify(sollStundenSpeicher));
+      localStorage.setItem("verlaufDaten", JSON.stringify(verlaufDaten));
+      localStorage.setItem("verlaufDetails", JSON.stringify(verlaufDetails));
+    }
+
+    function exportToCSV() {
+      const jahr = document.getElementById("jahrFilter").value;
+      let csv = "\ufeffMitarbeiter;Gesamtsaldo;Jan;Feb;Mrz;Apr;Mai;Jun;Jul;Aug;Sep;Okt;Nov;Dez\r\n";
+      Object.keys(mitarbeiter).sort().forEach(n => {
+        let zeile = `${n};${minutenZuZeit(mitarbeiter[n])}`;
+        for (let i = 1; i <= 12; i++) {
+          const mKey = String(i).padStart(2, '0');
+          const wert = (verlaufDaten[n] && verlaufDaten[n][jahr] && verlaufDaten[n][jahr][mKey]) ? verlaufDaten[n][jahr][mKey] : "-";
+          zeile += ";" + wert;
         }
+        csv += zeile + "\r\n";
+      });
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = `Stunden_${jahr}.csv`;
+      link.click();
+    }
 
-        window.saveBooking = async () => {
-            const sel = document.getElementById("mitarbeiterSelect");
-            const name = sel.value === "neu" ? document.getElementById("newName").value.trim() : sel.value;
-            const date = document.getElementById("date").value;
-            if(!name || !date.includes("/")) return alert("Name/Datum!");
+    function mitarbeiterLoeschen() {
+      const name = document.getElementById("mitarbeiterSelect").value;
+      if (confirm(`Mitarbeiter "${name}" und alle seine Daten unwiderruflich löschen?`)) {
+        delete mitarbeiter[name]; delete sollStundenSpeicher[name]; delete verlaufDaten[name]; delete verlaufDetails[name];
+        speichern();
+        location.reload();
+      }
+    }
 
-            const [mm, jj] = date.split("/");
-            const year = "20"+jj;
-            const ist = document.getElementById("ist").value || "00:00";
-            const soll = document.getElementById("soll").value || "00:00";
-            const pay = document.getElementById("pay").value || "00:00";
-
-            let oldS = sel.value === "neu" ? t2m(document.getElementById("startSaldo").value) : (cloudData.mitarbeiter[name] || 0);
-            let diff = t2m(ist) - t2m(soll) - t2m(pay);
-
-            const ups = {};
-            ups[`porterhouse/mitarbeiter/${name}`] = oldS + diff;
-            ups[`porterhouse/verlauf/${name}/${year}/${mm}`] = ist;
-            
-            await update(ref(db), ups);
-            document.getElementById("msg").textContent = "Synchronisiert!";
-            setTimeout(() => document.getElementById("msg").textContent="", 2000);
-        };
-
-        document.getElementById("mitarbeiterSelect").onchange = updateUI;
-        document.getElementById("yearFilter").onchange = updateUI;
-        document.getElementById("deleteEmpBtn").onclick = () => {
-            const n = document.getElementById("mitarbeiterSelect").value;
-            if(confirm(n + " löschen?")) remove(ref(db, `porterhouse/mitarbeiter/${n}`));
-        };
-    </script>
+    function importFromCSV(input) {
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const zeilen = e.target.result.split(/\r?\n/);
+        for (let i = 1; i < zeilen.length; i++) {
+          const sp = zeilen[i].split(";");
+          if (sp.length >= 2) {
+            const n = sp[0].trim(), s = zeitZuMinuten(sp[1].trim());
+            if (n && !isNaN(s)) { mitarbeiter[n] = s; }
+          }
+        }
+        speichern();
+        location.reload();
+      };
+      reader.readAsText(input.files[0]);
+    }
+  </script>
 </body>
 </html>
