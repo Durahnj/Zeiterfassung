@@ -11,7 +11,7 @@
       margin: 0; padding: 0;
       min-height: 100vh;
       font-family: "Segoe UI", Arial, sans-serif;
-      background: linear-gradient(135deg, #d8c3a5 0%, #efe2d0 100%);
+      background: linear-gradient(135deg, #f5e6d3 0%, #fdf9f3 100%);
       overflow-x: hidden;
     }
     body {
@@ -20,41 +20,41 @@
     }
     .container {
       width: 100%; max-width: 1100px;
-      background: rgba(255,255,255,0.92);
+      background: rgba(255,253,247,0.95);
       backdrop-filter: blur(10px);
       border-radius: 24px; padding: 20px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.15);
-      border: 1px solid rgba(255,255,255,0.4);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+      border: 1px solid rgba(220,200,170,0.3);
     }
-    h1 { text-align: center; margin: 0 0 3px 0; color: #6d1f2f; font-size: clamp(24px, 6vw, 30px); }
-    .subtitle { text-align: center; margin-bottom: 20px; color: #866c5c; font-size: 12px; }
+    h1 { text-align: center; margin: 0 0 3px 0; color: #8b5a3c; font-size: clamp(24px, 6vw, 30px); }
+    .subtitle { text-align: center; margin-bottom: 20px; color: #a67c52; font-size: 12px; }
     .layout { display: grid; grid-template-columns: 1fr; gap: 15px; }
-    .sidebar, .history-panel, .booking-section { background: #f7f1ea; border-radius: 20px; padding: 18px; border: 2px solid #e4d3c0; }
-    h3 { margin-top: 0; color: #6d1f2f; font-size: 16px; margin-bottom: 12px; }
-    select, input { width: 100%; padding: 12px; border-radius: 10px; border: 2px solid #d8c3a5; background: #fffdf9; font-size: 16px; color: #4a3428; -webkit-appearance: none; appearance: none; }
-    select { background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%234a3428' stroke-width='2'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e"); background-repeat: no-repeat; background-position: right 10px center; background-size: 20px; padding-right: 40px; }
+    .sidebar, .history-panel, .booking-section { background: #fef8f0; border-radius: 20px; padding: 18px; border: 2px solid #e8d7c3; }
+    h3 { margin-top: 0; color: #8b5a3c; font-size: 16px; margin-bottom: 12px; }
+    select, input { width: 100%; padding: 12px; border-radius: 10px; border: 2px solid #d9c9b3; background: #fffcf7; font-size: 16px; color: #5a4535; -webkit-appearance: none; appearance: none; }
+    select { background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%235a4535' stroke-width='2'%3e%3cpolyline points=[...]
     .field { margin-bottom: 14px; }
-    label { display: block; margin-bottom: 5px; color: #5a4635; font-weight: 600; font-size: 13px; }
-    .hint { font-size: 11px; color: #8c7b6d; margin-top: 2px; }
-    button { width: 100%; padding: 14px; border: none; border-radius: 12px; background: linear-gradient(135deg, #7c2439, #5d1728); color: white; font-size: 15px; font-weight: bold; cursor: pointer; transition: 0.2s; -webkit-appearance: none; }
+    label { display: block; margin-bottom: 5px; color: #704a35; font-weight: 600; font-size: 13px; }
+    .hint { font-size: 11px; color: #a0896d; margin-top: 2px; }
+    button { width: 100%; padding: 14px; border: none; border-radius: 12px; background: linear-gradient(135deg, #a6743d, #8b5a2b); color: white; font-size: 15px; font-weight: bold; cursor: pointer; tr[...]
     button:active { transform: scale(0.98); }
     button:hover { opacity: 0.9; }
-    .btn-secondary { background: #866c5c; font-size: 12px; padding: 10px; margin-bottom: 8px; }
-    .btn-danger { background: #a33c3c; font-size: 11px; padding: 8px; margin-top: 8px; }
-    .saldo-box { margin: 12px 0; background: white; border-radius: 12px; padding: 12px; text-align: center; border: 1px solid #ead9c6; }
-    .saldo-value { font-size: 20px; font-weight: bold; color: #6d1f2f; }
+    .btn-secondary { background: #b89968; font-size: 12px; padding: 10px; margin-bottom: 8px; }
+    .btn-danger { background: #c17373; font-size: 11px; padding: 8px; margin-top: 8px; }
+    .saldo-box { margin: 12px 0; background: #fffcf7; border-radius: 12px; padding: 12px; text-align: center; border: 1px solid #e8d7c3; }
+    .saldo-value { font-size: 20px; font-weight: bold; color: #8b5a3c; }
     .history-list { list-style: none; padding: 0; margin-top: 10px; max-height: 400px; overflow-y: auto; }
     .history-item { 
       display: flex; justify-content: space-between; align-items: center;
-      padding: 10px 0; border-bottom: 1px solid #e4d3c0; font-size: 14px;
+      padding: 10px 0; border-bottom: 1px solid #e8d7c3; font-size: 14px;
     }
     .history-item span.time-val { font-family: monospace; font-weight: bold; margin-right: 10px; }
     .delete-entry { 
-      background: #e3b8c2; color: #8a2037; border: none; padding: 4px 10px; 
+      background: #e8c7c3; color: #8b4a4a; border: none; padding: 4px 10px; 
       border-radius: 6px; cursor: pointer; font-weight: bold; width: auto; font-size: 12px; flex-shrink: 0;
     }
-    .delete-entry:active { background: #d697a6; }
-    #ergebnis { margin-top: 12px; text-align: center; font-weight: bold; color: #6d1f2f; min-height: 20px; }
+    .delete-entry:active { background: #dab0a8; }
+    #ergebnis { margin-top: 12px; text-align: center; font-weight: bold; color: #8b5a3c; min-height: 20px; }
 
     /* Desktop layout */
     @media (min-width: 1001px) {
@@ -82,17 +82,17 @@
 
     /* Dark mode support */
     @media (prefers-color-scheme: dark) {
-      body { background: linear-gradient(135deg, #3a3220 0%, #4a3f35 100%); }
-      .container { background: rgba(30, 28, 24, 0.95); }
-      h1, h3 { color: #f4c8d4; }
-      .subtitle { color: #d4a894; }
-      select, input { background: #2a2520; color: #f0e6d8; border-color: #5a4a3a; }
-      .sidebar, .history-panel, .booking-section { background: #2a2520; border-color: #5a4a3a; }
-      label { color: #d4a894; }
-      .saldo-box { background: #3a3220; border-color: #5a4a3a; }
-      .saldo-value { color: #f4c8d4; }
-      .history-item { border-bottom-color: #5a4a3a; }
-      #ergebnis { color: #f4c8d4; }
+      body { background: linear-gradient(135deg, #4a4035 0%, #5a4f45 100%); }
+      .container { background: rgba(40, 35, 30, 0.95); }
+      h1, h3 { color: #e8c9a8; }
+      .subtitle { color: #d4a880; }
+      select, input { background: #3a3530; color: #f5e6d3; border-color: #6a5a4a; }
+      .sidebar, .history-panel, .booking-section { background: #3a3530; border-color: #6a5a4a; }
+      label { color: #d4a880; }
+      .saldo-box { background: #4a4035; border-color: #6a5a4a; }
+      .saldo-value { color: #e8c9a8; }
+      .history-item { border-bottom-color: #6a5a4a; }
+      #ergebnis { color: #e8c9a8; }
     }
   </style>
 </head>
@@ -109,12 +109,12 @@
           <select id="mitarbeiterSelect" onchange="mitarbeiterWechseln()"></select>
           <button id="deleteBtn" class="btn-danger" onclick="mitarbeiterLoeschen()" style="display:none;">Löschen</button>
         </div>
-        <div id="neuerMitarbeiterBereich" style="display:none; background: #fff; padding: 10px; border-radius: 10px; border: 1px solid #d8c3a5; margin-bottom: 15px;">
+        <div id="neuerMitarbeiterBereich" style="display:none; background: #fff; padding: 10px; border-radius: 10px; border: 1px solid #d9c9b3; margin-bottom: 15px;">
           <input type="text" id="neuerMitarbeiter" placeholder="Name" style="margin-bottom:5px;">
           <input type="text" id="startSaldo" placeholder="Startsaldo (00:00)">
         </div>
         <div class="saldo-box">
-          <div style="font-size:11px; color:#866c5c;">Aktueller Saldo</div>
+          <div style="font-size:11px; color:#a67c52;">Aktueller Saldo</div>
           <div class="saldo-value" id="aktuellerSaldo">00:00</div>
         </div>
         <button class="btn-secondary" onclick="exportToCSV()">📥 Excel Export (Jahr)</button>
