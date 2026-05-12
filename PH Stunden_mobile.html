@@ -68,33 +68,41 @@
     button:hover { background: var(--accent-hover); transform: translateY(-2px); }
 
     .btn-secondary { background: #b89968; margin-bottom: 10px; padding: 12px; font-size: 13px; }
+    .btn-excel { background: #4a7c44; margin-bottom: 10px; padding: 12px; font-size: 13px; }
     .btn-danger { background: #fdf2f2; color: var(--danger); border: 1px solid #f2dada; margin-top: 10px; }
 
     .saldo-box { margin: 20px 0; background: #fdfaf7; border-radius: 18px; padding: 18px; text-align: center; border: 1px dashed var(--border-color); }
     .saldo-value { font-size: 28px; font-weight: 600; color: var(--accent); }
     .start-saldo-info { font-size: 11px; color: var(--text-muted); margin-top: 5px; }
 
-    .history-list { list-style: none; padding: 0; max-height: 400px; overflow-y: auto; }
+    .history-list { list-style: none; padding: 0; max-height: 400px; overflow-y: auto; margin: 0; }
     .history-item { 
       display: flex; justify-content: space-between; align-items: center; 
-      padding: 15px 0; border-bottom: 1px solid #f0f0f0; 
+      padding: 12px 0; border-bottom: 1px solid #f0f0f0; 
     }
 
-    /* Status-Farben */
-    .diff-pos { color: var(--success); font-weight: bold; font-size: 0.85em; }
-    .diff-neg { color: var(--danger); font-weight: bold; font-size: 0.85em; }
-    .payout-val { color: var(--text-muted); font-style: italic; font-size: 12px; display: block; margin-top: 2px; }
-    .time-val { font-family: monospace; font-weight: 600; color: var(--accent); }
+    .diff-pos { color: var(--success); font-weight: bold; font-size: 0.8em; margin-left: 4px; }
+    .diff-neg { color: var(--danger); font-weight: bold; font-size: 0.8em; margin-left: 4px; }
+    .payout-val { color: var(--text-muted); font-style: italic; font-size: 11px; display: block; margin-top: 2px; }
+    .time-val { font-family: 'Inter', sans-serif; font-weight: 600; color: var(--accent); font-size: 15px; }
 
-    .delete-entry { background: #fdf2f2; color: var(--danger); border: none; padding: 5px 10px; border-radius: 6px; cursor: pointer; margin-left: 10px; }
+    .delete-entry-small { 
+      background: #fee2e2; color: #ef4444; border: none; 
+      width: 28px; height: 28px; border-radius: 8px; 
+      cursor: pointer; font-size: 14px; line-height: 1;
+      display: flex; align-items: center; justify-content: center;
+      transition: 0.2s; margin-left: 12px; padding: 0;
+    }
+    .delete-entry-small:hover { background: #ef4444; color: white; }
 
-    @media (min-width: 1001px) { .layout { grid-template-columns: 280px 1fr 350px; } }
+    @media (min-width: 1001px) { .layout { grid-template-columns: 280px 1fr 380px; } }
 
     @media (prefers-color-scheme: dark) {
       :root { --bg-color: #1a1614; --card-bg: #25211e; --text-main: #f5e6d3; --border-color: #3d342d; }
       .sidebar, .history-panel, .booking-section { background: #25211e; }
       input, select { background: #2d2824; color: #fff; }
       .saldo-box { background: #2d2824; }
+      .history-item { border-bottom-color: #333; }
     }
   </style>
 </head>
@@ -122,9 +130,10 @@
           <div class="start-saldo-info">Start-Saldo: <span id="startSaldoDisplay">00:00</span></div>
         </div>
 
-        <button class="btn-secondary" onclick="exportToCSV()">📥 Excel Export</button>
-        <button class="btn-secondary" onclick="document.getElementById('importFile').click()">📤 Daten Import</button>
-        <input type="file" id="importFile" style="display:none" accept=".csv" onchange="importFromCSV(this)">
+        <button class="btn-excel" onclick="exportToExcel()">📊 Excel Export (Jahr)</button>
+        <button class="btn-secondary" onclick="exportBackup()">📥 JSON Backup</button>
+        <button class="btn-secondary" onclick="document.getElementById('importFile').click()">📤 Backup einspielen</button>
+        <input type="file" id="importFile" style="display:none" accept=".json" onchange="importBackup(this)">
         <button id="deleteBtn" class="btn-danger" onclick="mitarbeiterLoeschen()" style="display:none;">Mitarbeiter löschen</button>
       </div>
 
@@ -168,16 +177,46 @@
       const jj = String(d.getFullYear()).substring(2);
       document.getElementById("buchungsDatum").value = `${mm}/${jj}`;
       
-      const jahrSelect = document.getElementById("jahrFilter");
-      for(let i = 2026; i >= 2024; i--) {
-        const opt = document.createElement("option"); opt.value = i; opt.textContent = i;
-        jahrSelect.appendChild(opt);
-      }
       dropdownLaden();
+      jahrFilterAktualisieren();
     };
 
+    // NEU: Dynamische Erzeugung der Jahresauswahl
+    function jahrFilterAktualisieren() {
+      const jahrSelect = document.getElementById("jahrFilter");
+      const aktuellesJahr = new Date().getFullYear();
+      const vorhandeneJahre = new Set();
+      
+      // Das aktuelle Jahr immer hinzufügen
+      vorhandeneJahre.add(aktuellesJahr);
+
+      // Alle Jahre aus den gespeicherten Details sammeln
+      Object.values(verlaufDetails).forEach(mitarbeiterJahre => {
+        Object.keys(mitarbeiterJahre).forEach(jahr => {
+          vorhandeneJahre.add(parseInt(jahr));
+        });
+      });
+
+      // Sortieren (neuestes zuerst)
+      const sortierteJahre = Array.from(vorhandeneJahre).sort((a, b) => b - a);
+
+      const vorherigeAuswahl = jahrSelect.value;
+      jahrSelect.innerHTML = "";
+      
+      sortierteJahre.forEach(jahr => {
+        const opt = document.createElement("option");
+        opt.value = jahr;
+        opt.textContent = jahr;
+        jahrSelect.appendChild(opt);
+      });
+
+      if (vorherigeAuswahl && sortierteJahre.includes(parseInt(vorherigeAuswahl))) {
+        jahrSelect.value = vorherigeAuswahl;
+      }
+    }
+
     function zeitZuMinuten(zeit) {
-      if (!zeit || zeit.trim() === "" || zeit === "0") return 0;
+      if (!zeit || zeit.toString().trim() === "" || zeit === "0") return 0;
       let neg = zeit.startsWith("-");
       if (neg) zeit = zeit.substring(1);
       const teile = zeit.split(":");
@@ -247,7 +286,6 @@
         if (details) {
           const istMin = zeitZuMinuten(details.ist);
           const sollMin = zeitZuMinuten(details.soll);
-          const ausMin = zeitZuMinuten(details.auszahlung || "00:00");
           const diff = istMin - sollMin;
           
           const diffText = diff >= 0 ? `(+${minutenZuZeit(diff)})` : `(${minutenZuZeit(diff)})`;
@@ -256,13 +294,13 @@
           const li = document.createElement("li");
           li.className = "history-item";
           li.innerHTML = `
-            <div>
-              <span style="font-weight:600;">${mName}</span>
-              ${ausMin !== 0 ? `<span class="payout-val">Auszahlung: ${details.auszahlung}</span>` : ''}
+            <div style="flex-grow:1;">
+              <span style="font-weight:600; font-size:14px;">${mName}</span>
+              ${zeitZuMinuten(details.auszahlung) !== 0 ? `<span class="payout-val">Auszahlung: ${details.auszahlung}h</span>` : ''}
             </div>
-            <div style="text-align:right;">
+            <div style="display:flex; align-items:center;">
               <span class="time-val">${details.ist} <span class="${diffClass}">${diffText}</span></span>
-              <button class="delete-entry" onclick="monatLoeschen('${name}', '${jahr}', '${mKey}')">✕</button>
+              <button class="delete-entry-small" title="Löschen" onclick="monatLoeschen('${name}', '${jahr}', '${mKey}')">✕</button>
             </div>`;
           list.appendChild(li);
         }
@@ -307,6 +345,8 @@
       verlaufDetails[name][jahrKey][monatKey] = { ist: istVal, soll: sollVal, auszahlung: ausVal };
 
       speichern();
+      jahrFilterAktualisieren(); // Jahre neu prüfen nach Buchung
+      
       document.getElementById("ergebnis").textContent = "✅ Gespeichert";
       setTimeout(() => { document.getElementById("ergebnis").textContent = ""; }, 2000);
       
@@ -324,7 +364,15 @@
       mitarbeiter[name] -= diffMin;
       delete verlaufDaten[name][jahr][monat];
       delete verlaufDetails[name][jahr][monat];
+      
+      // Prüfen ob das Jahr nun leer ist
+      if (Object.keys(verlaufDetails[name][jahr]).length === 0) {
+        delete verlaufDetails[name][jahr];
+        delete verlaufDaten[name][jahr];
+      }
+
       speichern();
+      jahrFilterAktualisieren();
       mitarbeiterWechseln();
     }
 
@@ -338,38 +386,69 @@
       }
     }
 
-    function exportToCSV() {
+    function exportToExcel() {
       const jahr = document.getElementById("jahrFilter").value;
-      let csv = "\ufeffMitarbeiter;Gesamtsaldo;Startsaldo;Jan;Feb;Mrz;Apr;Mai;Jun;Jul;Aug;Sep;Okt;Nov;Dez\r\n";
+      const monateNamen = ["Jan", "Feb", "Mär", "Apr", "Mai", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dez"];
+      
+      let csv = "\ufeffMitarbeiter;Gesamtsaldo (Aktuell);";
+      monateNamen.forEach(m => csv += `${m} (Ist);${m} (Diff);`);
+      csv += "\r\n";
+
       Object.keys(mitarbeiter).sort().forEach(n => {
-        let zeile = `${n};${minutenZuZeit(mitarbeiter[n])};${minutenZuZeit(startSalden[n] || 0)}`;
+        let zeile = `${n};${minutenZuZeit(mitarbeiter[n])};`;
         for (let i = 1; i <= 12; i++) {
           const mKey = String(i).padStart(2, '0');
-          const wert = (verlaufDaten[n] && verlaufDaten[n][jahr] && verlaufDaten[n][jahr][mKey]) ? verlaufDaten[n][jahr][mKey] : "-";
-          zeile += ";" + wert;
+          const details = (verlaufDetails[n] && verlaufDetails[n][jahr]) ? verlaufDetails[n][jahr][mKey] : null;
+          if (details) {
+            const diff = zeitZuMinuten(details.ist) - zeitZuMinuten(details.soll);
+            zeile += `${details.ist};${minutenZuZeit(diff)};`;
+          } else {
+            zeile += "-;-;";
+          }
         }
         csv += zeile + "\r\n";
       });
+
       const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
       const link = document.createElement("a");
       link.href = URL.createObjectURL(blob);
-      link.download = `Stunden_${jahr}.csv`;
+      link.download = `Porterhouse_Stunden_${jahr}.csv`;
       link.click();
     }
 
-    function importFromCSV(input) {
+    function exportBackup() {
+      const data = {
+        mitarbeiter,
+        sollStundenSpeicher,
+        verlaufDaten,
+        verlaufDetails,
+        startSalden,
+        exportDate: new Date().toISOString()
+      };
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = `Porterhouse_Backup_${new Date().toLocaleDateString()}.json`;
+      link.click();
+    }
+
+    function importBackup(input) {
       const reader = new FileReader();
       reader.onload = function(e) {
-        const zeilen = e.target.result.split(/\r?\n/);
-        for (let i = 1; i < zeilen.length; i++) {
-          const sp = zeilen[i].split(";");
-          if (sp.length >= 2) {
-            const n = sp[0].trim(), s = zeitZuMinuten(sp[1].trim());
-            if (n && !isNaN(s)) { mitarbeiter[n] = s; }
+        try {
+          const data = JSON.parse(e.target.result);
+          if (data.mitarbeiter && data.verlaufDetails) {
+            mitarbeiter = data.mitarbeiter;
+            sollStundenSpeicher = data.sollStundenSpeicher || {};
+            verlaufDaten = data.verlaufDaten || {};
+            verlaufDetails = data.verlaufDetails || {};
+            startSalden = data.startSalden || {};
+            speichern();
+            jahrFilterAktualisieren();
+            alert("Backup erfolgreich eingespielt!");
+            location.reload();
           }
-        }
-        speichern();
-        location.reload();
+        } catch (err) { alert("Fehler beim Lesen der Datei!"); }
       };
       reader.readAsText(input.files[0]);
     }
