@@ -21,21 +21,17 @@
       --text-muted: #a67c52;
       --border-color: #e2d7cc;
       --danger: #c17373;
+      --success: #4a7c44;
     }
 
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
-    html, body {
-      margin: 0; padding: 0; min-height: 100vh;
+    body {
+      margin: 0; padding: 15px; min-height: 100vh;
       font-family: var(--primary-font);
       background: var(--bg-color);
       color: var(--text-main);
-      overflow-x: hidden;
-    }
-
-    body {
       display: flex; justify-content: center; align-items: center;
-      padding: 15px;
     }
 
     .container {
@@ -46,112 +42,59 @@
       border: 1px solid rgba(220,200,170,0.2);
     }
 
-    h1 { 
-      font-family: var(--title-font); 
-      text-align: center; margin: 0 0 5px 0; 
-      color: var(--accent); 
-      font-size: clamp(26px, 7vw, 36px); 
-      letter-spacing: -0.5px;
-    }
-
-    .subtitle { 
-      text-align: center; margin-bottom: 30px; 
-      color: var(--text-muted); font-size: 13px; 
-      text-transform: uppercase; letter-spacing: 2px; font-weight: 400;
-    }
+    h1 { font-family: var(--title-font); text-align: center; margin: 0; color: var(--accent); font-size: clamp(26px, 7vw, 36px); }
+    .subtitle { text-align: center; margin-bottom: 30px; color: var(--text-muted); font-size: 13px; text-transform: uppercase; letter-spacing: 2px; }
 
     .layout { display: grid; grid-template-columns: 1fr; gap: 20px; }
 
     .sidebar, .history-panel, .booking-section { 
       background: #ffffff; border-radius: 24px; padding: 25px; 
       border: 1px solid var(--border-color);
-      box-shadow: 0 4px 12px rgba(0,0,0,0.01);
     }
 
-    h3 { 
-      font-family: var(--title-font); 
-      margin-top: 0; color: var(--accent); 
-      font-size: 20px; margin-bottom: 18px; 
-    }
+    h3 { font-family: var(--title-font); margin-top: 0; color: var(--accent); font-size: 20px; }
 
-    label { 
-      display: block; margin-bottom: 8px; 
-      color: #704a35; font-weight: 600; font-size: 11px; 
-      text-transform: uppercase; letter-spacing: 1px;
-    }
+    label { display: block; margin-bottom: 8px; color: #704a35; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; }
 
     input, select { 
-      width: 100%; padding: 14px 16px; border-radius: 12px; 
-      border: 1px solid var(--border-color); 
-      background: #fafafa; font-size: 16px; font-family: var(--primary-font);
-      transition: all 0.3s ease;
-      color: var(--text-main);
-      -webkit-appearance: none;
-    }
-
-    input:focus, select:focus {
-      outline: none; border-color: var(--accent); background: #fff;
-      box-shadow: 0 0 0 4px rgba(139, 90, 60, 0.1);
+      width: 100%; padding: 14px; border-radius: 12px; border: 1px solid var(--border-color); 
+      background: #fafafa; font-size: 16px; margin-bottom: 15px;
     }
 
     button { 
       width: 100%; padding: 16px; border: none; border-radius: 14px; 
-      background: var(--accent); color: white; 
-      font-size: 15px; font-weight: 600; cursor: pointer; 
-      font-family: var(--primary-font); transition: 0.3s;
+      background: var(--accent); color: white; font-weight: 600; cursor: pointer; transition: 0.3s;
     }
+    button:hover { background: var(--accent-hover); transform: translateY(-2px); }
 
-    button:hover { transform: translateY(-2px); background: var(--accent-hover); box-shadow: 0 8px 20px rgba(139, 90, 60, 0.2); }
-    button:active { transform: translateY(0); }
+    .btn-secondary { background: #b89968; margin-bottom: 10px; padding: 12px; font-size: 13px; }
+    .btn-danger { background: #fdf2f2; color: var(--danger); border: 1px solid #f2dada; margin-top: 10px; }
 
-    .btn-secondary { background: #b89968; font-size: 13px; padding: 12px; margin-bottom: 10px; }
-    .btn-danger { background: #fdf2f2; color: var(--danger); font-size: 12px; padding: 10px; margin-top: 10px; border: 1px solid #f2dada; }
-    .btn-danger:hover { background: var(--danger); color: white; }
+    .saldo-box { margin: 20px 0; background: #fdfaf7; border-radius: 18px; padding: 18px; text-align: center; border: 1px dashed var(--border-color); }
+    .saldo-value { font-size: 28px; font-weight: 600; color: var(--accent); }
+    .start-saldo-info { font-size: 11px; color: var(--text-muted); margin-top: 5px; }
 
-    .saldo-box { 
-      margin: 20px 0; background: #fdfaf7; border-radius: 18px; 
-      padding: 18px; text-align: center; border: 1px dashed var(--border-color); 
-    }
-
-    .saldo-value { 
-      font-family: var(--primary-font); font-size: 28px; 
-      font-weight: 600; color: var(--accent); 
-    }
-
-    .history-list { list-style: none; padding: 0; margin-top: 15px; max-height: 350px; overflow-y: auto; }
+    .history-list { list-style: none; padding: 0; max-height: 400px; overflow-y: auto; }
     .history-item { 
-      display: flex; justify-content: space-between; align-items: center;
-      padding: 14px 0; border-bottom: 1px solid #f0f0f0; font-size: 15px;
-    }
-    .time-val { font-family: 'Inter', monospace; font-weight: 600; color: var(--accent); margin-right: 15px; }
-
-    .delete-entry { 
-      background: #fdf2f2; color: var(--danger); border: none; padding: 6px 12px; 
-      border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 12px;
+      display: flex; justify-content: space-between; align-items: center; 
+      padding: 15px 0; border-bottom: 1px solid #f0f0f0; 
     }
 
-    #ergebnis { margin-top: 15px; text-align: center; font-weight: 600; color: #4a7c44; min-height: 20px; font-size: 14px; }
+    /* Status-Farben */
+    .diff-pos { color: var(--success); font-weight: bold; font-size: 0.85em; }
+    .diff-neg { color: var(--danger); font-weight: bold; font-size: 0.85em; }
+    .payout-val { color: var(--text-muted); font-style: italic; font-size: 12px; display: block; margin-top: 2px; }
+    .time-val { font-family: monospace; font-weight: 600; color: var(--accent); }
 
-    /* Desktop layout */
-    @media (min-width: 1001px) {
-      .layout { grid-template-columns: 280px 1fr 320px; gap: 25px; }
-      .container { padding: 40px; }
-      body { padding: 40px; }
-    }
+    .delete-entry { background: #fdf2f2; color: var(--danger); border: none; padding: 5px 10px; border-radius: 6px; cursor: pointer; margin-left: 10px; }
 
-    /* Dark mode */
+    @media (min-width: 1001px) { .layout { grid-template-columns: 280px 1fr 350px; } }
+
     @media (prefers-color-scheme: dark) {
-      :root {
-        --bg-color: #1a1614;
-        --card-bg: #25211e;
-        --text-main: #f5e6d3;
-        --border-color: #3d342d;
-      }
+      :root { --bg-color: #1a1614; --card-bg: #25211e; --text-main: #f5e6d3; --border-color: #3d342d; }
       .sidebar, .history-panel, .booking-section { background: #25211e; }
       input, select { background: #2d2824; color: #fff; }
       .saldo-box { background: #2d2824; }
-      .history-item { border-bottom-color: #333; }
-      .btn-danger { background: #332222; border-color: #443333; }
     }
   </style>
 </head>
@@ -164,48 +107,43 @@
     <div class="layout">
       <div class="sidebar">
         <h3>Mitarbeiter</h3>
-        <div class="field">
-          <select id="mitarbeiterSelect" onchange="mitarbeiterWechseln()"></select>
-          <button id="deleteBtn" class="btn-danger" onclick="mitarbeiterLoeschen()" style="display:none;">Mitarbeiter löschen</button>
-        </div>
+        <select id="mitarbeiterSelect" onchange="mitarbeiterWechseln()"></select>
         
         <div id="neuerMitarbeiterBereich" style="display:none; background: #fdfaf7; padding: 15px; border-radius: 15px; border: 1px solid var(--border-color); margin-bottom: 20px;">
           <label>Neuer Name</label>
-          <input type="text" id="neuerMitarbeiter" placeholder="Vorname Nachname" style="margin-bottom:10px;">
-          <label>Start-Saldo</label>
+          <input type="text" id="neuerMitarbeiter" placeholder="Vorname Nachname">
+          <label>Start-Saldo (HH:MM)</label>
           <input type="text" id="startSaldo" placeholder="00:00">
         </div>
 
         <div class="saldo-box">
           <div style="font-size:11px; color:var(--text-muted); text-transform: uppercase; letter-spacing: 1px;">Aktueller Saldo</div>
           <div class="saldo-value" id="aktuellerSaldo">00:00</div>
+          <div class="start-saldo-info">Start-Saldo: <span id="startSaldoDisplay">00:00</span></div>
         </div>
 
-        <button class="btn-secondary" onclick="exportToCSV()">📥 Excel Export (Jahr)</button>
+        <button class="btn-secondary" onclick="exportToCSV()">📥 Excel Export</button>
         <button class="btn-secondary" onclick="document.getElementById('importFile').click()">📤 Daten Import</button>
         <input type="file" id="importFile" style="display:none" accept=".csv" onchange="importFromCSV(this)">
+        <button id="deleteBtn" class="btn-danger" onclick="mitarbeiterLoeschen()" style="display:none;">Mitarbeiter löschen</button>
       </div>
 
       <div class="booking-section">
         <h3>Buchung erfassen</h3>
-        <div class="field">
-          <label>Monat / Jahr (MM/JJ)</label>
-          <input type="text" id="buchungsDatum" placeholder="04/26" inputmode="numeric">
-        </div>
-        <div class="field">
-          <label>Soll-Stunden</label>
-          <input type="text" id="soll" placeholder="160:00" inputmode="decimal">
-        </div>
-        <div class="field">
-          <label>Ist-Stunden (Geleistet)</label>
-          <input type="text" id="ist" placeholder="168:45" inputmode="decimal">
-        </div>
-        <div class="field">
-          <label>Auszahlung (Stunden)</label>
-          <input type="text" id="auszahlung" placeholder="00:00" inputmode="decimal">
-        </div>
+        <label>Monat / Jahr (MM/JJ)</label>
+        <input type="text" id="buchungsDatum" placeholder="04/26">
+        
+        <label>Soll-Stunden</label>
+        <input type="text" id="soll" placeholder="160:00">
+        
+        <label>Ist-Stunden (Geleistet)</label>
+        <input type="text" id="ist" placeholder="168:45">
+        
+        <label>Auszahlung (Stunden)</label>
+        <input type="text" id="auszahlung" placeholder="00:00">
+        
         <button onclick="berechnen()">💾 Saldo aktualisieren</button>
-        <div id="ergebnis"></div>
+        <div id="ergebnis" style="text-align:center; margin-top:10px; font-weight:600;"></div>
       </div>
 
       <div class="history-panel">
@@ -222,6 +160,7 @@
     let sollStundenSpeicher = JSON.parse(localStorage.getItem("sollStundenDaten")) || {};
     let verlaufDaten = JSON.parse(localStorage.getItem("verlaufDaten")) || {};
     let verlaufDetails = JSON.parse(localStorage.getItem("verlaufDetails")) || {};
+    let startSalden = JSON.parse(localStorage.getItem("startSalden")) || {};
 
     window.onload = function() {
       const d = new Date(); d.setMonth(d.getMonth() - 1);
@@ -242,7 +181,7 @@
       let neg = zeit.startsWith("-");
       if (neg) zeit = zeit.substring(1);
       const teile = zeit.split(":");
-      if (teile.length !== 2) return NaN;
+      if (teile.length !== 2) return 0;
       const gesamt = (parseInt(teile[0], 10) * 60) + parseInt(teile[1], 10);
       return neg ? -gesamt : gesamt;
     }
@@ -251,6 +190,14 @@
       const neg = min < 0; min = Math.abs(min);
       const h = Math.floor(min / 60); const m = min % 60;
       return (neg ? "-" : "") + String(h).padStart(2, "0") + ":" + String(m).padStart(2, "0");
+    }
+
+    function speichern() {
+      localStorage.setItem("mitarbeiterDaten", JSON.stringify(mitarbeiter));
+      localStorage.setItem("sollStundenDaten", JSON.stringify(sollStundenSpeicher));
+      localStorage.setItem("verlaufDaten", JSON.stringify(verlaufDaten));
+      localStorage.setItem("verlaufDetails", JSON.stringify(verlaufDetails));
+      localStorage.setItem("startSalden", JSON.stringify(startSalden));
     }
 
     function dropdownLaden() {
@@ -271,11 +218,14 @@
       const isNew = name === "neu";
       document.getElementById("neuerMitarbeiterBereich").style.display = isNew ? "block" : "none";
       document.getElementById("deleteBtn").style.display = isNew ? "none" : "block";
+      
       if (!isNew) {
         document.getElementById("aktuellerSaldo").textContent = minutenZuZeit(mitarbeiter[name] || 0);
         document.getElementById("soll").value = sollStundenSpeicher[name] || "";
+        document.getElementById("startSaldoDisplay").textContent = minutenZuZeit(startSalden[name] || 0);
       } else {
         document.getElementById("aktuellerSaldo").textContent = "00:00";
+        document.getElementById("startSaldoDisplay").textContent = "00:00";
       }
       updateVerlaufAnzeige();
     }
@@ -285,30 +235,38 @@
       const jahr = document.getElementById("jahrFilter").value;
       const list = document.getElementById("historyList");
       list.innerHTML = "";
-      if (name === "neu" || !verlaufDaten[name] || !verlaufDaten[name][jahr]) return;
+      
+      if (name === "neu" || !verlaufDetails[name] || !verlaufDetails[name][jahr]) return;
 
       const monate = ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember"];
+      
       monate.forEach((mName, index) => {
         const mKey = String(index + 1).padStart(2, '0');
-        if (verlaufDaten[name][jahr][mKey]) {
-          const stunden = verlaufDaten[name][jahr][mKey];
+        const details = verlaufDetails[name][jahr][mKey];
+        
+        if (details) {
+          const istMin = zeitZuMinuten(details.ist);
+          const sollMin = zeitZuMinuten(details.soll);
+          const ausMin = zeitZuMinuten(details.auszahlung || "00:00");
+          const diff = istMin - sollMin;
+          
+          const diffText = diff >= 0 ? `(+${minutenZuZeit(diff)})` : `(${minutenZuZeit(diff)})`;
+          const diffClass = diff >= 0 ? "diff-pos" : "diff-neg";
+          
           const li = document.createElement("li");
           li.className = "history-item";
-          li.innerHTML = `<span>${mName}</span> <div><span class="time-val">${stunden}</span><button class="delete-entry" onclick="monatLoeschen('${name}', '${jahr}', '${mKey}')">Löschen</button></div>`;
+          li.innerHTML = `
+            <div>
+              <span style="font-weight:600;">${mName}</span>
+              ${ausMin !== 0 ? `<span class="payout-val">Auszahlung: ${details.auszahlung}</span>` : ''}
+            </div>
+            <div style="text-align:right;">
+              <span class="time-val">${details.ist} <span class="${diffClass}">${diffText}</span></span>
+              <button class="delete-entry" onclick="monatLoeschen('${name}', '${jahr}', '${mKey}')">✕</button>
+            </div>`;
           list.appendChild(li);
         }
       });
-    }
-
-    function monatLoeschen(name, jahr, monat) {
-      if (!confirm(`${monat}/${jahr} wirklich löschen?`)) return;
-      const details = verlaufDetails[name][jahr][monat];
-      const diffMin = zeitZuMinuten(details.ist) - zeitZuMinuten(details.soll) - zeitZuMinuten(details.auszahlung || "00:00");
-      mitarbeiter[name] -= diffMin;
-      delete verlaufDaten[name][jahr][monat];
-      delete verlaufDetails[name][jahr][monat];
-      speichern();
-      mitarbeiterWechseln();
     }
 
     function berechnen() {
@@ -325,15 +283,16 @@
       if (dateParts.length !== 2) return alert("Datum im Format MM/JJ angeben!");
       const monatKey = dateParts[0], jahrKey = "20" + dateParts[1];
 
-      if (verlaufDaten[name] && verlaufDaten[name][jahrKey] && verlaufDaten[name][jahrKey][monatKey]) {
+      if (verlaufDetails[name] && verlaufDetails[name][jahrKey] && verlaufDetails[name][jahrKey][monatKey]) {
         return alert("Dieser Monat wurde bereits gebucht.");
       }
 
       const sollMin = zeitZuMinuten(sollVal), istMin = zeitZuMinuten(istVal), ausMin = zeitZuMinuten(ausVal);
-      if (isNaN(sollMin) || isNaN(istMin) || isNaN(ausMin)) return alert("Bitte Zeitformat prüfen (HH:MM)");
 
       if (select.value === "neu") {
-        mitarbeiter[name] = zeitZuMinuten(document.getElementById("startSaldo").value || "00:00");
+        const sMin = zeitZuMinuten(document.getElementById("startSaldo").value || "00:00");
+        mitarbeiter[name] = sMin;
+        startSalden[name] = sMin;
       }
 
       mitarbeiter[name] = (mitarbeiter[name] || 0) + (istMin - sollMin) - ausMin;
@@ -348,8 +307,8 @@
       verlaufDetails[name][jahrKey][monatKey] = { ist: istVal, soll: sollVal, auszahlung: ausVal };
 
       speichern();
-      document.getElementById("ergebnis").textContent = "✅ Buchung erfolgreich gespeichert";
-      setTimeout(() => { document.getElementById("ergebnis").textContent = ""; }, 3000);
+      document.getElementById("ergebnis").textContent = "✅ Gespeichert";
+      setTimeout(() => { document.getElementById("ergebnis").textContent = ""; }, 2000);
       
       dropdownLaden();
       document.getElementById("mitarbeiterSelect").value = name;
@@ -358,18 +317,32 @@
       document.getElementById("auszahlung").value = "";
     }
 
-    function speichern() {
-      localStorage.setItem("mitarbeiterDaten", JSON.stringify(mitarbeiter));
-      localStorage.setItem("sollStundenDaten", JSON.stringify(sollStundenSpeicher));
-      localStorage.setItem("verlaufDaten", JSON.stringify(verlaufDaten));
-      localStorage.setItem("verlaufDetails", JSON.stringify(verlaufDetails));
+    function monatLoeschen(name, jahr, monat) {
+      if (!confirm(`${monat}/${jahr} wirklich löschen?`)) return;
+      const details = verlaufDetails[name][jahr][monat];
+      const diffMin = zeitZuMinuten(details.ist) - zeitZuMinuten(details.soll) - zeitZuMinuten(details.auszahlung || "00:00");
+      mitarbeiter[name] -= diffMin;
+      delete verlaufDaten[name][jahr][monat];
+      delete verlaufDetails[name][jahr][monat];
+      speichern();
+      mitarbeiterWechseln();
+    }
+
+    function mitarbeiterLoeschen() {
+      const name = document.getElementById("mitarbeiterSelect").value;
+      if (confirm(`Mitarbeiter "${name}" unwiderruflich löschen?`)) {
+        delete mitarbeiter[name]; delete sollStundenSpeicher[name]; 
+        delete verlaufDaten[name]; delete verlaufDetails[name]; delete startSalden[name];
+        speichern();
+        location.reload();
+      }
     }
 
     function exportToCSV() {
       const jahr = document.getElementById("jahrFilter").value;
-      let csv = "\ufeffMitarbeiter;Gesamtsaldo;Jan;Feb;Mrz;Apr;Mai;Jun;Jul;Aug;Sep;Okt;Nov;Dez\r\n";
+      let csv = "\ufeffMitarbeiter;Gesamtsaldo;Startsaldo;Jan;Feb;Mrz;Apr;Mai;Jun;Jul;Aug;Sep;Okt;Nov;Dez\r\n";
       Object.keys(mitarbeiter).sort().forEach(n => {
-        let zeile = `${n};${minutenZuZeit(mitarbeiter[n])}`;
+        let zeile = `${n};${minutenZuZeit(mitarbeiter[n])};${minutenZuZeit(startSalden[n] || 0)}`;
         for (let i = 1; i <= 12; i++) {
           const mKey = String(i).padStart(2, '0');
           const wert = (verlaufDaten[n] && verlaufDaten[n][jahr] && verlaufDaten[n][jahr][mKey]) ? verlaufDaten[n][jahr][mKey] : "-";
@@ -382,15 +355,6 @@
       link.href = URL.createObjectURL(blob);
       link.download = `Stunden_${jahr}.csv`;
       link.click();
-    }
-
-    function mitarbeiterLoeschen() {
-      const name = document.getElementById("mitarbeiterSelect").value;
-      if (confirm(`Mitarbeiter "${name}" und alle seine Daten unwiderruflich löschen?`)) {
-        delete mitarbeiter[name]; delete sollStundenSpeicher[name]; delete verlaufDaten[name]; delete verlaufDetails[name];
-        speichern();
-        location.reload();
-      }
     }
 
     function importFromCSV(input) {
