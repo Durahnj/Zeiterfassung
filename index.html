@@ -3,7 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
-  <title>Stunden-Pro | Porterhouse</title>
+  <title>Stunden-Pro | Porterhouse Cloud</title>
+
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -104,9 +107,21 @@
       .saldo-box { background: #2d2824; }
       .history-item { border-bottom-color: #333; }
     }
+
+    /* Loading Overlay */
+    #loadingOverlay {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(255,255,255,0.9); display: flex; flex-direction: column; justify-content: center;
+      align-items: center; z-index: 9999; font-weight: bold; color: var(--accent);
+    }
   </style>
 </head>
 <body>
+
+  <div id="loadingOverlay">
+    <div style="font-size: 24px; margin-bottom: 10px;">⏳</div>
+    <div>Lade Daten aus Cloud...</div>
+  </div>
 
   <div class="container">
     <h1>Stundenaufzeichnung</h1>
@@ -165,13 +180,62 @@
   </div>
 
   <script>
-    let mitarbeiter = JSON.parse(localStorage.getItem("mitarbeiterDaten")) || {};
-    let sollStundenSpeicher = JSON.parse(localStorage.getItem("sollStundenDaten")) || {};
-    let verlaufDaten = JSON.parse(localStorage.getItem("verlaufDaten")) || {};
-    let verlaufDetails = JSON.parse(localStorage.getItem("verlaufDetails")) || {};
-    let startSalden = JSON.parse(localStorage.getItem("startSalden")) || {};
+    // --- FIREBASE INITIALISIERUNG ---
+    const firebaseConfig = {
+      apiKey: "AIzaSyAPF3obb17GU4zgrsOQFq6BCuQCMp2m6V4",
+      authDomain: "stundenph.firebaseapp.com",
+      projectId: "stundenph",
+      storageBucket: "stundenph.firebasestorage.app",
+      messagingSenderId: "836285555835",
+      appId: "1:836285555835:web:612e642c22b74d24fbaede",
+      measurementId: "G-00XQN5PV76"
+    };
 
-    window.onload = function() {
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    // Lokale Datenstrukturen
+    let mitarbeiter = {};
+    let sollStundenSpeicher = {};
+    let verlaufDetails = {};
+    let startSalden = {};
+
+    // 1. DATEN BEIM START AUS FIREBASE LADEN
+    async function datenLaden() {
+      try {
+        const doc = await db.collection("porterhouse").doc("stundendaten").get();
+        if (doc.exists) {
+          const d = doc.data();
+          mitarbeiter = d.mitarbeiter || {};
+          sollStundenSpeicher = d.sollStundenSpeicher || {};
+          verlaufDetails = d.verlaufDetails || {};
+          startSalden = d.startSalden || {};
+        }
+        document.getElementById("loadingOverlay").style.display = "none";
+        initApp();
+      } catch (err) {
+        console.error("Fehler beim Laden:", err);
+        alert("Fehler beim Laden der Cloud-Daten! Bitte Internetverbindung prüfen.");
+      }
+    }
+
+    // 2. DATEN IN FIREBASE SPEICHERN
+    async function speichern() {
+      try {
+        await db.collection("porterhouse").doc("stundendaten").set({
+          mitarbeiter,
+          sollStundenSpeicher,
+          verlaufDetails,
+          startSalden,
+          lastChange: new Date().toISOString()
+        });
+      } catch (err) {
+        console.error("Speicherfehler:", err);
+        alert("Fehler beim Speichern in der Cloud!");
+      }
+    }
+
+    function initApp() {
       const d = new Date(); d.setMonth(d.getMonth() - 1);
       const mm = String(d.getMonth() + 1).padStart(2, '0');
       const jj = String(d.getFullYear()).substring(2);
@@ -179,27 +243,25 @@
       
       dropdownLaden();
       jahrFilterAktualisieren();
-    };
+    }
 
-    // NEU: Dynamische Erzeugung der Jahresauswahl
+    window.onload = datenLaden;
+
+    // --- HILFSFUNKTIONEN ---
+
     function jahrFilterAktualisieren() {
       const jahrSelect = document.getElementById("jahrFilter");
       const aktuellesJahr = new Date().getFullYear();
       const vorhandeneJahre = new Set();
-      
-      // Das aktuelle Jahr immer hinzufügen
       vorhandeneJahre.add(aktuellesJahr);
 
-      // Alle Jahre aus den gespeicherten Details sammeln
       Object.values(verlaufDetails).forEach(mitarbeiterJahre => {
         Object.keys(mitarbeiterJahre).forEach(jahr => {
           vorhandeneJahre.add(parseInt(jahr));
         });
       });
 
-      // Sortieren (neuestes zuerst)
       const sortierteJahre = Array.from(vorhandeneJahre).sort((a, b) => b - a);
-
       const vorherigeAuswahl = jahrSelect.value;
       jahrSelect.innerHTML = "";
       
@@ -221,22 +283,13 @@
       if (neg) zeit = zeit.substring(1);
       const teile = zeit.split(":");
       if (teile.length !== 2) return 0;
-      const gesamt = (parseInt(teile[0], 10) * 60) + parseInt(teile[1], 10);
-      return neg ? -gesamt : gesamt;
+      return (neg ? -1 : 1) * ((parseInt(teile[0], 10) * 60) + parseInt(teile[1], 10));
     }
 
     function minutenZuZeit(min) {
       const neg = min < 0; min = Math.abs(min);
       const h = Math.floor(min / 60); const m = min % 60;
       return (neg ? "-" : "") + String(h).padStart(2, "0") + ":" + String(m).padStart(2, "0");
-    }
-
-    function speichern() {
-      localStorage.setItem("mitarbeiterDaten", JSON.stringify(mitarbeiter));
-      localStorage.setItem("sollStundenDaten", JSON.stringify(sollStundenSpeicher));
-      localStorage.setItem("verlaufDaten", JSON.stringify(verlaufDaten));
-      localStorage.setItem("verlaufDetails", JSON.stringify(verlaufDetails));
-      localStorage.setItem("startSalden", JSON.stringify(startSalden));
     }
 
     function dropdownLaden() {
@@ -282,15 +335,9 @@
       monate.forEach((mName, index) => {
         const mKey = String(index + 1).padStart(2, '0');
         const details = verlaufDetails[name][jahr][mKey];
-        
         if (details) {
-          const istMin = zeitZuMinuten(details.ist);
-          const sollMin = zeitZuMinuten(details.soll);
-          const diff = istMin - sollMin;
-          
+          const diff = zeitZuMinuten(details.ist) - zeitZuMinuten(details.soll);
           const diffText = diff >= 0 ? `(+${minutenZuZeit(diff)})` : `(${minutenZuZeit(diff)})`;
-          const diffClass = diff >= 0 ? "diff-pos" : "diff-neg";
-          
           const li = document.createElement("li");
           li.className = "history-item";
           li.innerHTML = `
@@ -299,15 +346,15 @@
               ${zeitZuMinuten(details.auszahlung) !== 0 ? `<span class="payout-val">Auszahlung: ${details.auszahlung}h</span>` : ''}
             </div>
             <div style="display:flex; align-items:center;">
-              <span class="time-val">${details.ist} <span class="${diffClass}">${diffText}</span></span>
-              <button class="delete-entry-small" title="Löschen" onclick="monatLoeschen('${name}', '${jahr}', '${mKey}')">✕</button>
+              <span class="time-val">${details.ist} <span class="${diff >= 0 ? 'diff-pos' : 'diff-neg'}">${diffText}</span></span>
+              <button class="delete-entry-small" onclick="monatLoeschen('${name}', '${jahr}', '${mKey}')">✕</button>
             </div>`;
           list.appendChild(li);
         }
       });
     }
 
-    function berechnen() {
+    async function berechnen() {
       const select = document.getElementById("mitarbeiterSelect");
       const datumVal = document.getElementById("buchungsDatum").value;
       const istVal = document.getElementById("ist").value || "00:00";
@@ -315,15 +362,13 @@
       const ausVal = document.getElementById("auszahlung").value || "00:00";
       
       let name = select.value === "neu" ? document.getElementById("neuerMitarbeiter").value.trim() : select.value;
-      if (!name) return alert("Name fehlt!");
+      if (!name) return alert("Bitte Name eingeben!");
 
       const dateParts = datumVal.split("/");
-      if (dateParts.length !== 2) return alert("Datum im Format MM/JJ angeben!");
+      if (dateParts.length !== 2) return alert("Format: MM/JJ");
       const monatKey = dateParts[0], jahrKey = "20" + dateParts[1];
 
-      if (verlaufDetails[name] && verlaufDetails[name][jahrKey] && verlaufDetails[name][jahrKey][monatKey]) {
-        return alert("Dieser Monat wurde bereits gebucht.");
-      }
+      if (verlaufDetails[name]?.[jahrKey]?.[monatKey]) return alert("Monat ist bereits gebucht.");
 
       const sollMin = zeitZuMinuten(sollVal), istMin = zeitZuMinuten(istVal), ausMin = zeitZuMinuten(ausVal);
 
@@ -336,18 +381,14 @@
       mitarbeiter[name] = (mitarbeiter[name] || 0) + (istMin - sollMin) - ausMin;
       sollStundenSpeicher[name] = sollVal;
 
-      if (!verlaufDaten[name]) verlaufDaten[name] = {};
-      if (!verlaufDaten[name][jahrKey]) verlaufDaten[name][jahrKey] = {};
-      verlaufDaten[name][jahrKey][monatKey] = istVal;
-
       if (!verlaufDetails[name]) verlaufDetails[name] = {};
       if (!verlaufDetails[name][jahrKey]) verlaufDetails[name][jahrKey] = {};
       verlaufDetails[name][jahrKey][monatKey] = { ist: istVal, soll: sollVal, auszahlung: ausVal };
 
-      speichern();
-      jahrFilterAktualisieren(); // Jahre neu prüfen nach Buchung
+      await speichern();
+      jahrFilterAktualisieren();
       
-      document.getElementById("ergebnis").textContent = "✅ Gespeichert";
+      document.getElementById("ergebnis").textContent = "✅ Cloud-Synchronisiert";
       setTimeout(() => { document.getElementById("ergebnis").textContent = ""; }, 2000);
       
       dropdownLaden();
@@ -357,98 +398,75 @@
       document.getElementById("auszahlung").value = "";
     }
 
-    function monatLoeschen(name, jahr, monat) {
-      if (!confirm(`${monat}/${jahr} wirklich löschen?`)) return;
+    async function monatLoeschen(name, jahr, monat) {
+      if (!confirm(`${monat}/${jahr} wirklich aus der Cloud löschen?`)) return;
       const details = verlaufDetails[name][jahr][monat];
       const diffMin = zeitZuMinuten(details.ist) - zeitZuMinuten(details.soll) - zeitZuMinuten(details.auszahlung || "00:00");
       mitarbeiter[name] -= diffMin;
-      delete verlaufDaten[name][jahr][monat];
       delete verlaufDetails[name][jahr][monat];
       
-      // Prüfen ob das Jahr nun leer ist
-      if (Object.keys(verlaufDetails[name][jahr]).length === 0) {
-        delete verlaufDetails[name][jahr];
-        delete verlaufDaten[name][jahr];
-      }
-
-      speichern();
+      await speichern();
       jahrFilterAktualisieren();
       mitarbeiterWechseln();
     }
 
-    function mitarbeiterLoeschen() {
+    async function mitarbeiterLoeschen() {
       const name = document.getElementById("mitarbeiterSelect").value;
-      if (confirm(`Mitarbeiter "${name}" unwiderruflich löschen?`)) {
+      if (confirm(`Soll "${name}" und alle seine Daten unwiderruflich aus der Cloud gelöscht werden?`)) {
         delete mitarbeiter[name]; delete sollStundenSpeicher[name]; 
-        delete verlaufDaten[name]; delete verlaufDetails[name]; delete startSalden[name];
-        speichern();
+        delete verlaufDetails[name]; delete startSalden[name];
+        await speichern();
         location.reload();
       }
     }
 
+    // Export & Backup
     function exportToExcel() {
       const jahr = document.getElementById("jahrFilter").value;
+      let csv = "\ufeffMitarbeiter;Gesamtsaldo;";
       const monateNamen = ["Jan", "Feb", "Mär", "Apr", "Mai", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dez"];
-      
-      let csv = "\ufeffMitarbeiter;Gesamtsaldo (Aktuell);";
       monateNamen.forEach(m => csv += `${m} (Ist);${m} (Diff);`);
       csv += "\r\n";
-
       Object.keys(mitarbeiter).sort().forEach(n => {
         let zeile = `${n};${minutenZuZeit(mitarbeiter[n])};`;
         for (let i = 1; i <= 12; i++) {
           const mKey = String(i).padStart(2, '0');
-          const details = (verlaufDetails[n] && verlaufDetails[n][jahr]) ? verlaufDetails[n][jahr][mKey] : null;
-          if (details) {
-            const diff = zeitZuMinuten(details.ist) - zeitZuMinuten(details.soll);
-            zeile += `${details.ist};${minutenZuZeit(diff)};`;
-          } else {
-            zeile += "-;-;";
-          }
+          const d = verlaufDetails[n]?.[jahr]?.[mKey];
+          if (d) {
+            zeile += `${d.ist};${minutenZuZeit(zeitZuMinuten(d.ist)-zeitZuMinuten(d.soll))};`;
+          } else zeile += "-;-;";
         }
         csv += zeile + "\r\n";
       });
-
       const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
       const link = document.createElement("a");
       link.href = URL.createObjectURL(blob);
-      link.download = `Porterhouse_Stunden_${jahr}.csv`;
+      link.download = `Porterhouse_Cloud_Export_${jahr}.csv`;
       link.click();
     }
 
     function exportBackup() {
-      const data = {
-        mitarbeiter,
-        sollStundenSpeicher,
-        verlaufDaten,
-        verlaufDetails,
-        startSalden,
-        exportDate: new Date().toISOString()
-      };
+      const data = { mitarbeiter, sollStundenSpeicher, verlaufDetails, startSalden };
       const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
       const link = document.createElement("a");
       link.href = URL.createObjectURL(blob);
-      link.download = `Porterhouse_Backup_${new Date().toLocaleDateString()}.json`;
+      link.download = `Porterhouse_Cloud_Backup_${new Date().toLocaleDateString()}.json`;
       link.click();
     }
 
-    function importBackup(input) {
+    async function importBackup(input) {
       const reader = new FileReader();
-      reader.onload = function(e) {
+      reader.onload = async function(e) {
         try {
           const data = JSON.parse(e.target.result);
-          if (data.mitarbeiter && data.verlaufDetails) {
-            mitarbeiter = data.mitarbeiter;
-            sollStundenSpeicher = data.sollStundenSpeicher || {};
-            verlaufDaten = data.verlaufDaten || {};
-            verlaufDetails = data.verlaufDetails || {};
-            startSalden = data.startSalden || {};
-            speichern();
-            jahrFilterAktualisieren();
-            alert("Backup erfolgreich eingespielt!");
-            location.reload();
-          }
-        } catch (err) { alert("Fehler beim Lesen der Datei!"); }
+          mitarbeiter = data.mitarbeiter || {};
+          sollStundenSpeicher = data.sollStundenSpeicher || {};
+          verlaufDetails = data.verlaufDetails || {};
+          startSalden = data.startSalden || {};
+          await speichern();
+          alert("Backup erfolgreich in die Cloud übertragen!");
+          location.reload();
+        } catch (err) { alert("Import fehlgeschlagen!"); }
       };
       reader.readAsText(input.files[0]);
     }
