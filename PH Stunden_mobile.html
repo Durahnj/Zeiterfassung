@@ -64,6 +64,18 @@
       background: #fafafa; font-size: 16px; margin-bottom: 15px;
     }
 
+    .select-row {
+      display: flex; gap: 8px; align-items: flex-start;
+    }
+    
+    .btn-edit {
+      width: 48px; height: 48px; padding: 0; border-radius: 12px;
+      background: #fdfaf7; border: 1px solid var(--border-color);
+      font-size: 18px; display: flex; align-items: center; justify-content: center;
+      cursor: pointer; transition: 0.2s;
+    }
+    .btn-edit:hover { background: #eee; }
+
     button { 
       width: 100%; padding: 16px; border: none; border-radius: 14px; 
       background: var(--accent); color: white; font-weight: 600; cursor: pointer; transition: 0.3s;
@@ -104,11 +116,11 @@
       :root { --bg-color: #1a1614; --card-bg: #25211e; --text-main: #f5e6d3; --border-color: #3d342d; }
       .sidebar, .history-panel, .booking-section { background: #25211e; }
       input, select { background: #2d2824; color: #fff; }
+      .btn-edit { background: #2d2824; }
       .saldo-box { background: #2d2824; }
       .history-item { border-bottom-color: #333; }
     }
 
-    /* Loading Overlay */
     #loadingOverlay {
       position: fixed; top: 0; left: 0; width: 100%; height: 100%;
       background: rgba(255,255,255,0.9); display: flex; flex-direction: column; justify-content: center;
@@ -130,13 +142,17 @@
     <div class="layout">
       <div class="sidebar">
         <h3>Mitarbeiter</h3>
-        <select id="mitarbeiterSelect" onchange="mitarbeiterWechseln()"></select>
+        <div class="select-row">
+          <select id="mitarbeiterSelect" onchange="mitarbeiterWechseln()"></select>
+          <button id="editMitarbeiterBtn" class="btn-edit" onclick="mitarbeiterBearbeitenModus()" title="Mitarbeiter bearbeiten" style="display:none;">✏️</button>
+        </div>
         
         <div id="neuerMitarbeiterBereich" style="display:none; background: #fdfaf7; padding: 15px; border-radius: 15px; border: 1px solid var(--border-color); margin-bottom: 20px;">
-          <label>Neuer Name</label>
+          <label id="bereichTitel">Neuer Mitarbeiter</label>
           <input type="text" id="neuerMitarbeiter" placeholder="Vorname Nachname">
           <label>Start-Saldo (HH:MM)</label>
           <input type="text" id="startSaldo" placeholder="00:00">
+          <button id="btnAbbrechen" class="btn-secondary" style="margin-top:5px; background:#c17373; display:none;" onclick="bearbeitenAbbrechen()">Abbrechen</button>
         </div>
 
         <div class="saldo-box">
@@ -153,7 +169,7 @@
       </div>
 
       <div class="booking-section">
-        <h3>Buchung erfassen</h3>
+        <h3 id="buchungSektionTitel">Buchung erfassen</h3>
         <label>Monat / Jahr (MM/JJ)</label>
         <input type="text" id="buchungsDatum" placeholder="04/26">
         
@@ -166,7 +182,7 @@
         <label>Auszahlung (Stunden)</label>
         <input type="text" id="auszahlung" placeholder="00:00">
         
-        <button onclick="berechnen()">💾 Saldo aktualisieren</button>
+        <button id="btnSpeichern" onclick="berechnen()">💾 Saldo aktualisieren</button>
         <div id="ergebnis" style="text-align:center; margin-top:10px; font-weight:600;"></div>
       </div>
 
@@ -180,7 +196,6 @@
   </div>
 
   <script>
-    // --- FIREBASE INITIALISIERUNG ---
     const firebaseConfig = {
       apiKey: "AIzaSyAPF3obb17GU4zgrsOQFq6BCuQCMp2m6V4",
       authDomain: "stundenph.firebaseapp.com",
@@ -194,13 +209,13 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    // Lokale Datenstrukturen
     let mitarbeiter = {};
     let sollStundenSpeicher = {};
     let verlaufDetails = {};
     let startSalden = {};
+    let istBearbeitungsModus = false;
+    let alterNameFuerBearbeitung = "";
 
-    // 1. DATEN BEIM START AUS FIREBASE LADEN
     async function datenLaden() {
       try {
         const doc = await db.collection("porterhouse").doc("stundendaten").get();
@@ -215,11 +230,10 @@
         initApp();
       } catch (err) {
         console.error("Fehler beim Laden:", err);
-        alert("Fehler beim Laden der Cloud-Daten! Bitte Internetverbindung prüfen.");
+        alert("Fehler beim Laden der Cloud-Daten!");
       }
     }
 
-    // 2. DATEN IN FIREBASE SPEICHERN
     async function speichern() {
       try {
         await db.collection("porterhouse").doc("stundendaten").set({
@@ -230,8 +244,7 @@
           lastChange: new Date().toISOString()
         });
       } catch (err) {
-        console.error("Speicherfehler:", err);
-        alert("Fehler beim Speichern in der Cloud!");
+        alert("Speicherfehler in Cloud!");
       }
     }
 
@@ -247,34 +260,27 @@
 
     window.onload = datenLaden;
 
-    // --- HILFSFUNKTIONEN ---
-
     function jahrFilterAktualisieren() {
       const jahrSelect = document.getElementById("jahrFilter");
-      const aktuellesJahr = new Date().getFullYear();
+      const vorherigeAuswahl = jahrSelect.value;
       const vorhandeneJahre = new Set();
-      vorhandeneJahre.add(aktuellesJahr);
+      vorhandeneJahre.add(new Date().getFullYear());
 
-      Object.values(verlaufDetails).forEach(mitarbeiterJahre => {
-        Object.keys(mitarbeiterJahre).forEach(jahr => {
-          vorhandeneJahre.add(parseInt(jahr));
-        });
+      // Jahre aus allen Verläufen sammeln
+      Object.values(verlaufDetails).forEach(mJahre => {
+        Object.keys(mJahre).forEach(j => vorhandeneJahre.add(parseInt(j)));
       });
 
       const sortierteJahre = Array.from(vorhandeneJahre).sort((a, b) => b - a);
-      const vorherigeAuswahl = jahrSelect.value;
       jahrSelect.innerHTML = "";
       
       sortierteJahre.forEach(jahr => {
         const opt = document.createElement("option");
-        opt.value = jahr;
-        opt.textContent = jahr;
+        opt.value = jahr; opt.textContent = jahr;
         jahrSelect.appendChild(opt);
       });
 
-      if (vorherigeAuswahl && sortierteJahre.includes(parseInt(vorherigeAuswahl))) {
-        jahrSelect.value = vorherigeAuswahl;
-      }
+      if (vorherigeAuswahl) jahrSelect.value = vorherigeAuswahl;
     }
 
     function zeitZuMinuten(zeit) {
@@ -308,8 +314,12 @@
       const select = document.getElementById("mitarbeiterSelect");
       const name = select.value;
       const isNew = name === "neu";
-      document.getElementById("neuerMitarbeiterBereich").style.display = isNew ? "block" : "none";
-      document.getElementById("deleteBtn").style.display = isNew ? "none" : "block";
+      
+      if (!istBearbeitungsModus) {
+        document.getElementById("neuerMitarbeiterBereich").style.display = isNew ? "block" : "none";
+        document.getElementById("editMitarbeiterBtn").style.display = isNew ? "none" : "block";
+        document.getElementById("deleteBtn").style.display = isNew ? "none" : "block";
+      }
       
       if (!isNew) {
         document.getElementById("aktuellerSaldo").textContent = minutenZuZeit(mitarbeiter[name] || 0);
@@ -322,33 +332,49 @@
       updateVerlaufAnzeige();
     }
 
+    function mitarbeiterBearbeitenModus() {
+      const name = document.getElementById("mitarbeiterSelect").value;
+      if (name === "neu") return;
+      istBearbeitungsModus = true;
+      alterNameFuerBearbeitung = name;
+      document.getElementById("bereichTitel").textContent = "Mitarbeiter bearbeiten";
+      document.getElementById("neuerMitarbeiter").value = name;
+      document.getElementById("startSaldo").value = minutenZuZeit(startSalden[name] || 0);
+      document.getElementById("neuerMitarbeiterBereich").style.display = "block";
+      document.getElementById("btnAbbrechen").style.display = "block";
+      document.getElementById("buchungSektionTitel").textContent = "Daten anpassen";
+      document.getElementById("btnSpeichern").textContent = "📝 Stammdaten speichern";
+    }
+
+    function bearbeitenAbbrechen() {
+      istBearbeitungsModus = false;
+      document.getElementById("neuerMitarbeiterBereich").style.display = "none";
+      document.getElementById("btnAbbrechen").style.display = "none";
+      document.getElementById("buchungSektionTitel").textContent = "Buchung erfassen";
+      document.getElementById("btnSpeichern").textContent = "💾 Saldo aktualisieren";
+      mitarbeiterWechseln();
+    }
+
     function updateVerlaufAnzeige() {
       const name = document.getElementById("mitarbeiterSelect").value;
       const jahr = document.getElementById("jahrFilter").value;
       const list = document.getElementById("historyList");
       list.innerHTML = "";
-      
       if (name === "neu" || !verlaufDetails[name] || !verlaufDetails[name][jahr]) return;
-
       const monate = ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember"];
-      
       monate.forEach((mName, index) => {
         const mKey = String(index + 1).padStart(2, '0');
         const details = verlaufDetails[name][jahr][mKey];
         if (details) {
           const diff = zeitZuMinuten(details.ist) - zeitZuMinuten(details.soll);
-          const diffText = diff >= 0 ? `(+${minutenZuZeit(diff)})` : `(${minutenZuZeit(diff)})`;
           const li = document.createElement("li");
           li.className = "history-item";
           li.innerHTML = `
-            <div style="flex-grow:1;">
-              <span style="font-weight:600; font-size:14px;">${mName}</span>
-              ${zeitZuMinuten(details.auszahlung) !== 0 ? `<span class="payout-val">Auszahlung: ${details.auszahlung}h</span>` : ''}
-            </div>
-            <div style="display:flex; align-items:center;">
-              <span class="time-val">${details.ist} <span class="${diff >= 0 ? 'diff-pos' : 'diff-neg'}">${diffText}</span></span>
-              <button class="delete-entry-small" onclick="monatLoeschen('${name}', '${jahr}', '${mKey}')">✕</button>
-            </div>`;
+            <div style="flex-grow:1;"><span style="font-weight:600;">${mName}</span>
+            ${zeitZuMinuten(details.auszahlung) !== 0 ? `<span class="payout-val">Auszahlung: ${details.auszahlung}h</span>` : ''}</div>
+            <div style="display:flex; align-items:center;"><span class="time-val">${details.ist} 
+            <span class="${diff >= 0 ? 'diff-pos' : 'diff-neg'}">(${diff >= 0 ? '+' : ''}${minutenZuZeit(diff)})</span></span>
+            <button class="delete-entry-small" onclick="monatLoeschen('${name}', '${jahr}', '${mKey}')">✕</button></div>`;
           list.appendChild(li);
         }
       });
@@ -356,117 +382,96 @@
 
     async function berechnen() {
       const select = document.getElementById("mitarbeiterSelect");
-      const datumVal = document.getElementById("buchungsDatum").value;
-      const istVal = document.getElementById("ist").value || "00:00";
-      const sollVal = document.getElementById("soll").value || "00:00";
-      const ausVal = document.getElementById("auszahlung").value || "00:00";
-      
-      let name = select.value === "neu" ? document.getElementById("neuerMitarbeiter").value.trim() : select.value;
-      if (!name) return alert("Bitte Name eingeben!");
+      if (istBearbeitungsModus) {
+        let neuerName = document.getElementById("neuerMitarbeiter").value.trim();
+        let nMin = zeitZuMinuten(document.getElementById("startSaldo").value || "00:00");
+        if (neuerName !== alterNameFuerBearbeitung) {
+          mitarbeiter[neuerName] = mitarbeiter[alterNameFuerBearbeitung];
+          startSalden[neuerName] = nMin;
+          sollStundenSpeicher[neuerName] = sollStundenSpeicher[alterNameFuerBearbeitung];
+          verlaufDetails[neuerName] = verlaufDetails[alterNameFuerBearbeitung] || {};
+          delete mitarbeiter[alterNameFuerBearbeitung]; delete startSalden[alterNameFuerBearbeitung];
+          delete sollStundenSpeicher[alterNameFuerBearbeitung]; delete verlaufDetails[alterNameFuerBearbeitung];
+        } else { startSalden[neuerName] = nMin; }
+        
+        // Saldo neu berechnen
+        let s = startSalden[neuerName] || 0;
+        Object.values(verlaufDetails[neuerName] || {}).forEach(y => Object.values(y).forEach(m => {
+          s += (zeitZuMinuten(m.ist) - zeitZuMinuten(m.soll)) - zeitZuMinuten(m.auszahlung || "00:00");
+        }));
+        mitarbeiter[neuerName] = s;
+        await speichern(); bearbeitenAbbrechen(); dropdownLaden();
+        document.getElementById("mitarbeiterSelect").value = neuerName; mitarbeiterWechseln();
+        return;
+      }
 
+      let name = select.value === "neu" ? document.getElementById("neuerMitarbeiter").value.trim() : select.value;
+      const datumVal = document.getElementById("buchungsDatum").value;
       const dateParts = datumVal.split("/");
       if (dateParts.length !== 2) return alert("Format: MM/JJ");
       const monatKey = dateParts[0], jahrKey = "20" + dateParts[1];
-
-      if (verlaufDetails[name]?.[jahrKey]?.[monatKey]) return alert("Monat ist bereits gebucht.");
-
-      const sollMin = zeitZuMinuten(sollVal), istMin = zeitZuMinuten(istVal), ausMin = zeitZuMinuten(ausVal);
-
+      if (verlaufDetails[name]?.[jahrKey]?.[monatKey]) return alert("Monat existiert bereits.");
+      
+      const istVal = document.getElementById("ist").value || "00:00", sollVal = document.getElementById("soll").value || "00:00", ausVal = document.getElementById("auszahlung").value || "00:00";
       if (select.value === "neu") {
-        const sMin = zeitZuMinuten(document.getElementById("startSaldo").value || "00:00");
-        mitarbeiter[name] = sMin;
-        startSalden[name] = sMin;
+        let sMin = zeitZuMinuten(document.getElementById("startSaldo").value || "00:00");
+        mitarbeiter[name] = sMin; startSalden[name] = sMin;
       }
-
-      mitarbeiter[name] = (mitarbeiter[name] || 0) + (istMin - sollMin) - ausMin;
+      mitarbeiter[name] += (zeitZuMinuten(istVal) - zeitZuMinuten(sollVal)) - zeitZuMinuten(ausVal);
       sollStundenSpeicher[name] = sollVal;
-
       if (!verlaufDetails[name]) verlaufDetails[name] = {};
       if (!verlaufDetails[name][jahrKey]) verlaufDetails[name][jahrKey] = {};
       verlaufDetails[name][jahrKey][monatKey] = { ist: istVal, soll: sollVal, auszahlung: ausVal };
-
-      await speichern();
-      jahrFilterAktualisieren();
-      
-      document.getElementById("ergebnis").textContent = "✅ Cloud-Synchronisiert";
-      setTimeout(() => { document.getElementById("ergebnis").textContent = ""; }, 2000);
-      
-      dropdownLaden();
-      document.getElementById("mitarbeiterSelect").value = name;
-      mitarbeiterWechseln();
-      document.getElementById("ist").value = ""; 
-      document.getElementById("auszahlung").value = "";
+      await speichern(); jahrFilterAktualisieren(); dropdownLaden();
+      document.getElementById("mitarbeiterSelect").value = name; mitarbeiterWechseln();
     }
 
     async function monatLoeschen(name, jahr, monat) {
-      if (!confirm(`${monat}/${jahr} wirklich aus der Cloud löschen?`)) return;
-      const details = verlaufDetails[name][jahr][monat];
-      const diffMin = zeitZuMinuten(details.ist) - zeitZuMinuten(details.soll) - zeitZuMinuten(details.auszahlung || "00:00");
-      mitarbeiter[name] -= diffMin;
+      if (!confirm("Löschen?")) return;
+      const d = verlaufDetails[name][jahr][monat];
+      mitarbeiter[name] -= (zeitZuMinuten(d.ist) - zeitZuMinuten(d.soll) - zeitZuMinuten(d.auszahlung || "00:00"));
       delete verlaufDetails[name][jahr][monat];
-      
-      await speichern();
-      jahrFilterAktualisieren();
-      mitarbeiterWechseln();
+      await speichern(); mitarbeiterWechseln();
     }
 
     async function mitarbeiterLoeschen() {
       const name = document.getElementById("mitarbeiterSelect").value;
-      if (confirm(`Soll "${name}" und alle seine Daten unwiderruflich aus der Cloud gelöscht werden?`)) {
-        delete mitarbeiter[name]; delete sollStundenSpeicher[name]; 
-        delete verlaufDetails[name]; delete startSalden[name];
-        await speichern();
-        location.reload();
+      if (confirm(`"${name}" wirklich löschen?`)) {
+        delete mitarbeiter[name]; delete sollStundenSpeicher[name]; delete verlaufDetails[name]; delete startSalden[name];
+        await speichern(); location.reload();
       }
     }
 
-    // Export & Backup
     function exportToExcel() {
       const jahr = document.getElementById("jahrFilter").value;
-      let csv = "\ufeffMitarbeiter;Gesamtsaldo;";
-      const monateNamen = ["Jan", "Feb", "Mär", "Apr", "Mai", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dez"];
-      monateNamen.forEach(m => csv += `${m} (Ist);${m} (Diff);`);
+      let csv = "\ufeffMitarbeiter;Saldo;";
+      for(let i=1;i<=12;i++) csv += i+";";
       csv += "\r\n";
       Object.keys(mitarbeiter).sort().forEach(n => {
-        let zeile = `${n};${minutenZuZeit(mitarbeiter[n])};`;
-        for (let i = 1; i <= 12; i++) {
-          const mKey = String(i).padStart(2, '0');
-          const d = verlaufDetails[n]?.[jahr]?.[mKey];
-          if (d) {
-            zeile += `${d.ist};${minutenZuZeit(zeitZuMinuten(d.ist)-zeitZuMinuten(d.soll))};`;
-          } else zeile += "-;-;";
+        csv += n+";"+minutenZuZeit(mitarbeiter[n])+";";
+        for(let i=1;i<=12;i++) {
+          const d = verlaufDetails[n]?.[jahr]?.[String(i).padStart(2,'0')];
+          csv += d ? d.ist+";" : "-;";
         }
-        csv += zeile + "\r\n";
+        csv += "\r\n";
       });
-      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
       const link = document.createElement("a");
-      link.href = URL.createObjectURL(blob);
-      link.download = `Porterhouse_Cloud_Export_${jahr}.csv`;
-      link.click();
+      link.href = URL.createObjectURL(new Blob([csv], {type:'text/csv'}));
+      link.download = `Export_${jahr}.csv`; link.click();
     }
 
     function exportBackup() {
-      const data = { mitarbeiter, sollStundenSpeicher, verlaufDetails, startSalden };
-      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const blob = new Blob([JSON.stringify({mitarbeiter,sollStundenSpeicher,verlaufDetails,startSalden})], {type:'application/json'});
       const link = document.createElement("a");
-      link.href = URL.createObjectURL(blob);
-      link.download = `Porterhouse_Cloud_Backup_${new Date().toLocaleDateString()}.json`;
-      link.click();
+      link.href = URL.createObjectURL(blob); link.download = "Backup.json"; link.click();
     }
 
     async function importBackup(input) {
       const reader = new FileReader();
-      reader.onload = async function(e) {
-        try {
-          const data = JSON.parse(e.target.result);
-          mitarbeiter = data.mitarbeiter || {};
-          sollStundenSpeicher = data.sollStundenSpeicher || {};
-          verlaufDetails = data.verlaufDetails || {};
-          startSalden = data.startSalden || {};
-          await speichern();
-          alert("Backup erfolgreich in die Cloud übertragen!");
-          location.reload();
-        } catch (err) { alert("Import fehlgeschlagen!"); }
+      reader.onload = async (e) => {
+        const d = JSON.parse(e.target.result);
+        mitarbeiter=d.mitarbeiter; sollStundenSpeicher=d.sollStundenSpeicher; verlaufDetails=d.verlaufDetails; startSalden=d.startSalden;
+        await speichern(); location.reload();
       };
       reader.readAsText(input.files[0]);
     }
