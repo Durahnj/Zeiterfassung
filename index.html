@@ -12,7 +12,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Outfit:wght@500;700&display=swap" rel="stylesheet">
 
-  <style>
+<style>
     :root {
       --primary-font: 'Inter', sans-serif;
       --title-font: 'Outfit', sans-serif;
@@ -25,6 +25,7 @@
       --border-color: #e5e5e5;
       --danger: #dc2626;
       --success: #16a34a;
+      --info: #2563eb;
       --card-shadow: 0 10px 30px rgba(0,0,0,0.04);
     }
 
@@ -39,7 +40,7 @@
     }
 
     .container {
-      width: 100%; max-width: 1100px;
+      width: 100%; max-width: 1200px;
       background: var(--card-bg);
       border-radius: 24px; padding: 30px;
       box-shadow: var(--card-shadow);
@@ -57,7 +58,7 @@
     
     .subtitle { 
       text-align: center; 
-      margin-bottom: 30px; 
+      margin-bottom: 20px; 
       color: var(--text-muted); 
       font-size: 11px; 
       text-transform: uppercase; 
@@ -65,9 +66,43 @@
       font-weight: 600;
     }
 
+    /* Tab Navigation */
+    .tabs {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 30px;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 10px;
+    }
+    .tab-btn {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-family: var(--title-font);
+      font-size: 16px;
+      font-weight: 600;
+      padding: 8px 20px;
+      cursor: pointer;
+      border-radius: 8px;
+      transition: 0.2s;
+      width: auto;
+    }
+    .tab-btn:hover {
+      background: #f5f5f5;
+      transform: none;
+    }
+    .tab-btn.active {
+      color: white;
+      background: var(--accent);
+    }
+
+    .page { display: none; }
+    .page.active { display: block; }
+
     .layout { display: grid; grid-template-columns: 1fr; gap: 24px; }
 
-    .sidebar, .history-panel, .booking-section { 
+    .sidebar, .history-panel, .booking-section, .overview-panel { 
       background: var(--card-bg); 
       border-radius: 20px; 
       padding: 25px; 
@@ -129,17 +164,22 @@
     button:hover { background: var(--accent-hover); transform: translateY(-1px); }
 
     .btn-secondary { background: #f5f5f5; color: #444; border: 1px solid var(--border-color); margin-bottom: 8px; padding: 10px; font-size: 12px; }
-    .btn-excel { background: var(--success); margin-bottom: 8px; padding: 10px; font-size: 12px; }
+    .btn-pdf { background: var(--info); margin-bottom: 8px; padding: 10px; font-size: 12px; }
     .btn-danger { background: #fff1f2; color: var(--danger); border: 1px solid #fecaca; margin-top: 10px; }
 
     .saldo-box { 
       margin: 20px 0; 
-      background: #fdf2f4; /* Ganz leichter Bordeaux-Schimmer */
+      background: #fdf2f4; 
       border-radius: 16px; padding: 20px; 
       text-align: center; border: 1px solid rgba(128,0,32,0.1); 
     }
-    .saldo-value { font-size: 32px; font-weight: 700; color: var(--accent); font-family: var(--title-font); letter-spacing: -1px; }
-    .start-saldo-info { font-size: 10px; color: var(--text-muted); margin-top: 4px; font-weight: 500; }
+    .saldo-box.is-positive { background: #f0fdf4; border-color: rgba(22,163,74,0.1); }
+    .saldo-box.is-negative { background: #fdf2f4; border-color: rgba(128,0,32,0.1); }
+
+    .saldo-value { font-size: 32px; font-weight: 700; font-family: var(--title-font); letter-spacing: -1px; }
+    
+    .saldo-neg { color: var(--accent) !important; font-weight: 700; }
+    .saldo-pos { color: var(--success) !important; font-weight: 700; }
 
     .history-list { list-style: none; padding: 0; max-height: 400px; overflow-y: auto; margin: 0; }
     .history-item { 
@@ -164,27 +204,34 @@
       transition: 0.2s; margin-left: 10px; padding: 0 !important;
     }
 
+    .table-responsive {
+      width: 100%; overflow-x: auto; margin-top: 15px; border-radius: 12px; border: 1px solid var(--border-color);
+    }
+    .overview-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 13px; }
+    .overview-table th, .overview-table td { padding: 12px 10px; border-bottom: 1px solid var(--border-color); white-space: nowrap; }
+    .overview-table th { background: #f5f5f5; font-family: var(--title-font); font-weight: 600; color: var(--text-main); }
+    .overview-table tr:hover { background: rgba(0,0,0,0.01); }
+
     @media (min-width: 1001px) { .layout { grid-template-columns: 280px 1fr 360px; } }
 
     @media (prefers-color-scheme: dark) {
       :root { 
-        --bg-color: #0f0a0a; /* Sehr dunkles Bordeaux-Schwarz */
-        --card-bg: #1a1212; 
-        --text-main: #f9f9f9; 
-        --text-muted: #a1a1a1; 
-        --border-color: #2d1f1f; 
-        --accent: #b32d3a; /* Helleres Bordeaux für Kontrast */
-        --accent-hover: #d43d4c;
+        --bg-color: #0f0a0a; --card-bg: #1a1212; --text-main: #f9f9f9; --text-muted: #a1a1a1; 
+        --border-color: #2d1f1f; --accent: #b32d3a; --accent-hover: #d43d4c;
       }
-      .sidebar, .history-panel, .booking-section { background: #1a1212; border-color: #2d1f1f; }
+      .sidebar, .history-panel, .booking-section, .overview-panel { background: #1a1212; border-color: #2d1f1f; }
       input, select { background: #241a1a; color: #fff; border-color: #3d2a2a; }
       .btn-edit { background: #241a1a; border-color: #3d2a2a; color: #fff; }
-      .saldo-box { background: #241618; border-color: rgba(179,45,58,0.2); }
+      .saldo-box.is-positive { background: #064e3b; border-color: rgba(110,231,183,0.2); }
+      .saldo-box.is-negative { background: #241618; border-color: rgba(179,45,58,0.2); }
       .history-item { border-bottom-color: #2d1f1f; }
       .tag-u { background: #064e3b; color: #6ee7b7; }
       .tag-k { background: #7f1d1d; color: #fca5a5; }
       .btn-secondary { background: #241a1a; color: #ccc; border-color: #3d2a2a; }
       .delete-entry-small { background: #450a0a !important; color: #f87171 !important; }
+      .overview-table th { background: #241a1a; color: #fff; }
+      .tab-btn:hover { background: #241a1a; }
+      .overview-table tr:hover { background: rgba(255,255,255,0.02); }
     }
 
     #loadingOverlay {
@@ -194,102 +241,182 @@
       font-family: var(--title-font);
     }
     
-    /* Scrollbar Styling */
     .history-list::-webkit-scrollbar { width: 5px; }
     .history-list::-webkit-scrollbar-track { background: transparent; }
     .history-list::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 10px; }
+
+    /* --- HIER SIND DIE ÄNDERUNGEN FÜR OPTION 1 --- */
+    
+    /* Verhindert standardmäßig, dass der Container auf dem Monitor gerendert wird */
+    #printContainer { display: none; }
+
+    /* PRINT LAYOUT (PDF-Erzeugung per Druckmenü) */
+    @media print {
+      /* Erzwingt die Anzeige exakt für den Moment des Druckvorgangs */
+      #printContainer { display: block !important; }
+
+      body * { visibility: hidden; }
+      #printContainer, #printContainer * { visibility: visible; }
+      #printContainer { 
+        position: absolute; left: 0; top: 0; width: 100%; 
+        color: #000 !important; background: #fff !important;
+        font-family: sans-serif; padding: 20px;
+      }
+      .print-header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #800020; padding-bottom: 10px; }
+      .print-header h2 { margin: 0; color: #800020; font-size: 24px; }
+      .print-header p { margin: 5px 0 0 0; color: #555; font-size: 14px; }
+      .print-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+      .print-table th, .print-table td { border: 1px solid #ddd; padding: 12px; text-align: left; font-size: 14px; }
+      .print-table th { background: #f5f5f5 !important; font-weight: bold; }
+      .print-table tr:nth-child(even) { background: #fafafa !important; }
+      .print-total { font-weight: bold; text-align: right; margin-top: 25px; font-size: 16px; border-top: 1px solid #000; padding-top: 10px; }
+    }
   </style>
 </head>
 <body>
 
   <div id="loadingOverlay">
-    <div style="font-size: 32px; margin-bottom: 15px;">🍷</div>
+    <div style="font-size: 32px; margin-bottom: 15px;">🍷🥩</div>
     <div style="letter-spacing: 1px;">PORTERHOUSE CLOUD...</div>
   </div>
+
+  <!-- Unsichtbarer Print-Container für sauberen PDF-Druck -->
+  <div id="printContainer"></div>
 
   <div class="container">
     <h1>Stundenaufzeichnung</h1>
     <div class="subtitle">Personalverwaltung Porterhouse</div>
 
-    <div class="layout">
-      <div class="sidebar">
-        <h3>Mitarbeiter</h3>
-        <div class="select-row">
-          <select id="mitarbeiterSelect" onchange="mitarbeiterWechseln()"></select>
-          <button id="editMitarbeiterBtn" class="btn-edit" onclick="mitarbeiterBearbeitenModus()" title="Bearbeiten">✏️</button>
-        </div>
-        
-        <div id="neuerMitarbeiterBereich" style="display:none; background: rgba(0,0,0,0.02); padding: 15px; border-radius: 12px; border: 1px dashed var(--border-color); margin-bottom: 20px;">
-          <label id="bereichTitel" style="color:var(--accent)">Neuer Mitarbeiter</label>
-          <input type="text" id="neuerMitarbeiter" placeholder="Name">
-          <label>Start-Saldo (HH:MM)</label>
-          <input type="text" id="startSaldo" placeholder="00:00">
-          <button id="btnAbbrechen" class="btn-secondary" style="margin-top:5px; border-color:#dc2626; color:#dc2626; display:none;" onclick="bearbeitenAbbrechen()">Abbrechen</button>
+    <!-- Tab Navigation -->
+    <div class="tabs">
+      <button class="tab-btn active" id="tabEingabe" onclick="switchTab('eingabe')">✍️ Eingabe</button>
+      <button class="tab-btn" id="tabUebersicht" onclick="switchTab('uebersicht')">📊 Übersicht</button>
+    </div>
+
+    <!-- PAGE 1: EINGABE -->
+    <div id="pageEingabe" class="page active">
+      <div class="layout">
+        <div class="sidebar">
+          <h3>Mitarbeiter</h3>
+          <div class="select-row">
+            <select id="mitarbeiterSelect" onchange="mitarbeiterWechseln()"></select>
+            <button id="editMitarbeiterBtn" class="btn-edit" onclick="mitarbeiterBearbeitenModus()" title="Bearbeiten">✏️</button>
+          </div>
+          
+          <div id="neuerMitarbeiterBereich" style="display:none; background: rgba(0,0,0,0.02); padding: 15px; border-radius: 12px; border: 1px dashed var(--border-color); margin-bottom: 20px;">
+            <label id="bereichTitel" style="color:var(--accent)">Neuer Mitarbeiter</label>
+            <input type="text" id="neuerMitarbeiter" placeholder="Name">
+            <label>Start-Saldo (HH:MM)</label>
+            <input type="text" id="startSaldo" placeholder="00:00">
+            <button id="btnAbbrechen" class="btn-secondary" style="margin-top:5px; border-color:#dc2626; color:#dc2626; display:none;" onclick="bearbeitenAbbrechen()">Abbrechen</button>
+          </div>
+
+          <div class="saldo-box is-negative" id="saldoBox">
+            <div style="font-size:10px; color:var(--text-muted); text-transform: uppercase; font-weight: 700;">Aktueller Saldo</div>
+            <div class="saldo-value saldo-neg" id="aktuellerSaldo">00:00</div>
+            <div class="start-saldo-info">Start: <span id="startSaldoDisplay">00:00</span></div>
+          </div>
+
+          <button class="btn-pdf" onclick="exportAuszahlungenPDF()">📄 Auszahlungen PDF</button>
+          <button class="btn-secondary" onclick="exportBackup()">📥 Backup</button>
+          <button class="btn-secondary" onclick="document.getElementById('importFile').click()">📤 Import</button>
+          <input type="file" id="importFile" style="display:none" accept=".json" onchange="importBackup(this)">
+          <button id="deleteBtn" class="btn-danger" onclick="mitarbeiterLoeschen()" style="display:none;">Mitarbeiter löschen</button>
         </div>
 
-        <div class="saldo-box">
-          <div style="font-size:10px; color:var(--text-muted); text-transform: uppercase; font-weight: 700;">Aktueller Saldo</div>
-          <div class="saldo-value" id="aktuellerSaldo">00:00</div>
-          <div class="start-saldo-info">Start: <span id="startSaldoDisplay">00:00</span></div>
+        <div class="booking-section">
+          <h3 id="buchungSektionTitel">Buchung erfassen</h3>
+          <div class="row">
+            <div>
+              <label>MM/JJ</label>
+              <input type="text" id="buchungsDatum" placeholder="04/26">
+            </div>
+            <div>
+              <label>Soll-Stunden</label>
+              <input type="text" id="soll" placeholder="160:00">
+            </div>
+          </div>
+          
+          <div class="row">
+            <div>
+              <label>Ist (Geleistet)</label>
+              <input type="text" id="ist" placeholder="168:00">
+            </div>
+            <div>
+              <label>Auszahlung</label>
+              <input type="text" id="auszahlung" placeholder="00:00">
+            </div>
+          </div>
+
+          <div class="row" style="background: rgba(0,0,0,0.01); padding: 12px; border-radius: 12px; border: 1px solid var(--border-color); margin-bottom: 18px;">
+            <div>
+              <label>Urlaub (Tage)</label>
+              <input type="number" id="urlaub" placeholder="0" min="0" step="0.5">
+            </div>
+            <div>
+              <label>Krank (Tage)</label>
+              <input type="number" id="krank" placeholder="0" min="0" step="0.5">
+            </div>
+          </div>
+          
+          <button id="btnSpeichern" onclick="berechnen()">💾 Buchung speichern</button>
+          <div id="ergebnis" style="text-align:center; margin-top:12px; font-weight:600; color:var(--accent); font-size:13px;"></div>
         </div>
 
-        <button class="btn-excel" onclick="exportToExcel()">📊 Excel Export</button>
-        <button class="btn-secondary" onclick="exportBackup()">📥 Backup</button>
-        <button class="btn-secondary" onclick="document.getElementById('importFile').click()">📤 Import</button>
-        <input type="file" id="importFile" style="display:none" accept=".json" onchange="importBackup(this)">
-        <button id="deleteBtn" class="btn-danger" onclick="mitarbeiterLoeschen()" style="display:none;">Mitarbeiter löschen</button>
-      </div>
-
-      <div class="booking-section">
-        <h3 id="buchungSektionTitel">Buchung erfassen</h3>
-        <div class="row">
-          <div>
-            <label>MM/JJ</label>
-            <input type="text" id="buchungsDatum" placeholder="04/26">
+        <div class="history-panel">
+          <h3>Verlauf</h3>
+          <div class="row">
+            <div style="flex:1">
+              <label>Jahr filtern</label>
+              <select id="jahrFilter" onchange="updateVerlaufAnzeige()"></select>
+            </div>
           </div>
-          <div>
-            <label>Soll-Stunden</label>
-            <input type="text" id="soll" placeholder="160:00">
-          </div>
+          <ul id="historyList" class="history-list"></ul>
         </div>
-        
-        <div class="row">
-          <div>
-            <label>Ist (Geleistet)</label>
-            <input type="text" id="ist" placeholder="168:00">
-          </div>
-          <div>
-            <label>Auszahlung</label>
-            <input type="text" id="auszahlung" placeholder="00:00">
-          </div>
-        </div>
-
-        <div class="row" style="background: rgba(0,0,0,0.01); padding: 12px; border-radius: 12px; border: 1px solid var(--border-color); margin-bottom: 18px;">
-          <div>
-            <label>Urlaub (Tage)</label>
-            <input type="number" id="urlaub" placeholder="0" min="0" step="0.5">
-          </div>
-          <div>
-            <label>Krank (Tage)</label>
-            <input type="number" id="krank" placeholder="0" min="0" step="0.5">
-          </div>
-        </div>
-        
-        <button id="btnSpeichern" onclick="berechnen()">💾 Buchung speichern</button>
-        <div id="ergebnis" style="text-align:center; margin-top:12px; font-weight:600; color:var(--accent); font-size:13px;"></div>
-      </div>
-
-      <div class="history-panel">
-        <h3>Verlauf</h3>
-        <div class="row">
-          <div style="flex:1">
-            <label>Jahr filtern</label>
-            <select id="jahrFilter" onchange="updateVerlaufAnzeige()"></select>
-          </div>
-        </div>
-        <ul id="historyList" class="history-list"></ul>
       </div>
     </div>
+
+    <!-- PAGE 2: ÜBERSICHT -->
+    <div id="pageUebersicht" class="page">
+      <div class="overview-panel">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 15px;">
+          <h3 style="margin: 0;">Jahresübersicht aller Mitarbeiter</h3>
+          <div style="width: 150px;">
+            <label>Jahr filtern</label>
+            <select id="uebersichtJahrFilter" onchange="baueUebersichtstabelle()" style="margin:0;"></select>
+          </div>
+        </div>
+
+        <div class="table-responsive">
+          <table class="overview-table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Gesamtsaldo</th>
+                <th>Urlaub (T)</th>
+                <th>Krank (T)</th>
+                <th>Jan</th>
+                <th>Feb</th>
+                <th>Mär</th>
+                <th>Apr</th>
+                <th>Mai</th>
+                <th>Jun</th>
+                <th>Jul</th>
+                <th>Aug</th>
+                <th>Sep</th>
+                <th>Okt</th>
+                <th>Nov</th>
+                <th>Dez</th>
+              </tr>
+            </thead>
+            <tbody id="overviewTableBody">
+              <!-- Wird dynamisch per JS befüllt -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
   </div>
 
   <script>
@@ -356,11 +483,87 @@
 
     function jahrFilterAktualisieren() {
       const s = document.getElementById("jahrFilter");
+      const sUebersicht = document.getElementById("uebersichtJahrFilter");
       const prev = s.value;
+      const prevUebersicht = sUebersicht.value;
+      
       const jahre = new Set([new Date().getFullYear()]);
       Object.values(verlaufDetails).forEach(m => Object.keys(m).forEach(j => jahre.add(parseInt(j))));
-      s.innerHTML = Array.from(jahre).sort((a,b)=>b-a).map(j => `<option value="${j}">${j}</option>`).join("");
+      
+      const optionsHTML = Array.from(jahre).sort((a,b)=>b-a).map(j => `<option value="${j}">${j}</option>`).join("");
+      
+      s.innerHTML = optionsHTML;
+      sUebersicht.innerHTML = optionsHTML;
+      
       if(prev) s.value = prev;
+      if(prevUebersicht) sUebersicht.value = prevUebersicht;
+      
+      baueUebersichtstabelle();
+    }
+
+    function switchTab(tabName) {
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+      document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
+      
+      if(tabName === 'eingabe') {
+        document.getElementById('tabEingabe').classList.add('active');
+        document.getElementById('pageEingabe').classList.add('active');
+        updateVerlaufAnzeige();
+      } else if(tabName === 'uebersicht') {
+        document.getElementById('tabUebersicht').classList.add('active');
+        document.getElementById('pageUebersicht').classList.add('active');
+        baueUebersichtstabelle();
+      }
+    }
+
+    function baueUebersichtstabelle() {
+      const j = document.getElementById("uebersichtJahrFilter").value;
+      const tbody = document.getElementById("overviewTableBody");
+      tbody.innerHTML = "";
+
+      const mitarbeiterNamen = Object.keys(mitarbeiter).sort();
+      
+      if(mitarbeiterNamen.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="16" style="text-align:center; color:var(--text-muted);">Keine Mitarbeiter angelegt</td></tr>`;
+        return;
+      }
+
+      mitarbeiterNamen.forEach(n => {
+        let uSum = 0, kSum = 0;
+        if(verlaufDetails[n]?.[j]) {
+          Object.values(verlaufDetails[n][j]).forEach(m => { 
+            uSum += m.urlaub || 0; 
+            kSum += m.krank || 0; 
+          });
+        }
+
+        const gesamtMinuten = mitarbeiter[n] || 0;
+        const saldoKlasse = gesamtMinuten >= 0 ? 'saldo-pos' : 'saldo-neg';
+
+        let rowHTML = `<tr>`;
+        rowHTML += `<td style="font-weight:600;">${n}</td>`;
+        rowHTML += `<td class="${saldoKlasse}">${minutenZuZeit(gesamtMinuten)}</td>`;
+        rowHTML += `<td>${uSum}</td>`;
+        rowHTML += `<td>${kSum}</td>`;
+
+        for(let i = 1; i <= 12; i++) {
+          const d = verlaufDetails[n]?.[j]?.[String(i).padStart(2,'0')];
+          if(d) {
+            const diff = zeitZuMinuten(d.ist) - zeitZuMinuten(d.soll);
+            const diffSign = diff >= 0 ? '+' : '';
+            const diffClass = diff >= 0 ? 'diff-pos' : 'diff-neg';
+            
+            rowHTML += `<td>
+              <div>${d.ist}</div>
+              <div class="${diffClass}" style="font-size:10px;">(${diffSign}${minutenZuZeit(diff)})</div>
+            </td>`;
+          } else {
+            rowHTML += `<td style="color:var(--text-muted);">-</td>`;
+          }
+        }
+        rowHTML += `</tr>`;
+        tbody.innerHTML += rowHTML;
+      });
     }
 
     function dropdownLaden() {
@@ -380,8 +583,22 @@
         document.getElementById("editMitarbeiterBtn").style.display = isNew ? "none" : "block";
         document.getElementById("deleteBtn").style.display = isNew ? "none" : "block";
       }
-      document.getElementById("aktuellerSaldo").textContent = isNew ? "00:00" : minutenZuZeit(mitarbeiter[name] || 0);
+
+      const minuten = isNew ? 0 : (mitarbeiter[name] || 0);
+      const saldoTextElement = document.getElementById("aktuellerSaldo");
+      const saldoBoxElement = document.getElementById("saldoBox");
+
+      saldoTextElement.textContent = minutenZuZeit(minuten);
       document.getElementById("startSaldoDisplay").textContent = isNew ? "00:00" : minutenZuZeit(startSalden[name] || 0);
+      
+      if (minuten >= 0) {
+        saldoTextElement.className = "saldo-value saldo-pos";
+        saldoBoxElement.className = "saldo-box is-positive";
+      } else {
+        saldoTextElement.className = "saldo-value saldo-neg";
+        saldoBoxElement.className = "saldo-box is-negative";
+      }
+
       if(!isNew) document.getElementById("soll").value = sollStundenSpeicher[name] || "";
       updateVerlaufAnzeige();
     }
@@ -410,6 +627,7 @@
       const n = document.getElementById("mitarbeiterSelect").value;
       const j = document.getElementById("jahrFilter").value;
       const l = document.getElementById("historyList");
+      if(!l) return;
       l.innerHTML = "";
       if (n === "neu" || !verlaufDetails[n]?.[j]) return;
       
@@ -496,7 +714,7 @@
       const d = verlaufDetails[n][j][m];
       mitarbeiter[n] -= (zeitZuMinuten(d.ist) - zeitZuMinuten(d.soll) - zeitZuMinuten(d.auszahlung || "00:00"));
       delete verlaufDetails[n][j][m];
-      await speichern(); mitarbeiterWechseln();
+      await speichern(); jahrFilterAktualisieren(); mitarbeiterWechseln();
     }
 
     async function mitarbeiterLoeschen() {
@@ -507,26 +725,74 @@
       }
     }
 
-    function exportToExcel() {
-      const j = document.getElementById("jahrFilter").value;
-      let csv = "\ufeffName;Saldo;Urlaub;Krank;";
-      monatsNamen.forEach(mName => { csv += mName + ";"; });
-      csv += "\r\n";
-      Object.keys(mitarbeiter).sort().forEach(n => {
-        let uSum = 0, kSum = 0;
-        if(verlaufDetails[n]?.[j]) {
-          Object.values(verlaufDetails[n][j]).forEach(m => { uSum += m.urlaub||0; kSum += m.krank||0; });
+    /* NEUE FUNKTION: PDF / DRUCK-EXPORT FÜR AUSZAHLUNGEN */
+    function exportAuszahlungenPDF() {
+      const d = new Date(); d.setMonth(d.getMonth() - 1);
+      const standardWert = String(d.getMonth() + 1).padStart(2, '0') + "/" + String(d.getFullYear()).substring(2);
+      
+      const eingabe = prompt("Für welchen Monat sollen die Auszahlungen exportiert werden? (Format: MM/JJ)", standardWert);
+      if (!eingabe) return; // Abbrechen gedrückt
+      
+      const dp = eingabe.split("/");
+      if (dp.length !== 2) return alert("Ungültiges Format! Bitte verwende MM/JJ (z.B. 04/26).");
+      
+      const mK = dp[0];
+      const jK = "20" + dp[1];
+      const monatNameLang = monatsNamen[parseInt(mK) - 1] || mK;
+
+      let gesamtAuszahlungMinuten = 0;
+      let zeilenHTML = "";
+
+      // Alle Mitarbeiter alphabetisch durchgehen
+      Object.keys(mitarbeiter).sort().forEach(name => {
+        const daten = verlaufDetails[name]?.[jK]?.[mK];
+        let auszahlung = "00:00";
+        
+        if (daten && daten.auszahlung) {
+          auszahlung = daten.auszahlung;
         }
-        csv += `${n};${minutenZuZeit(mitarbeiter[n])};${uSum};${kSum};`;
-        for(let i=1;i<=12;i++) {
-          const d = verlaufDetails[n]?.[j]?.[String(i).padStart(2,'0')];
-          csv += d ? d.ist+";" : "-;";
+
+        const min = zeitZuMinuten(auszahlung);
+        if (min !== 0) { // Nur Mitarbeiter mit tatsächlicher Auszahlung listen
+          gesamtAuszahlungMinuten += min;
+          zeilenHTML += `
+            <tr>
+              <td><strong>${name}</strong></td>
+              <td style="text-align: right; font-family: monospace; font-size: 15px;">${auszahlung} Std.</td>
+            </tr>`;
         }
-        csv += "\r\n";
       });
-      const link = document.createElement("a");
-      link.href = URL.createObjectURL(new Blob([csv], {type:'text/csv'}));
-      link.download = `Export_${j}.csv`; link.click();
+
+      if (gesamtAuszahlungMinuten === 0) {
+        alert(`Keine Auszahlungen im Monat ${eingabe} gefunden.`);
+        return;
+      }
+
+      // Den unsichtbaren Print-Container befüllen
+      const printContainer = document.getElementById("printContainer");
+      printContainer.innerHTML = `
+        <div class="print-header">
+          <h2>Porterhouse – Auszahlungsübersicht</h2>
+          <p>Abrechnungszeitraum: <strong>${monatNameLang} ${jK}</strong> (Datenstand: ${new Date().toLocaleDateString('de-DE')})</p>
+        </div>
+        <table class="print-table">
+          <thead>
+            <tr>
+              <th>Mitarbeiter Name</th>
+              <th style="text-align: right;">Auszahlungsmenge</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${zeilenHTML}
+          </tbody>
+        </table>
+        <div class="print-total">
+          Gesamtsumme aller Auszahlungen: ${minutenZuZeit(gesamtAuszahlungMinuten)} Std.
+        </div>
+      `;
+
+      // Druckdialog des Browsers öffnen (Hier kann "Als PDF speichern" gewählt werden)
+      window.print();
     }
 
     function exportBackup() {
