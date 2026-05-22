@@ -270,81 +270,90 @@
       .print-table th { background: #f5f5f5 !important; font-weight: bold; }
       .print-table tr:nth-child(even) { background: #fafafa !important; }
       .print-total { font-weight: bold; text-align: right; margin-top: 25px; font-size: 16px; border-top: 1px solid #000; padding-top: 10px; }
-/* --- OPTIMIERUNG FÜR MOBILGERÄTE (MÖGLICHKEIT 1) --- */
+/* --- FORCE-UPDATE FÜR MOBILGERÄTE (KARTEN-ANSICHT) --- */
     @media (max-width: 768px) {
-      /* Versteckt den normalen Tabellenkopf (Name, Jan, Feb...), da wir ihn auf dem Handy nicht brauchen */
+      /* Deaktiviert das seitliche Scrollen des Tabellen-Containers */
+      .table-responsive {
+        overflow-x: visible !important;
+        border: none !important;
+      }
+
+      /* Versteckt den Tabellenkopf komplett */
       .overview-table thead {
-        display: none;
+        display: none !important;
       }
 
-      /* Die Tabellenstruktur wird aufgehoben, jede Zeile wird zur Karte */
-      .overview-table, .overview-table tbody, .overview-table tr, .overview-table td {
-        display: block;
-        width: 100%;
-      }
-
-      /* Styling für die Karte eines einzelnen Mitarbeiters */
-      .overview-table tr {
-        background: var(--card-bg);
-        border: 1px solid var(--border-color);
-        border-radius: 16px;
-        padding: 15px;
-        margin-bottom: 20px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.02);
-      }
-
-      /* Jede Zelle (Monat/Wert) wird zu einer Zeile innerhalb der Karte */
+      /* Zwingt die Tabelle und alle Unterelemente, sich wie Blöcke (Karten) zu verhalten */
+      .overview-table, 
+      .overview-table tbody, 
+      .overview-table tr, 
       .overview-table td {
-        display: flex;
-        justify-content: space-between; /* Text links, Wert rechts */
-        align-items: center;
-        padding: 10px 0;
-        border-bottom: 1px dashed var(--border-color);
-        white-space: normal;
-        text-align: right;
+        display: block !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
       }
 
-      /* Entfernt die gestrichelte Linie beim letzten Monat (Dezember) */
+      /* Jede Zeile wird zu einer isolierten Karte */
+      .overview-table tr {
+        background: var(--card-bg) !important;
+        border: 1px solid var(--border-color) !important;
+        border-radius: 16px !important;
+        padding: 15px !important;
+        margin-bottom: 25px !important;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.03) !important;
+      }
+
+      /* Jede Zelle wird zu einer Zeile in der Karte mit Text links und Wert rechts */
+      .overview-table td {
+        display: flex !important;
+        justify-content: space-between !important;
+        align-items: center !important;
+        padding: 10px 5px !important;
+        border-bottom: 1px dashed var(--border-color) !important;
+        white-space: normal !important;
+        background: transparent !important;
+      }
+
+      /* Entfernt die Linie beim letzten Monat (Dezember) */
       .overview-table td:last-child {
-        border-bottom: none;
+        border-bottom: none !important;
       }
 
-      /* Sonder-Styling für die allererste Zelle (Der Name des Mitarbeiters) */
+      /* Name des Mitarbeiters als fette Überschrift der Karte */
       .overview-table td:first-child {
-        font-size: 18px;
-        font-family: var(--title-font);
-        border-bottom: 2px solid var(--accent);
-        padding-bottom: 10px;
-        margin-bottom: 8px;
-        justify-content: space-between;
+        font-size: 18px !important;
+        font-family: var(--title-font) !important;
+        border-bottom: 2px solid var(--accent) !important;
+        padding-bottom: 12px !important;
+        margin-bottom: 10px !important;
+        color: var(--accent) !important;
       }
-      /* Schreibt das Wort "Mitarbeiter:" vor den Namen */
       .overview-table td:first-child::before {
-        content: "Mitarbeiter:";
-        font-weight: normal;
-        color: var(--text-muted);
-        font-size: 14px;
-        font-family: var(--primary-font);
+        content: "Mitarbeiter:" !important;
+        font-weight: normal !important;
+        color: var(--text-muted) !important;
+        font-size: 14px !important;
+        font-family: var(--primary-font) !important;
       }
 
-      /* Hier werden die Beschriftungen (Labels) für die linke Seite erzeugt */
-      .overview-table td:nth-child(2)::before { content: "Gesamtsaldo:"; font-weight: 600; color: var(--text-muted); }
-      .overview-table td:nth-child(3)::before { content: "Urlaub (Tage):"; color: var(--text-muted); }
-      .overview-table td:nth-child(4)::before { content: "Krank (Tage):"; color: var(--text-muted); }
+      /* Dynamische Labels für die Werte links */
+      .overview-table td:nth-child(2)::before { content: "Gesamtsaldo:" !important; font-weight: 600; color: var(--text-muted) !important; }
+      .overview-table td:nth-child(3)::before { content: "Urlaub (Tage):" !important; color: var(--text-muted) !important; }
+      .overview-table td:nth-child(4)::before { content: "Krank (Tage):" !important; color: var(--text-muted) !important; }
 
-      /* Beschriftung für die Spalten 5 bis 16 (Januar bis Dezember) */
-      .overview-table td:nth-child(5)::before { content: "Januar:"; color: var(--text-muted); }
-      .overview-table td:nth-child(6)::before { content: "Februar:"; color: var(--text-muted); }
-      .overview-table td:nth-child(7)::before { content: "März:"; color: var(--text-muted); }
-      .overview-table td:nth-child(8)::before { content: "April:"; color: var(--text-muted); }
-      .overview-table td:nth-child(9)::before { content: "Mai:"; color: var(--text-muted); }
-      .overview-table td:nth-child(10)::before { content: "Juni:"; color: var(--text-muted); }
-      .overview-table td:nth-child(11)::before { content: "Juli:"; color: var(--text-muted); }
-      .overview-table td:nth-child(12)::before { content: "August:"; color: var(--text-muted); }
-      .overview-table td:nth-child(13)::before { content: "September:"; color: var(--text-muted); }
-      .overview-table td:nth-child(14)::before { content: "Oktober:"; color: var(--text-muted); }
-      .overview-table td:nth-child(15)::before { content: "November:"; color: var(--text-muted); }
-      .overview-table td:nth-child(16)::before { content: "Dezember:"; color: var(--text-muted); }
+      /* Monate Januar bis Dezember */
+      .overview-table td:nth-child(5)::before { content: "Januar:" !important; color: var(--text-muted) !important; }
+      .overview-table td:nth-child(6)::before { content: "Februar:" !important; color: var(--text-muted) !important; }
+      .overview-table td:nth-child(7)::before { content: "März:" !important; color: var(--text-muted) !important; }
+      .overview-table td:nth-child(8)::before { content: "April:" !important; color: var(--text-muted) !important; }
+      .overview-table td:nth-child(9)::before { content: "Mai:" !important; color: var(--text-muted) !important; }
+      .overview-table td:nth-child(10)::before { content: "Juni:" !important; color: var(--text-muted) !important; }
+      .overview-table td:nth-child(11)::before { content: "Juli:" !important; color: var(--text-muted) !important; }
+      .overview-table td:nth-child(12)::before { content: "August:" !important; color: var(--text-muted) !important; }
+      .overview-table td:nth-child(13)::before { content: "September:" !important; color: var(--text-muted) !important; }
+      .overview-table td:nth-child(14)::before { content: "Oktober:" !important; color: var(--text-muted) !important; }
+      .overview-table td:nth-child(15)::before { content: "November:" !important; color: var(--text-muted) !important; }
+      .overview-table td:nth-child(16)::before { content: "Dezember:" !important; color: var(--text-muted) !important; }
     }
   </style>
 </head>
