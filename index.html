@@ -121,12 +121,18 @@
 
     .layout { display: grid; grid-template-columns: 1fr; gap: 24px; }
     .layout-urlaub { display: grid; grid-template-columns: 1fr; gap: 24px; }
+    .layout-rechner { display: flex; justify-content: center; width: 100%; }
 
-    .sidebar, .history-panel, .booking-section, .overview-panel, .urlaub-form-panel, .urlaub-list-panel, .urlaub-calendar-panel { 
+    .sidebar, .history-panel, .booking-section, .overview-panel, .urlaub-form-panel, .urlaub-list-panel, .urlaub-calendar-panel, .rechner-panel { 
       background: var(--card-bg); 
       border-radius: 20px; 
       padding: 25px; 
       border: 1px solid var(--border-color);
+    }
+    
+    .rechner-panel {
+      width: 100%;
+      max-width: 500px;
     }
 
     h3 { 
@@ -190,19 +196,19 @@
     .btn-pdf { background: var(--info); margin-bottom: 8px; padding: 10px; font-size: 12px; }
     .btn-danger { background: #fff1f2; color: var(--danger); border: 1px solid #fecaca; margin-top: 10px; }
 
-    .saldo-box { 
+    .saldo-box, .ergebnis-box { 
       margin: 20px 0; 
       background: #fdf2f4; 
       border-radius: 16px; padding: 20px; 
       text-align: center; border: 1px solid rgba(128,0,32,0.1); 
     }
-    .saldo-box.is-positive { background: #f0fdf4; border-color: rgba(22,163,74,0.1); }
+    .saldo-box.is-positive, .ergebnis-box.is-rechner { background: #f0fdf4; border-color: rgba(22,163,74,0.1); }
     .saldo-box.is-negative { background: #fdf2f4; border-color: rgba(128,0,32,0.1); }
 
-    .saldo-value { font-size: 32px; font-weight: 700; font-family: var(--title-font); letter-spacing: -1px; }
+    .saldo-value, .ergebnis-value { font-size: 32px; font-weight: 700; font-family: var(--title-font); letter-spacing: -1px; }
     
     .saldo-neg { color: var(--accent) !important; font-weight: 700; }
-    .saldo-pos { color: var(--success) !important; font-weight: 700; }
+    .saldo-pos, .ergebnis-pos { color: var(--success) !important; font-weight: 700; }
 
     .history-list { list-style: none; padding: 0; max-height: 400px; overflow-y: auto; margin: 0; }
     .history-item { 
@@ -342,10 +348,10 @@
         --text-schule: #f3f4f6;
         --badge-schule: #6b7280;
       }
-      .sidebar, .history-panel, .booking-section, .overview-panel, .urlaub-form-panel, .urlaub-list-panel, .urlaub-calendar-panel { background: #1a1212; border-color: #2d1f1f; }
+      .sidebar, .history-panel, .booking-section, .overview-panel, .urlaub-form-panel, .urlaub-list-panel, .urlaub-calendar-panel, .rechner-panel { background: #1a1212; border-color: #2d1f1f; }
       input, select { background: #241a1a; color: #fff; border-color: #3d2a2a; }
       .btn-edit { background: #241a1a; border-color: #3d2a2a; color: #fff; }
-      .saldo-box.is-positive { background: #064e3b; border-color: rgba(110,231,183,0.2); }
+      .saldo-box.is-positive, .ergebnis-box.is-rechner { background: #064e3b; border-color: rgba(110,231,183,0.2); }
       .saldo-box.is-negative { background: #241618; border-color: rgba(179,45,58,0.2); }
       .history-item, .urlaubs-item { border-bottom-color: #2d1f1f; }
       .tag-u { background: #064e3b; color: #6ee7b7; }
@@ -413,6 +419,7 @@
       <button class="tab-btn active" id="tabEingabe" onclick="switchTab('eingabe')">✍️ Eingabe</button>
       <button class="tab-btn" id="tabUebersicht" onclick="switchTab('uebersicht')">📊 Übersicht</button>
       <button class="tab-btn" id="tabUrlaub" onclick="switchTab('urlaub')">🌴 Urlaubsplaner</button>
+      <button class="tab-btn" id="tabRechner" onclick="switchTab('rechner')">🧮 Rechner</button>
     </div>
 
     <div id="pageEingabe" class="page active">
@@ -598,6 +605,25 @@
       </div>
     </div>
 
+    <div id="pageRechner" class="page">
+      <div class="layout-rechner">
+        <div class="rechner-panel">
+          <h3>Schnellrechner (Lohn)</h3>
+          <label>Stunden (SS:MM)</label>
+          <input type="text" id="rechnerStunden" placeholder="160:30" oninput="lohnBerechnen()">
+          
+          <label>Stundenlohn (€)</label>
+          <input type="number" id="rechnerLohn" placeholder="15.00" step="0.01" min="0" oninput="lohnBerechnen()">
+          
+          <div class="ergebnis-box is-rechner">
+            <div style="font-size:10px; color:var(--text-muted); text-transform: uppercase; font-weight: 700; margin-bottom: 5px;">Berechneter Bruttolohn</div>
+            <div class="ergebnis-value ergebnis-pos" id="rechnerErgebnis">0,00 €</div>
+            <div style="font-size:11px; color:var(--text-muted); margin-top: 5px;" id="rechnerDezimalInfo">0,00 Dezimalstunden</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </div>
 
   <script>
@@ -706,6 +732,9 @@
         document.getElementById('tabUrlaub').classList.add('active');
         document.getElementById('pageUrlaub').classList.add('active');
         renderUrlaubPlaner();
+      } else if(tabName === 'rechner') {
+        document.getElementById('tabRechner').classList.add('active');
+        document.getElementById('pageRechner').classList.add('active');
       }
     }
 
@@ -1200,6 +1229,38 @@
     function urlaubKalenderJahrWechseln() {
       ucYear = parseInt(document.getElementById('ucJahrSelect').value);
       renderUrlaubPlaner();
+    }
+
+    /* --- LOGIK DES RECHNERS (TAB 4) --- */
+    function lohnBerechnen() {
+      const stundenInput = document.getElementById("rechnerStunden").value.trim();
+      const lohnInput = parseFloat(document.getElementById("rechnerLohn").value) || 0;
+      
+      const ergebnisElement = document.getElementById("rechnerErgebnis");
+      const dezimalInfoElement = document.getElementById("rechnerDezimalInfo");
+      
+      if (!stundenInput) {
+        ergebnisElement.textContent = "0,00 €";
+        dezimalInfoElement.textContent = "0,00 Dezimalstunden";
+        return;
+      }
+      
+      // Umrechnung von SS:MM in Minuten
+      let gesamtMinuten = zeitZuMinuten(stundenInput);
+      
+      // Fallback: Falls der User eine einfache Zahl statt SS:MM eingibt (z.B. "160")
+      if (gesamtMinuten === 0 && stundenInput !== "" && !stundenInput.includes(":")) {
+        const einfacheStunden = parseFloat(stundenInput) || 0;
+        gesamtMinuten = einfacheStunden * 60;
+      }
+      
+      // Berechnung der Dezimalstunden
+      const dezimalStunden = gesamtMinuten / 60;
+      const bruttoLohn = dezimalStunden * lohnInput;
+      
+      // Anzeige formatieren
+      dezimalInfoElement.textContent = dezimalStunden.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " Dezimalstunden";
+      ergebnisElement.textContent = bruttoLohn.toLocaleString("de-DE", { style: "currency", currency: "EUR" });
     }
 
     window.onload = datenLaden;
