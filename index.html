@@ -27,6 +27,24 @@
       --success: #16a34a;
       --info: #2563eb;
       --card-shadow: 0 10px 30px rgba(0,0,0,0.04);
+      --wochenende-color: #f5f5f5;
+      
+      /* Abteilungsfarben (Lightmode) */
+      --bg-kueche: #dcfce7;
+      --border-kueche: #bbf7d0;
+      --text-kueche: #166534;
+      --badge-kueche: #16a34a;
+      
+      --bg-service: #dbeafe;
+      --border-service: #bfdbfe;
+      --text-service: #1e40af;
+      --badge-service: #2563eb;
+
+      /* Schulblock-Farben (Lightmode) */
+      --bg-schule: #f3f4f6;
+      --border-schule: #e5e7eb;
+      --text-schule: #4b5563;
+      --badge-schule: #9ca3af;
     }
 
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -74,6 +92,7 @@
       margin-bottom: 30px;
       border-bottom: 1px solid var(--border-color);
       padding-bottom: 10px;
+      flex-wrap: wrap;
     }
     .tab-btn {
       background: none;
@@ -101,8 +120,9 @@
     .page.active { display: block; }
 
     .layout { display: grid; grid-template-columns: 1fr; gap: 24px; }
+    .layout-urlaub { display: grid; grid-template-columns: 1fr; gap: 24px; }
 
-    .sidebar, .history-panel, .booking-section, .overview-panel { 
+    .sidebar, .history-panel, .booking-section, .overview-panel, .urlaub-form-panel, .urlaub-list-panel, .urlaub-calendar-panel { 
       background: var(--card-bg); 
       border-radius: 20px; 
       padding: 25px; 
@@ -141,8 +161,11 @@
       border-color: var(--accent);
     }
 
-    .row { display: flex; gap: 12px; }
-    .row > div { flex: 1; }
+    .row { display: flex; gap: 12px; width: 100%; }
+    .row > div { flex: 1; min-width: 0; }
+
+    .urlaub-form-panel .row { display: flex !important; flex-direction: row !important; gap: 12px !important; width: 100% !important; }
+    .urlaub-form-panel .row > div { flex: 1 !important; display: block !important; min-width: 0 !important; }
 
     .select-row { display: flex; gap: 8px; align-items: flex-start; margin-bottom: 10px; }
     
@@ -212,19 +235,110 @@
     .overview-table th { background: #f5f5f5; font-family: var(--title-font); font-weight: 600; color: var(--text-main); }
     .overview-table tr:hover { background: rgba(0,0,0,0.01); }
 
-    @media (min-width: 1001px) { .layout { grid-template-columns: 280px 1fr 360px; } }
+    /* --- URLAUBSPLANER INTERFACE ELEMENTS --- */
+    .calendar-header {
+      display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; gap: 10px;
+    }
+    .calendar-header h2 { font-family: var(--title-font); color: var(--text-main); margin: 0; font-size: 20px; }
+    .calendar-nav-buttons { display: flex; gap: 6px; align-items: center; }
+    .calendar-nav-buttons button { width: auto; padding: 8px 16px; background: #f5f5f5; color: var(--text-main); border: 1px solid var(--border-color); }
+    .calendar-nav-buttons button:hover { background: var(--border-color); transform: none; }
+    
+    .calendar-grid {
+      display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; text-align: center;
+    }
+    .uc-weekday { font-weight: 600; padding: 8px 0; color: var(--text-muted); font-size: 12px; text-transform: uppercase; }
+    .uc-day {
+      padding: 12px 4px; border-radius: 12px; background: #fafafa; border: 1px solid var(--border-color);
+      display: flex; flex-direction: column; justify-content: space-between; align-items: center; min-height: 65px; cursor: pointer; position: relative;
+    }
+    .uc-day:hover { background: #f0f0f0; }
+    .uc-day-num { font-weight: 600; font-size: 14px; }
+    .uc-day-info { font-size: 9px; width: 95%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-top: 4px; border-radius: 4px; padding: 2px 4px; text-align: center; font-weight: 600; }
+    .uc-empty { background: transparent; border: none; cursor: default; }
+    .uc-wochenende { background-color: var(--wochenende-color); }
+    
+    /* Dynamisches Klassen-Styling für Küche vs Service vs Schule */
+    .uc-day.uc-kueche {
+      background-color: var(--bg-kueche) !important; border-color: var(--border-kueche); color: var(--text-kueche) !important;
+    }
+    .uc-day.uc-kueche .uc-day-info {
+      background-color: var(--badge-kueche); color: white;
+    }
+
+    .uc-day.uc-service {
+      background-color: var(--bg-service) !important; border-color: var(--border-service); color: var(--text-service) !important;
+    }
+    .uc-day.uc-service .uc-day-info {
+      background-color: var(--badge-service); color: white;
+    }
+
+    .uc-day.uc-schule {
+      background-color: var(--bg-schule) !important; border-color: var(--border-schule); color: var(--text-schule) !important;
+    }
+    .uc-day.uc-schule .uc-day-info {
+      background-color: var(--badge-schule); color: white;
+    }
+    
+    /* Wenn mehrere Abteilungen am selben Tag Urlaub/Schule haben */
+    .uc-day.uc-mixed {
+      background: linear-gradient(135deg, var(--bg-kueche) 50%, var(--bg-service) 50%) !important;
+      border-color: var(--accent);
+      color: var(--text-main) !important;
+    }
+    .uc-day.uc-mixed .uc-day-info {
+      background-color: var(--accent); color: white;
+    }
+
+    /* Listen-Badges */
+    .list-badge {
+      font-size: 10px; padding: 2px 6px; border-radius: 6px; font-weight: bold; margin-left: 8px;
+    }
+    .list-badge.kueche { background: var(--bg-kueche); color: var(--text-kueche); border: 1px solid var(--border-kueche); }
+    .list-badge.service { background: var(--bg-service); color: var(--text-service); border: 1px solid var(--border-service); }
+    .list-badge.schule { background: var(--bg-schule); color: var(--text-schule); border: 1px solid var(--border-schule); }
+
+    .urlaubs-liste { list-style: none; padding: 0; max-height: 250px; overflow-y: auto; margin: 0; }
+    .urlaubs-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--border-color); font-size: 14px; }
+    
+    #urlaubInfoBox {
+      margin-top: 15px; padding: 12px; background: #f5f5f5; border-radius: 12px; text-align: center; font-size: 13px; font-weight: 600; color: var(--text-muted);
+    }
+
+    @media (min-width: 1001px) { 
+      .layout { grid-template-columns: 280px 1fr 360px; } 
+      .layout-urlaub { grid-template-columns: 320px 1fr; }
+    }
 
     @media (prefers-color-scheme: dark) {
       :root { 
         --bg-color: #0f0a0a; --card-bg: #1a1212; --text-main: #f9f9f9; --text-muted: #a1a1a1; 
         --border-color: #2d1f1f; --accent: #b32d3a; --accent-hover: #d43d4c;
+        --wochenende-color: #241a1a;
+
+        /* Darkmode Abteilungsfarben */
+        --bg-kueche: #064e3b;
+        --border-kueche: #065f46;
+        --text-kueche: #6ee7b7;
+        --badge-kueche: #059669;
+        
+        --bg-service: #1e3a8a;
+        --border-service: #1e40af;
+        --text-service: #93c5fd;
+        --badge-service: #2563eb;
+
+        /* Darkmode Schulblockfarben */
+        --bg-schule: #374151;
+        --border-schule: #4b5563;
+        --text-schule: #f3f4f6;
+        --badge-schule: #6b7280;
       }
-      .sidebar, .history-panel, .booking-section, .overview-panel { background: #1a1212; border-color: #2d1f1f; }
+      .sidebar, .history-panel, .booking-section, .overview-panel, .urlaub-form-panel, .urlaub-list-panel, .urlaub-calendar-panel { background: #1a1212; border-color: #2d1f1f; }
       input, select { background: #241a1a; color: #fff; border-color: #3d2a2a; }
       .btn-edit { background: #241a1a; border-color: #3d2a2a; color: #fff; }
       .saldo-box.is-positive { background: #064e3b; border-color: rgba(110,231,183,0.2); }
       .saldo-box.is-negative { background: #241618; border-color: rgba(179,45,58,0.2); }
-      .history-item { border-bottom-color: #2d1f1f; }
+      .history-item, .urlaubs-item { border-bottom-color: #2d1f1f; }
       .tag-u { background: #064e3b; color: #6ee7b7; }
       .tag-k { background: #7f1d1d; color: #fca5a5; }
       .btn-secondary { background: #241a1a; color: #ccc; border-color: #3d2a2a; }
@@ -232,6 +346,12 @@
       .overview-table th { background: #241a1a; color: #fff; }
       .tab-btn:hover { background: #241a1a; }
       .overview-table tr:hover { background: rgba(255,255,255,0.02); }
+      
+      .uc-day { background: #1f1616; border-color: #2d1f1f; }
+      .uc-day:hover { background: #2d1f1f; }
+      .calendar-nav-buttons button { background: #241a1a; color: var(--text-main); border-color: #3d2a2a; }
+      .calendar-nav-buttons button:hover { background: #3d2a2a; }
+      #urlaubInfoBox { background: #241a1a; color: var(--text-muted); }
     }
 
     #loadingOverlay {
@@ -241,20 +361,14 @@
       font-family: var(--title-font);
     }
     
-    .history-list::-webkit-scrollbar { width: 5px; }
-    .history-list::-webkit-scrollbar-track { background: transparent; }
-    .history-list::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 10px; }
+    .history-list::-webkit-scrollbar, .urlaubs-liste::-webkit-scrollbar { width: 5px; }
+    .history-list::-webkit-scrollbar-track, .urlaubs-liste::-webkit-scrollbar-track { background: transparent; }
+    .history-list::-webkit-scrollbar-thumb, .urlaubs-liste::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 10px; }
 
-    /* --- HIER SIND DIE ÄNDERUNGEN FÜR OPTION 1 --- */
-    
-    /* Verhindert standardmäßig, dass der Container auf dem Monitor gerendert wird */
     #printContainer { display: none; }
 
-    /* PRINT LAYOUT (PDF-Erzeugung per Druckmenü) */
     @media print {
-      /* Erzwingt die Anzeige exakt für den Moment des Druckvorgangs */
       #printContainer { display: block !important; }
-
       body * { visibility: hidden; }
       #printContainer, #printContainer * { visibility: visible; }
       #printContainer { 
@@ -280,20 +394,18 @@
     <div style="letter-spacing: 1px;">PORTERHOUSE CLOUD...</div>
   </div>
 
-  <!-- Unsichtbarer Print-Container für sauberen PDF-Druck -->
   <div id="printContainer"></div>
 
   <div class="container">
     <h1>Stundenaufzeichnung</h1>
     <div class="subtitle">Personalverwaltung Porterhouse</div>
 
-    <!-- Tab Navigation -->
     <div class="tabs">
       <button class="tab-btn active" id="tabEingabe" onclick="switchTab('eingabe')">✍️ Eingabe</button>
       <button class="tab-btn" id="tabUebersicht" onclick="switchTab('uebersicht')">📊 Übersicht</button>
+      <button class="tab-btn" id="tabUrlaub" onclick="switchTab('urlaub')">🌴 Urlaubsplaner</button>
     </div>
 
-    <!-- PAGE 1: EINGABE -->
     <div id="pageEingabe" class="page active">
       <div class="layout">
         <div class="sidebar">
@@ -376,7 +488,6 @@
       </div>
     </div>
 
-    <!-- PAGE 2: ÜBERSICHT -->
     <div id="pageUebersicht" class="page">
       <div class="overview-panel">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 15px;">
@@ -409,10 +520,71 @@
                 <th>Dez</th>
               </tr>
             </thead>
-            <tbody id="overviewTableBody">
-              <!-- Wird dynamisch per JS befüllt -->
-            </tbody>
+            <tbody id="overviewTableBody"></tbody>
           </table>
+        </div>
+      </div>
+    </div>
+
+    <div id="pageUrlaub" class="page">
+      <div class="layout-urlaub">
+        <div style="display: flex; flex-direction: column; gap: 24px;">
+          
+          <div class="urlaub-form-panel">
+            <h3>Eintrag erstellen</h3>
+            <form id="urlaubEintragForm" onsubmit="urlaubSpeichern(event)">
+              <label>Mitarbeiter</label>
+              <select id="urlaubMitarbeiterSelect" required></select>
+              
+              <label>Kategorie</label>
+              <select id="urlaubAbteilungSelect" required>
+                <option value="" disabled selected>Kategorie wählen...</option>
+                <option value="Küche">🧑‍🍳 Küche</option>
+                <option value="Service">🍷 Service</option>
+                <option value="Schule">📚 Schulblock (Azubi)</option>
+              </select>
+
+              <div class="row">
+                <div>
+                  <label>Von</label>
+                  <input type="date" id="urlaubVon" required>
+                </div>
+                <div>
+                  <label>Bis (einschl.)</label>
+                  <input type="date" id="urlaubBis" required>
+                </div>
+              </div>
+              <button type="submit">💾 Eintrag speichern</button>
+            </form>
+          </div>
+
+          <div class="urlaub-list-panel">
+            <h3 id="urlaubListeTitel">Eingetragene Urlaube</h3>
+            <ul id="urlaubPlanerListe" class="urlaubs-liste"></ul>
+          </div>
+        </div>
+
+        <div class="urlaub-calendar-panel">
+          <div class="calendar-header">
+            <h2 id="ucMonthYearDisplay">Monat Jahr</h2>
+            <div class="calendar-nav-buttons">
+              <button onclick="urlaubKalenderBlattern(-1)">&lt;</button>
+              <button onclick="urlaubKalenderBlattern(1)">&gt;</button>
+              <select id="ucJahrSelect" onchange="urlaubKalenderJahrWechseln()" style="margin:0; padding: 6px 10px; font-size:13px;"></select>
+            </div>
+          </div>
+
+          <div class="calendar-grid" id="urlaubCalendarGrid">
+            <div class="uc-weekday">Mo</div>
+            <div class="uc-weekday">Di</div>
+            <div class="uc-weekday">Mi</div>
+            <div class="uc-weekday">Do</div>
+            <div class="uc-weekday">Fr</div>
+            <div class="uc-weekday">Sa</div>
+            <div class="uc-weekday">So</div>
+          </div>
+
+          <div id="urlaubInfoBox">Klicke auf einen Tag für Details</div>
         </div>
       </div>
     </div>
@@ -436,7 +608,11 @@
     const db = firebase.firestore();
 
     let mitarbeiter = {}, sollStundenSpeicher = {}, verlaufDetails = {}, startSalden = {};
+    let teamUrlaube = []; 
     let istBearbeitungsModus = false, alterNameFuerBearbeitung = "";
+    
+    let ucMonth = new Date().getMonth();
+    let ucYear = new Date().getFullYear();
 
     async function datenLaden() {
       try {
@@ -447,6 +623,7 @@
           sollStundenSpeicher = d.sollStundenSpeicher || {};
           verlaufDetails = d.verlaufDetails || {};
           startSalden = d.startSalden || {};
+          teamUrlaube = d.teamUrlaube || [];
         }
         document.getElementById("loadingOverlay").style.display = "none";
         initApp();
@@ -456,7 +633,7 @@
     async function speichern() {
       try {
         await db.collection("porterhouse").doc("stundendaten").set({
-          mitarbeiter, sollStundenSpeicher, verlaufDetails, startSalden, lastChange: new Date().toISOString()
+          mitarbeiter, sollStundenSpeicher, verlaufDetails, startSalden, teamUrlaube, lastChange: new Date().toISOString()
         });
       } catch (err) { alert("Cloud-Fehler!"); }
     }
@@ -464,7 +641,10 @@
     function initApp() {
       const d = new Date(); d.setMonth(d.getMonth() - 1);
       document.getElementById("buchungsDatum").value = String(d.getMonth() + 1).padStart(2, '0') + "/" + String(d.getFullYear()).substring(2);
-      dropdownLaden(); jahrFilterAktualisieren();
+      dropdownLaden(); 
+      jahrFilterAktualisieren();
+      initUrlaubKalenderJahre();
+      renderUrlaubPlaner();
     }
 
     function zeitZuMinuten(zeit) {
@@ -513,6 +693,10 @@
         document.getElementById('tabUebersicht').classList.add('active');
         document.getElementById('pageUebersicht').classList.add('active');
         baueUebersichtstabelle();
+      } else if(tabName === 'urlaub') {
+        document.getElementById('tabUrlaub').classList.add('active');
+        document.getElementById('pageUrlaub').classList.add('active');
+        renderUrlaubPlaner();
       }
     }
 
@@ -568,9 +752,14 @@
 
     function dropdownLaden() {
       const s = document.getElementById("mitarbeiterSelect");
+      const sUrlaub = document.getElementById("urlaubMitarbeiterSelect");
       const cur = s.value;
-      s.innerHTML = '<option value="neu">+ Mitarbeiter anlegen</option>' + 
-        Object.keys(mitarbeiter).sort().map(n => `<option value="${n}">${n}</option>`).join("");
+      
+      const mOptions = Object.keys(mitarbeiter).sort().map(n => `<option value="${n}">${n}</option>`).join("");
+      
+      s.innerHTML = '<option value="neu">+ Mitarbeiter anlegen</option>' + mOptions;
+      sUrlaub.innerHTML = '<option value="" disabled selected>Mitarbeiter wählen...</option>' + mOptions;
+      
       if(cur && mitarbeiter[cur]) s.value = cur;
       mitarbeiterWechseln();
     }
@@ -668,6 +857,8 @@
           verlaufDetails[nName] = verlaufDetails[alterNameFuerBearbeitung] || {};
           delete mitarbeiter[alterNameFuerBearbeitung]; delete startSalden[alterNameFuerBearbeitung];
           delete sollStundenSpeicher[alterNameFuerBearbeitung]; delete verlaufDetails[alterNameFuerBearbeitung];
+          
+          teamUrlaube.forEach(u => { if(u.name === alterNameFuerBearbeitung) u.name = nName; });
         } else { startSalden[nName] = nStart; }
         
         let s = startSalden[nName] || 0;
@@ -721,17 +912,17 @@
       const n = document.getElementById("mitarbeiterSelect").value;
       if (confirm(`"${n}" unwiderruflich löschen?`)) {
         delete mitarbeiter[n]; delete sollStundenSpeicher[n]; delete verlaufDetails[n]; delete startSalden[n];
+        teamUrlaube = teamUrlaube.filter(u => u.name !== n);
         await speichern(); location.reload();
       }
     }
 
-    /* NEUE FUNKTION: PDF / DRUCK-EXPORT FÜR AUSZAHLUNGEN */
     function exportAuszahlungenPDF() {
       const d = new Date(); d.setMonth(d.getMonth() - 1);
       const standardWert = String(d.getMonth() + 1).padStart(2, '0') + "/" + String(d.getFullYear()).substring(2);
       
       const eingabe = prompt("Für welchen Monat sollen die Auszahlungen exportiert werden? (Format: MM/JJ)", standardWert);
-      if (!eingabe) return; // Abbrechen gedrückt
+      if (!eingabe) return;
       
       const dp = eingabe.split("/");
       if (dp.length !== 2) return alert("Ungültiges Format! Bitte verwende MM/JJ (z.B. 04/26).");
@@ -743,7 +934,6 @@
       let gesamtAuszahlungMinuten = 0;
       let zeilenHTML = "";
 
-      // Alle Mitarbeiter alphabetisch durchgehen
       Object.keys(mitarbeiter).sort().forEach(name => {
         const daten = verlaufDetails[name]?.[jK]?.[mK];
         let auszahlung = "00:00";
@@ -753,7 +943,7 @@
         }
 
         const min = zeitZuMinuten(auszahlung);
-        if (min !== 0) { // Nur Mitarbeiter mit tatsächlicher Auszahlung listen
+        if (min !== 0) {
           gesamtAuszahlungMinuten += min;
           zeilenHTML += `
             <tr>
@@ -768,7 +958,6 @@
         return;
       }
 
-      // Den unsichtbaren Print-Container befüllen
       const printContainer = document.getElementById("printContainer");
       printContainer.innerHTML = `
         <div class="print-header">
@@ -791,12 +980,11 @@
         </div>
       `;
 
-      // Druckdialog des Browsers öffnen (Hier kann "Als PDF speichern" gewählt werden)
       window.print();
     }
 
     function exportBackup() {
-      const b = new Blob([JSON.stringify({mitarbeiter,sollStundenSpeicher,verlaufDetails,startSalden})], {type:'application/json'});
+      const b = new Blob([JSON.stringify({mitarbeiter,sollStundenSpeicher,verlaufDetails,startSalden,teamUrlaube})], {type:'application/json'});
       const l = document.createElement("a"); l.href = URL.createObjectURL(b); l.download = "Backup_Porterhouse.json"; l.click();
     }
 
@@ -805,37 +993,236 @@
       r.onload = async (e) => {
         const d = JSON.parse(e.target.result);
         mitarbeiter=d.mitarbeiter; sollStundenSpeicher=d.sollStundenSpeicher; verlaufDetails=d.verlaufDetails; startSalden=d.startSalden;
+        teamUrlaube=d.teamUrlaube || [];
         await speichern(); location.reload();
       };
       r.readAsText(i.files[0]);
+    }
+
+    /* --- LOGIK DES URLAUBSPLANERS (TAB 3) --- */
+    function initUrlaubKalenderJahre() {
+      const s = document.getElementById("ucJahrSelect");
+      s.innerHTML = "";
+      const jNow = new Date().getFullYear();
+      for (let y = jNow - 1; y <= jNow + 3; y++) {
+        let opt = document.createElement('option');
+        opt.value = y; opt.textContent = y;
+        if (y === jNow) opt.selected = true;
+        s.appendChild(opt);
+      }
+    }
+
+    function renderUrlaubPlaner() {
+      renderUrlaubKalender();
+      updateUrlaubPlanerListe();
+    }
+
+    // Liefert alle Urlaube an einem Tag zurück
+    function werHatUrlaubDetails(dateString) {
+      return teamUrlaube.filter(u => dateString >= u.von && dateString <= u.bis);
+    }
+
+    function renderUrlaubKalender() {
+      const grid = document.getElementById('urlaubCalendarGrid');
+      const cells = grid.querySelectorAll('.uc-day, .uc-empty');
+      cells.forEach(c => c.remove());
+
+      document.getElementById('ucMonthYearDisplay').textContent = `${monatsNamen[ucMonth]} ${ucYear}`;
+      document.getElementById('ucJahrSelect').value = ucYear;
+
+      const firstDayIndex = new Date(ucYear, ucMonth, 1).getDay();
+      const startOffset = firstDayIndex === 0 ? 6 : firstDayIndex - 1;
+      const totalDays = new Date(ucYear, ucMonth + 1, 0).getDate();
+
+      for (let i = 0; i < startOffset; i++) {
+        let div = document.createElement('div');
+        div.className = 'uc-empty';
+        grid.appendChild(div);
+      }
+
+      for (let d = 1; d <= totalDays; d++) {
+        let div = document.createElement('div');
+        div.className = 'uc-day';
+        
+        let numSpan = document.createElement('span');
+        numSpan.className = 'uc-day-num';
+        numSpan.textContent = d;
+        div.appendChild(numSpan);
+
+        let checkDate = new Date(ucYear, ucMonth, d);
+        let dateString = `${ucYear}-${String(ucMonth+1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+        let wDay = checkDate.getDay();
+
+        let infoText = `${d}. ${monatsNamen[ucMonth]} ${ucYear}`;
+
+        if (wDay === 0 || wDay === 6) {
+          div.classList.add('uc-wochenende');
+          infoText += " (Wochenende)";
+        }
+
+        // Farbliche Filterung nach Abteilungen und Schulblöcken
+        let urlaubeAnDiesemTag = werHatUrlaubDetails(dateString);
+        if (urlaubeAnDiesemTag.length > 0) {
+          let abteilungen = urlaubeAnDiesemTag.map(u => u.abt || 'Küche'); // Fallback zu Küche, falls Altdaten existieren
+          let istKueche = abteilungen.includes('Küche');
+          let istService = abteilungen.includes('Service');
+          let istSchule = abteilungen.includes('Schule');
+
+          let anzeigenNamen = urlaubeAnDiesemTag.map(u => `${u.name} (${u.abt || 'Küche'})`).join(", ");
+          
+          if (istSchule) {
+            infoText = `📚 Schulblock: ${anzeigenNamen}`;
+          } else {
+            infoText = `🌴 Urlaub: ${anzeigenNamen}`;
+          }
+
+          if (istSchule) {
+            div.classList.add('uc-schule');
+          } else if (istKueche && istService) {
+            div.classList.add('uc-mixed');
+          } else if (istService) {
+            div.classList.add('uc-service');
+          } else {
+            div.classList.add('uc-kueche');
+          }
+          
+          let infoSpan = document.createElement('span');
+          infoSpan.className = 'uc-day-info';
+          infoSpan.textContent = urlaubeAnDiesemTag.map(u => u.name).join(", ");
+          div.appendChild(infoSpan);
+        }
+
+        div.addEventListener('click', () => {
+          document.getElementById('urlaubInfoBox').textContent = infoText;
+        });
+
+        grid.appendChild(div);
+      }
+    }
+
+    function updateUrlaubPlanerListe() {
+      const container = document.getElementById('urlaubPlanerListe');
+      const titel = document.getElementById('urlaubListeTitel');
+      container.innerHTML = '';
+      
+      titel.textContent = `Eingetragene Termine (${ucYear})`;
+
+      let gefilterteDaten = teamUrlaube.filter(u => {
+        const sJ = u.von.split('-')[0];
+        const eJ = u.bis.split('-')[0];
+        return sJ == ucYear || eJ == ucYear;
+      });
+
+      gefilterteDaten.sort((a,b) => a.von.localeCompare(b.von));
+
+      if (gefilterteDaten.length === 0) {
+        container.innerHTML = `<p style="color:var(--text-muted); text-align:center; margin:15px 0; font-size:13px;">Keine Einträge für ${ucYear}</p>`;
+        return;
+      }
+
+      gefilterteDaten.forEach((u) => {
+        const item = document.createElement('li');
+        item.className = 'urlaubs-item';
+        
+        const fDate = (iso) => iso.split('-').reverse().slice(0,2).join('.');
+        
+        let abtKlasse = 'kueche';
+        if (u.abt === 'Service') abtKlasse = 'service';
+        if (u.abt === 'Schule') abtKlasse = 'schule';
+        
+        item.innerHTML = `
+          <span><strong>${u.name}</strong> <span class="list-badge ${abtKlasse}">${u.abt || 'Küche'}</span> <br><small style="color:var(--text-muted);">${fDate(u.von)} - ${fDate(u.bis)}</small></span>
+          <button class="delete-entry-small" onclick="urlaubEntfernen('${u.von}', '${u.name}')" style="margin-left:auto;">✕</button>
+        `;
+        container.appendChild(item);
+      });
+    }
+
+    async function urlaubSpeichern(e) {
+      e.preventDefault();
+      const name = document.getElementById('urlaubMitarbeiterSelect').value;
+      const abt = document.getElementById('urlaubAbteilungSelect').value;
+      const von = document.getElementById('urlaubVon').value;
+      const bis = document.getElementById('urlaubBis').value;
+
+      if(!name) return alert("Bitte wähle einen Mitarbeiter aus!");
+      if(!abt) return alert("Bitte wähle eine Kategorie aus!");
+      if(von > bis) return alert("Das Enddatum darf nicht vor dem Startdatum liegen!");
+
+      teamUrlaube.push({ name, abt, von, bis });
+      await speichern();
+      
+      document.getElementById('urlaubVon').value = '';
+      document.getElementById('urlaubBis').value = '';
+      document.getElementById('urlaubMitarbeiterSelect').value = '';
+      document.getElementById('urlaubAbteilungSelect').value = '';
+      
+      renderUrlaubPlaner();
+    }
+
+    async function urlaubEntfernen(von, name) {
+      if (!confirm(`Eintrag für ${name} löschen?`)) return;
+      teamUrlaube = teamUrlaube.filter(u => !(u.von === von && u.name === name));
+      await speichern();
+      renderUrlaubPlaner();
+    }
+
+    function urlaubKalenderBlattern(richtung) {
+      ucMonth += richtung;
+      if (ucMonth < 0) { ucMonth = 11; ucYear--; }
+      if (ucMonth > 11) { ucMonth = 0; ucYear++; }
+      renderUrlaubPlaner();
+    }
+
+    function urlaubKalenderJahrWechseln() {
+      ucYear = parseInt(document.getElementById('ucJahrSelect').value);
+      renderUrlaubPlaner();
     }
 
     window.onload = datenLaden;
   </script>
 <style>
     @media screen and (max-width: 900px) {
-      /* Deaktiviert das Scrollen des umschließenden Containers */
       body div.container div#pageUebersicht div.overview-panel div.table-responsive {
         overflow-x: visible !important;
         border: none !important;
       }
 
-      /* Versteckt den Tabellenkopf */
       table.overview-table thead {
         display: none !important;
       }
 
-      /* Zwingt den Tabellen-Body und alle Zeilen in die Block-Ansicht (Karten) */
       table.overview-table, 
       table.overview-table tbody, 
-      table.overview-table tbody tr, 
-      table.overview-table tbody tr td {
+      table.overview-table tbody tr {
         display: block !important;
         width: 100% !important;
         box-sizing: border-box !important;
       }
 
-      /* Styling für die Mitarbeiter-Karte */
+      table.overview-table tbody tr td {
+        display: flex !important;
+        justify-content: space-between !important;
+        align-items: center !important;
+        padding: 10px 5px !important;
+        border-bottom: 1px dashed var(--border-color) !important;
+        white-space: normal !important;
+        background: transparent !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+      }
+
+      table.overview-table tbody tr td > div:first-child {
+        text-align: right !important;
+        width: 100% !important;
+      }
+      table.overview-table tbody tr td .diff-pos,
+      table.overview-table tbody tr td .diff-neg {
+        text-align: right !important;
+        display: block !important;
+        margin-left: 0 !important;
+      }
+
       table.overview-table tbody tr {
         background: var(--card-bg) !important;
         border: 1px solid var(--border-color) !important;
@@ -845,24 +1232,10 @@
         box-shadow: 0 4px 12px rgba(0,0,0,0.03) !important;
       }
 
-      /* Jede Tabellenzelle wird zur Zeile innerhalb der Karte */
-      table.overview-table tbody tr td {
-        display: flex !important;
-        justify-content: space-between !important;
-        align-items: center !important;
-        padding: 10px 5px !important;
-        border-bottom: 1px dashed var(--border-color) !important;
-        white-space: normal !important;
-        background: transparent !important;
-        text-align: right !important;
-      }
-
-      /* Entfernt die Linie beim letzten Monat (Dezember) */
       table.overview-table tbody tr td:last-child {
         border-bottom: none !important;
       }
 
-      /* Der Name des Mitarbeiters als große Überschrift */
       table.overview-table tbody tr td:first-child {
         font-size: 18px !important;
         font-family: var(--title-font) !important;
@@ -871,6 +1244,7 @@
         margin-bottom: 10px !important;
         color: var(--accent) !important;
         font-weight: bold !important;
+        display: flex !important;
       }
       table.overview-table tbody tr td:first-child::before {
         content: "Mitarbeiter:" !important;
@@ -880,12 +1254,10 @@
         font-family: var(--primary-font) !important;
       }
 
-      /* Die Labels auf der linken Seite */
       table.overview-table tbody tr td:nth-child(2)::before { content: "Gesamtsaldo:" !important; font-weight: 600; color: var(--text-muted) !important; }
       table.overview-table tbody tr td:nth-child(3)::before { content: "Urlaub (Tage):" !important; color: var(--text-muted) !important; }
       table.overview-table tbody tr td:nth-child(4)::before { content: "Krank (Tage):" !important; color: var(--text-muted) !important; }
 
-      /* Monate Januar bis Dezember */
       table.overview-table tbody tr td:nth-child(5)::before { content: "Januar:" !important; color: var(--text-muted) !important; }
       table.overview-table tbody tr td:nth-child(6)::before { content: "Februar:" !important; color: var(--text-muted) !important; }
       table.overview-table tbody tr td:nth-child(7)::before { content: "März:" !important; color: var(--text-muted) !important; }
