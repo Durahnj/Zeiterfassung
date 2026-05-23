@@ -528,7 +528,7 @@
 
     <div id="pageUrlaub" class="page">
       <div class="layout-urlaub">
-        <div style="display: flex; flex-direction: column; gap: 24px;">
+        <div class="urlaub-sidebar-container" style="display: flex; flex-direction: column; gap: 24px;">
           
           <div class="urlaub-form-panel">
             <h3>Eintrag erstellen</h3>
@@ -1182,7 +1182,57 @@
     window.onload = datenLaden;
   </script>
 <style>
+    /* Spezifische Optimierungen für Mobilgeräte */
     @media screen and (max-width: 900px) {
+      /* Allgemeine Anpassung der Abstände auf Smartphones */
+      body { padding: 8px; }
+      .container { padding: 15px; border-radius: 16px; }
+
+      /* --- URLAUBSPLANER MOBIL-RESPONSIVE --- */
+      .layout-urlaub {
+        grid-template-columns: 1fr !important; /* Erzwingt einspaltiges Layout */
+        gap: 16px !important;
+      }
+      
+      .urlaub-sidebar-container {
+        order: 2; /* Formular & Liste rutschen unter den Kalender */
+      }
+      
+      .urlaub-calendar-panel {
+        order: 1; /* Kalender steht ganz oben */
+        padding: 15px 10px !important;
+      }
+
+      /* Verhindert das Herausragen des Kalenders */
+      .calendar-grid {
+        gap: 4px !important;
+      }
+
+      .uc-weekday {
+        font-size: 11px !important;
+        padding: 4px 0 !important;
+      }
+
+      .uc-day {
+        min-height: 50px !important; /* Etwas kompakter auf Mobilgeräten */
+        padding: 6px 2px !important;
+        border-radius: 8px !important;
+      }
+
+      .uc-day-num {
+        font-size: 12px !important;
+      }
+
+      /* Die kleinen Namenstags-Badges im Kalendertag lesbar halten */
+      .uc-day-info {
+        font-size: 8px !important;
+        padding: 1px 2px !important;
+        margin-top: 2px !important;
+        width: 100% !important;
+        border-radius: 2px !important;
+      }
+
+      /* --- JAHRESÜBERSICHT TABELLE MOBIL-RESPONSIVE --- */
       body div.container div#pageUebersicht div.overview-panel div.table-responsive {
         overflow-x: visible !important;
         border: none !important;
