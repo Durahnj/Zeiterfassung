@@ -1129,8 +1129,18 @@
             let infoSpan = document.createElement('span');
             infoSpan.className = 'uc-day-info';
             
-            // Kürze den Namen auf die ersten 5 Buchstaben
-            infoSpan.textContent = u.name.substring(0, 5);
+            // 1. Maximale Länge bestimmen (Desktop: 8, Mobil: 5)
+            const maxBuchstaben = window.innerWidth > 900 ? 8 : 5;
+            
+            // 2. Ersten Teil des Namens herausschneiden
+            let gekuerzterName = u.name.substring(0, maxBuchstaben);
+            
+            // 3. Wenn im gekürzten Teil ein Leerzeichen ist, nur den Teil davor nehmen
+            if (gekuerzterName.includes(' ')) {
+              gekuerzterName = gekuerzterName.split(' ')[0];
+            }
+            
+            infoSpan.textContent = gekuerzterName;
             
             // Dem Badge die jeweilige Abteilungsfarbe zuweisen (wichtig für den Mixed-Modus)
             if (u.abt === 'Service') {
