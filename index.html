@@ -1128,7 +1128,9 @@
           urlaubeAnDiesemTag.forEach(u => {
             let infoSpan = document.createElement('span');
             infoSpan.className = 'uc-day-info';
-            infoSpan.textContent = u.name;
+            
+            // Kürze den Namen auf die ersten 5 Buchstaben
+            infoSpan.textContent = u.name.substring(0, 5);
             
             // Dem Badge die jeweilige Abteilungsfarbe zuweisen (wichtig für den Mixed-Modus)
             if (u.abt === 'Service') {
