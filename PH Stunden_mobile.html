@@ -5,8 +5,294 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
   <title>Stunden-Pro | Porterhouse Cloud</title>
 
-  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js">
+function renderOverviewCards() {
+  const cardsContainer = document.getElementById("overviewCards");
+  if (!cardsContainer) return;
+
+  const jahr = document.getElementById("uebersichtJahrFilter").value;
+  cardsContainer.innerHTML = "";
+
+  const alleFesten = Object.keys(mitarbeiter).map(n => ({ name:n, typ:'fest' }));
+  const alleAushilfen = Object.keys(aushilfen).map(n => ({ name:n, typ:'aushilfe' }));
+
+  const personen = [...alleFesten, ...alleAushilfen]
+    .sort((a,b) => a.name.localeCompare(b.name));
+
+  if(personen.length === 0){
+    cardsContainer.innerHTML = "<div>Keine Mitarbeiter vorhanden</div>";
+    return;
+  }
+
+  personen.forEach(person => {
+
+    const n = person.name;
+    const saldo = person.typ === 'fest'
+      ? (mitarbeiter[n] || 0)
+      : (aushilfen[n] || 0);
+
+    const saldoClass = saldo >= 0 ? 'saldo-pos' : 'saldo-neg';
+
+    let urlaub = 0;
+    let krank = 0;
+    let monateHTML = "";
+
+    for(let i=1;i<=12;i++){
+
+      const monatKey = String(i).padStart(2,'0');
+
+      if(person.typ === 'fest'){
+
+        const d = verlaufDetails[n]?.[jahr]?.[monatKey];
+
+        if(d){
+
+          urlaub += d.urlaub || 0;
+          krank += d.krank || 0;
+
+          const diff = zeitZuMinuten(d.ist) - zeitZuMinuten(d.soll);
+          const diffClass = diff >= 0 ? 'diff-pos' : 'diff-neg';
+          const diffSign = diff >= 0 ? '+' : '';
+
+          monateHTML += `
+            <div class="overview-month">
+              <strong>${monatsNamen[i-1].substring(0,3)}</strong>
+              <div style="text-align:right;">
+                <div>${d.ist}</div>
+                <div class="${diffClass}" style="font-size:11px;">
+                  (${diffSign}${minutenZuZeit(diff)})
+                </div>
+              </div>
+            </div>
+          `;
+        }
+
+      } else {
+
+        const d = aushilfenVerlaufDetails[n]?.[jahr]?.[monatKey];
+
+        if(d){
+
+          const diff = zeitZuMinuten(d.gearbeitet) - zeitZuMinuten(d.gezahlt);
+          const diffClass = diff >= 0 ? 'diff-pos' : 'diff-neg';
+          const diffSign = diff >= 0 ? '+' : '';
+
+          monateHTML += `
+            <div class="overview-month">
+              <strong>${monatsNamen[i-1].substring(0,3)}</strong>
+              <div style="text-align:right;">
+                <div>${d.gearbeitet}</div>
+                <div class="${diffClass}" style="font-size:11px;">
+                  (${diffSign}${minutenZuZeit(diff)})
+                </div>
+              </div>
+            </div>
+          `;
+        }
+      }
+    }
+
+    cardsContainer.innerHTML += `
+      <div class="overview-card">
+
+        <div class="overview-card-header">
+          <div class="overview-card-name">${n}</div>
+          <span class="status-badge ${person.typ}">
+            ${person.typ === 'fest' ? 'Fest' : 'Aushilfe'}
+          </span>
+        </div>
+
+        <div class="overview-card-grid">
+
+          <div class="overview-box">
+            <div class="overview-box-label">Saldo</div>
+            <div class="overview-box-value ${saldoClass}">
+              ${minutenZuZeit(saldo)}
+            </div>
+          </div>
+
+          <div class="overview-box">
+            <div class="overview-box-label">Jahr</div>
+            <div class="overview-box-value">${jahr}</div>
+          </div>
+
+          ${
+            person.typ === 'fest'
+            ? `
+              <div class="overview-box">
+                <div class="overview-box-label">Urlaub</div>
+                <div class="overview-box-value">${urlaub} Tage</div>
+              </div>
+
+              <div class="overview-box">
+                <div class="overview-box-label">Krank</div>
+                <div class="overview-box-value">${krank} Tage</div>
+              </div>
+            `
+            : ''
+          }
+
+        </div>
+
+        ${monateHTML || '<div style="color:var(--text-muted)">Keine Monatsdaten vorhanden</div>'}
+
+      </div>
+    `;
+  });
+}
+
+const originalBaue = baueUebersichtstabelle;
+
+baueUebersichtstabelle = function(){
+  originalBaue();
+  renderOverviewCards();
+};
+
+</script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js">
+function renderOverviewCards() {
+  const cardsContainer = document.getElementById("overviewCards");
+  if (!cardsContainer) return;
+
+  const jahr = document.getElementById("uebersichtJahrFilter").value;
+  cardsContainer.innerHTML = "";
+
+  const alleFesten = Object.keys(mitarbeiter).map(n => ({ name:n, typ:'fest' }));
+  const alleAushilfen = Object.keys(aushilfen).map(n => ({ name:n, typ:'aushilfe' }));
+
+  const personen = [...alleFesten, ...alleAushilfen]
+    .sort((a,b) => a.name.localeCompare(b.name));
+
+  if(personen.length === 0){
+    cardsContainer.innerHTML = "<div>Keine Mitarbeiter vorhanden</div>";
+    return;
+  }
+
+  personen.forEach(person => {
+
+    const n = person.name;
+    const saldo = person.typ === 'fest'
+      ? (mitarbeiter[n] || 0)
+      : (aushilfen[n] || 0);
+
+    const saldoClass = saldo >= 0 ? 'saldo-pos' : 'saldo-neg';
+
+    let urlaub = 0;
+    let krank = 0;
+    let monateHTML = "";
+
+    for(let i=1;i<=12;i++){
+
+      const monatKey = String(i).padStart(2,'0');
+
+      if(person.typ === 'fest'){
+
+        const d = verlaufDetails[n]?.[jahr]?.[monatKey];
+
+        if(d){
+
+          urlaub += d.urlaub || 0;
+          krank += d.krank || 0;
+
+          const diff = zeitZuMinuten(d.ist) - zeitZuMinuten(d.soll);
+          const diffClass = diff >= 0 ? 'diff-pos' : 'diff-neg';
+          const diffSign = diff >= 0 ? '+' : '';
+
+          monateHTML += `
+            <div class="overview-month">
+              <strong>${monatsNamen[i-1].substring(0,3)}</strong>
+              <div style="text-align:right;">
+                <div>${d.ist}</div>
+                <div class="${diffClass}" style="font-size:11px;">
+                  (${diffSign}${minutenZuZeit(diff)})
+                </div>
+              </div>
+            </div>
+          `;
+        }
+
+      } else {
+
+        const d = aushilfenVerlaufDetails[n]?.[jahr]?.[monatKey];
+
+        if(d){
+
+          const diff = zeitZuMinuten(d.gearbeitet) - zeitZuMinuten(d.gezahlt);
+          const diffClass = diff >= 0 ? 'diff-pos' : 'diff-neg';
+          const diffSign = diff >= 0 ? '+' : '';
+
+          monateHTML += `
+            <div class="overview-month">
+              <strong>${monatsNamen[i-1].substring(0,3)}</strong>
+              <div style="text-align:right;">
+                <div>${d.gearbeitet}</div>
+                <div class="${diffClass}" style="font-size:11px;">
+                  (${diffSign}${minutenZuZeit(diff)})
+                </div>
+              </div>
+            </div>
+          `;
+        }
+      }
+    }
+
+    cardsContainer.innerHTML += `
+      <div class="overview-card">
+
+        <div class="overview-card-header">
+          <div class="overview-card-name">${n}</div>
+          <span class="status-badge ${person.typ}">
+            ${person.typ === 'fest' ? 'Fest' : 'Aushilfe'}
+          </span>
+        </div>
+
+        <div class="overview-card-grid">
+
+          <div class="overview-box">
+            <div class="overview-box-label">Saldo</div>
+            <div class="overview-box-value ${saldoClass}">
+              ${minutenZuZeit(saldo)}
+            </div>
+          </div>
+
+          <div class="overview-box">
+            <div class="overview-box-label">Jahr</div>
+            <div class="overview-box-value">${jahr}</div>
+          </div>
+
+          ${
+            person.typ === 'fest'
+            ? `
+              <div class="overview-box">
+                <div class="overview-box-label">Urlaub</div>
+                <div class="overview-box-value">${urlaub} Tage</div>
+              </div>
+
+              <div class="overview-box">
+                <div class="overview-box-label">Krank</div>
+                <div class="overview-box-value">${krank} Tage</div>
+              </div>
+            `
+            : ''
+          }
+
+        </div>
+
+        ${monateHTML || '<div style="color:var(--text-muted)">Keine Monatsdaten vorhanden</div>'}
+
+      </div>
+    `;
+  });
+}
+
+const originalBaue = baueUebersichtstabelle;
+
+baueUebersichtstabelle = function(){
+  originalBaue();
+  renderOverviewCards();
+};
+
+</script>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -420,7 +706,103 @@
       .print-table tr:nth-child(even) { background: #fafafa !important; }
       .print-total { font-weight: bold; text-align: right; margin-top: 25px; font-size: 16px; border-top: 1px solid #000; padding-top: 10px; }
     }
-  </style>
+  
+/* ================= MOBILE ÜBERSICHT ================= */
+
+.overview-cards{
+  display:none;
+}
+
+@media (max-width:768px){
+
+  .table-responsive{
+    display:none;
+  }
+
+  .overview-cards{
+    display:flex;
+    flex-direction:column;
+    gap:16px;
+    margin-top:16px;
+  }
+
+  .overview-card{
+    border:1px solid var(--border-color);
+    border-radius:16px;
+    padding:16px;
+    background:var(--card-bg);
+  }
+
+  .overview-card-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:14px;
+    gap:10px;
+    flex-wrap:wrap;
+  }
+
+  .overview-card-name{
+    font-size:18px;
+    font-weight:700;
+  }
+
+  .overview-card-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
+    margin-bottom:14px;
+  }
+
+  .overview-box{
+    background:rgba(0,0,0,0.03);
+    border-radius:10px;
+    padding:10px;
+  }
+
+  .overview-box-label{
+    font-size:10px;
+    text-transform:uppercase;
+    color:var(--text-muted);
+    margin-bottom:4px;
+    font-weight:700;
+  }
+
+  .overview-box-value{
+    font-size:15px;
+    font-weight:700;
+  }
+
+  .overview-month{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    border:1px solid var(--border-color);
+    border-radius:10px;
+    padding:8px 10px;
+    margin-bottom:8px;
+    background:rgba(0,0,0,0.02);
+  }
+
+  .row{
+    flex-direction:column;
+  }
+
+  .tab-btn{
+    width:100%;
+  }
+
+  body{
+    padding:10px;
+    align-items:flex-start;
+  }
+
+  .container{
+    padding:18px;
+  }
+}
+
+</style>
 </head>
 <body>
 
@@ -597,6 +979,8 @@
             <select id="uebersichtJahrFilter" onchange="baueUebersichtstabelle()" style="margin:0;"></select>
           </div>
         </div>
+
+        <div id="overviewCards" class="overview-cards"></div>
 
         <div class="table-responsive">
           <table class="overview-table">
@@ -1670,6 +2054,149 @@
     }
 
     window.onload = datenLaden;
-  </script>
+  
+function renderOverviewCards() {
+  const cardsContainer = document.getElementById("overviewCards");
+  if (!cardsContainer) return;
+
+  const jahr = document.getElementById("uebersichtJahrFilter").value;
+  cardsContainer.innerHTML = "";
+
+  const alleFesten = Object.keys(mitarbeiter).map(n => ({ name:n, typ:'fest' }));
+  const alleAushilfen = Object.keys(aushilfen).map(n => ({ name:n, typ:'aushilfe' }));
+
+  const personen = [...alleFesten, ...alleAushilfen]
+    .sort((a,b) => a.name.localeCompare(b.name));
+
+  if(personen.length === 0){
+    cardsContainer.innerHTML = "<div>Keine Mitarbeiter vorhanden</div>";
+    return;
+  }
+
+  personen.forEach(person => {
+
+    const n = person.name;
+    const saldo = person.typ === 'fest'
+      ? (mitarbeiter[n] || 0)
+      : (aushilfen[n] || 0);
+
+    const saldoClass = saldo >= 0 ? 'saldo-pos' : 'saldo-neg';
+
+    let urlaub = 0;
+    let krank = 0;
+    let monateHTML = "";
+
+    for(let i=1;i<=12;i++){
+
+      const monatKey = String(i).padStart(2,'0');
+
+      if(person.typ === 'fest'){
+
+        const d = verlaufDetails[n]?.[jahr]?.[monatKey];
+
+        if(d){
+
+          urlaub += d.urlaub || 0;
+          krank += d.krank || 0;
+
+          const diff = zeitZuMinuten(d.ist) - zeitZuMinuten(d.soll);
+          const diffClass = diff >= 0 ? 'diff-pos' : 'diff-neg';
+          const diffSign = diff >= 0 ? '+' : '';
+
+          monateHTML += `
+            <div class="overview-month">
+              <strong>${monatsNamen[i-1].substring(0,3)}</strong>
+              <div style="text-align:right;">
+                <div>${d.ist}</div>
+                <div class="${diffClass}" style="font-size:11px;">
+                  (${diffSign}${minutenZuZeit(diff)})
+                </div>
+              </div>
+            </div>
+          `;
+        }
+
+      } else {
+
+        const d = aushilfenVerlaufDetails[n]?.[jahr]?.[monatKey];
+
+        if(d){
+
+          const diff = zeitZuMinuten(d.gearbeitet) - zeitZuMinuten(d.gezahlt);
+          const diffClass = diff >= 0 ? 'diff-pos' : 'diff-neg';
+          const diffSign = diff >= 0 ? '+' : '';
+
+          monateHTML += `
+            <div class="overview-month">
+              <strong>${monatsNamen[i-1].substring(0,3)}</strong>
+              <div style="text-align:right;">
+                <div>${d.gearbeitet}</div>
+                <div class="${diffClass}" style="font-size:11px;">
+                  (${diffSign}${minutenZuZeit(diff)})
+                </div>
+              </div>
+            </div>
+          `;
+        }
+      }
+    }
+
+    cardsContainer.innerHTML += `
+      <div class="overview-card">
+
+        <div class="overview-card-header">
+          <div class="overview-card-name">${n}</div>
+          <span class="status-badge ${person.typ}">
+            ${person.typ === 'fest' ? 'Fest' : 'Aushilfe'}
+          </span>
+        </div>
+
+        <div class="overview-card-grid">
+
+          <div class="overview-box">
+            <div class="overview-box-label">Saldo</div>
+            <div class="overview-box-value ${saldoClass}">
+              ${minutenZuZeit(saldo)}
+            </div>
+          </div>
+
+          <div class="overview-box">
+            <div class="overview-box-label">Jahr</div>
+            <div class="overview-box-value">${jahr}</div>
+          </div>
+
+          ${
+            person.typ === 'fest'
+            ? `
+              <div class="overview-box">
+                <div class="overview-box-label">Urlaub</div>
+                <div class="overview-box-value">${urlaub} Tage</div>
+              </div>
+
+              <div class="overview-box">
+                <div class="overview-box-label">Krank</div>
+                <div class="overview-box-value">${krank} Tage</div>
+              </div>
+            `
+            : ''
+          }
+
+        </div>
+
+        ${monateHTML || '<div style="color:var(--text-muted)">Keine Monatsdaten vorhanden</div>'}
+
+      </div>
+    `;
+  });
+}
+
+const originalBaue = baueUebersichtstabelle;
+
+baueUebersichtstabelle = function(){
+  originalBaue();
+  renderOverviewCards();
+};
+
+</script>
 </body>
 </html>
