@@ -241,6 +241,28 @@
     .overview-table th { background: #f5f5f5; font-family: var(--title-font); font-weight: 600; color: var(--text-main); }
     .overview-table tr:hover { background: rgba(0,0,0,0.01); }
 
+    /* Moderne Badges für die Übersicht */
+    .status-badge {
+      display: inline-block;
+      padding: 3px 8px;
+      font-size: 10px;
+      font-weight: 600;
+      border-radius: 30px;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      margin-left: 6px;
+    }
+    .status-badge.fest {
+      background-color: #fdf2f4;
+      color: var(--accent);
+      border: 1px solid rgba(128, 0, 32, 0.15);
+    }
+    .status-badge.aushilfe {
+      background-color: #eff6ff;
+      color: var(--info);
+      border: 1px solid rgba(37, 99, 235, 0.15);
+    }
+
     /* --- URLAUB PLANER INTERFACE ELEMENTS --- */
     .calendar-header {
       display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; gap: 10px;
@@ -255,7 +277,6 @@
     }
     .uc-weekday { font-weight: 600; padding: 8px 0; color: var(--text-muted); font-size: 12px; text-transform: uppercase; }
     
-    /* Vertikaler Layout-Fix für Kalenderzellen */
     .uc-day {
       padding: 12px 4px; border-radius: 12px; background: #fafafa; border: 1px solid var(--border-color);
       display: flex; flex-direction: column; justify-content: flex-start; align-items: center; 
@@ -264,7 +285,6 @@
     .uc-day:hover { background: #f0f0f0; }
     .uc-day-num { font-weight: 600; font-size: 14px; margin-bottom: 2px; }
     
-    /* Badges untereinander stapeln und Breite begrenzen */
     .uc-day-info { 
       font-size: 9px; width: 95%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; 
       border-radius: 4px; padding: 2px 4px; text-align: center; font-weight: 600; display: block;
@@ -273,7 +293,6 @@
     .uc-empty { background: transparent; border: none; cursor: default; }
     .uc-wochenende { background-color: var(--wochenende-color); }
     
-    /* Dynamisches Klassen-Styling für Küche vs Service vs Schule */
     .uc-day.uc-kueche {
       background-color: var(--bg-kueche) !important; border-color: var(--border-kueche); color: var(--text-kueche) !important;
     }
@@ -295,7 +314,6 @@
       background-color: var(--badge-schule); color: white;
     }
     
-    /* Wenn mehrere Abteilungen am selben Tag Urlaub/Schule haben */
     .uc-day.uc-mixed {
       background: linear-gradient(135deg, var(--bg-kueche) 50%, var(--bg-service) 50%) !important;
       border-color: var(--accent);
@@ -305,7 +323,6 @@
       background-color: var(--accent); color: white;
     }
 
-    /* Listen-Badges */
     .list-badge {
       font-size: 10px; padding: 2px 6px; border-radius: 6px; font-weight: bold; margin-left: 8px;
     }
@@ -362,6 +379,9 @@
       .tab-btn:hover { background: #241a1a; }
       .overview-table tr:hover { background: rgba(255,255,255,0.02); }
       
+      .status-badge.fest { background-color: #450a0a; color: #fca5a5; border-color: rgba(252, 165, 165, 0.2); }
+      .status-badge.aushilfe { background-color: #1e3a8a; color: #93c5fd; border-color: rgba(147, 197, 253, 0.2); }
+
       .uc-day { background: #1f1616; border-color: #2d1f1f; }
       .uc-day:hover { background: #2d1f1f; }
       .calendar-nav-buttons button { background: #241a1a; color: var(--text-main); border-color: #3d2a2a; }
@@ -416,7 +436,8 @@
     <div class="subtitle">Personalverwaltung Porterhouse</div>
 
     <div class="tabs">
-      <button class="tab-btn active" id="tabEingabe" onclick="switchTab('eingabe')">✍️ Eingabe</button>
+      <button class="tab-btn active" id="tabEingabe" onclick="switchTab('eingabe')">✍️ Angestellte</button>
+      <button class="tab-btn" id="tabAushilfen" onclick="switchTab('aushilfen')">🤝 Aushilfen</button>
       <button class="tab-btn" id="tabUebersicht" onclick="switchTab('uebersicht')">📊 Übersicht</button>
       <button class="tab-btn" id="tabUrlaub" onclick="switchTab('urlaub')">🌴 Urlaubsplaner</button>
       <button class="tab-btn" id="tabRechner" onclick="switchTab('rechner')">🧮 Rechner</button>
@@ -425,7 +446,7 @@
     <div id="pageEingabe" class="page active">
       <div class="layout">
         <div class="sidebar">
-          <h3>Mitarbeiter</h3>
+          <h3>Mitarbeiter (Fest)</h3>
           <div class="select-row">
             <select id="mitarbeiterSelect" onchange="mitarbeiterWechseln()"></select>
             <button id="editMitarbeiterBtn" class="btn-edit" onclick="mitarbeiterBearbeitenModus()" title="Bearbeiten">✏️</button>
@@ -500,6 +521,69 @@
             </div>
           </div>
           <ul id="historyList" class="history-list"></ul>
+        </div>
+      </div>
+    </div>
+
+    <div id="pageAushilfen" class="page">
+      <div class="layout">
+        <div class="sidebar">
+          <h3>Aushilfen</h3>
+          <div class="select-row">
+            <select id="aushilfeSelect" onchange="aushilfeWechseln()"></select>
+            <button id="editAushilfeBtn" class="btn-edit" onclick="aushilfeBearbeitenModus()" title="Bearbeiten">✏️</button>
+          </div>
+          
+          <div id="neueAushilfeBereich" style="display:none; background: rgba(0,0,0,0.02); padding: 15px; border-radius: 12px; border: 1px dashed var(--border-color); margin-bottom: 20px;">
+            <label id="aushilfeBereichTitel" style="color:var(--accent)">Neue Aushilfe</label>
+            <input type="text" id="neueAushilfe" placeholder="Name">
+            <label>Start-Saldo (HH:MM)</label>
+            <input type="text" id="aushilfeStartSaldo" placeholder="00:00">
+            <button id="btnAushilfeAbbrechen" class="btn-secondary" style="margin-top:5px; border-color:#dc2626; color:#dc2626; display:none;" onclick="aushilfeBearbeitenAbbrechen()">Abbrechen</button>
+          </div>
+
+          <div class="saldo-box is-negative" id="aushilfeSaldoBox">
+            <div style="font-size:10px; color:var(--text-muted); text-transform: uppercase; font-weight: 700;">Aktueller Saldo</div>
+            <div class="saldo-value saldo-neg" id="aushilfeAktuellerSaldo">00:00</div>
+            <div class="start-saldo-info">Start: <span id="aushilfeStartSaldoDisplay">00:00</span></div>
+          </div>
+
+          <button class="btn-pdf" onclick="exportAushilfenGezahltPDF()">📄 Aushilfen PDF</button>
+          <button id="aushilfeDeleteBtn" class="btn-danger" onclick="aushilfeLoeschen()" style="display:none;">Aushilfe löschen</button>
+        </div>
+
+        <div class="booking-section">
+          <h3 id="aushilfeBuchungSektionTitel">Buchung erfassen (Aushilfe)</h3>
+          <div class="row">
+            <div>
+              <label>MM/JJ</label>
+              <input type="text" id="aushilfeBuchungsDatum" placeholder="04/26">
+            </div>
+            <div>
+              <label>Stunden gearbeitet</label>
+              <input type="text" id="aushilfeGearbeitet" placeholder="40:00">
+            </div>
+          </div>
+          
+          <div class="row">
+            <div>
+              <label>Stunden gezahlt</label>
+              <input type="text" id="aushilfeGezahlt" placeholder="40:00">
+            </div>
+          </div>
+          
+          <button id="btnAushilfeSpeichern" onclick="aushilfeBerechnen()">💾 Buchung speichern</button>
+        </div>
+
+        <div class="history-panel">
+          <h3>Verlauf</h3>
+          <div class="row">
+            <div style="flex:1">
+              <label>Jahr filtern</label>
+              <select id="aushilfeJahrFilter" onchange="updateAushilfeVerlaufAnzeige()"></select>
+            </div>
+          </div>
+          <ul id="aushilfeHistoryList" class="history-list"></ul>
         </div>
       </div>
     </div>
@@ -642,9 +726,15 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
+    // Globale Datenobjekte für Festangestellte
     let mitarbeiter = {}, sollStundenSpeicher = {}, verlaufDetails = {}, startSalden = {};
+    
+    // Globale Datenobjekte für Aushilfen
+    let aushilfen = {}, aushilfenSollStundenSpeicher = {}, aushilfenVerlaufDetails = {}, aushilfenStartSalden = {};
+    
     let teamUrlaube = []; 
     let istBearbeitungsModus = false, alterNameFuerBearbeitung = "";
+    let istAushilfeBearbeitungsModus = false, alterAushilfeNameFuerBearbeitung = "";
     
     let ucMonth = new Date().getMonth();
     let ucYear = new Date().getFullYear();
@@ -658,6 +748,12 @@
           sollStundenSpeicher = d.sollStundenSpeicher || {};
           verlaufDetails = d.verlaufDetails || {};
           startSalden = d.startSalden || {};
+          
+          aushilfen = d.aushilfen || {};
+          aushilfenSollStundenSpeicher = d.aushilfenSollStundenSpeicher || {};
+          aushilfenVerlaufDetails = d.aushilfenVerlaufDetails || {};
+          aushilfenStartSalden = d.aushilfenStartSalden || {};
+          
           teamUrlaube = d.teamUrlaube || [];
         }
         document.getElementById("loadingOverlay").style.display = "none";
@@ -668,14 +764,20 @@
     async function speichern() {
       try {
         await db.collection("porterhouse").doc("stundendaten").set({
-          mitarbeiter, sollStundenSpeicher, verlaufDetails, startSalden, teamUrlaube, lastChange: new Date().toISOString()
+          mitarbeiter, sollStundenSpeicher, verlaufDetails, startSalden,
+          aushilfen, aushilfenSollStundenSpeicher, aushilfenVerlaufDetails, aushilfenStartSalden,
+          teamUrlaube, lastChange: new Date().toISOString()
         });
       } catch (err) { alert("Cloud-Fehler!"); }
     }
 
     function initApp() {
       const d = new Date(); d.setMonth(d.getMonth() - 1);
-      document.getElementById("buchungsDatum").value = String(d.getMonth() + 1).padStart(2, '0') + "/" + String(d.getFullYear()).substring(2);
+      const standardDatum = String(d.getMonth() + 1).padStart(2, '0') + "/" + String(d.getFullYear()).substring(2);
+      
+      document.getElementById("buchungsDatum").value = standardDatum;
+      document.getElementById("aushilfeBuchungsDatum").value = standardDatum;
+      
       dropdownLaden(); 
       jahrFilterAktualisieren();
       initUrlaubKalenderJahre();
@@ -696,21 +798,35 @@
       return (neg ? "-" : "") + String(Math.floor(m / 60)).padStart(2, "0") + ":" + String(m % 60).padStart(2, "0");
     }
 
+    function berechneStundenProTag(sollZeitString) {
+      const gesamtMinuten = zeitZuMinuten(sollZeitString);
+      if (gesamtMinuten <= 0) return 0;
+      const stundenDezimal = gesamtMinuten / 60;
+      const stundenProTagUnrund = stundenDezimal / 4.33 / 5;
+      return Math.round(stundenProTagUnrund * 2) / 2;
+    }
+
     function jahrFilterAktualisieren() {
       const s = document.getElementById("jahrFilter");
+      const sAushilfe = document.getElementById("aushilfeJahrFilter");
       const sUebersicht = document.getElementById("uebersichtJahrFilter");
+      
       const prev = s.value;
+      const prevAushilfe = sAushilfe.value;
       const prevUebersicht = sUebersicht.value;
       
       const jahre = new Set([new Date().getFullYear()]);
       Object.values(verlaufDetails).forEach(m => Object.keys(m).forEach(j => jahre.add(parseInt(j))));
+      Object.values(aushilfenVerlaufDetails).forEach(m => Object.keys(m).forEach(j => jahre.add(parseInt(j))));
       
       const optionsHTML = Array.from(jahre).sort((a,b)=>b-a).map(j => `<option value="${j}">${j}</option>`).join("");
       
       s.innerHTML = optionsHTML;
+      sAushilfe.innerHTML = optionsHTML;
       sUebersicht.innerHTML = optionsHTML;
       
       if(prev) s.value = prev;
+      if(prevAushilfe) sAushilfe.value = prevAushilfe;
       if(prevUebersicht) sUebersicht.value = prevUebersicht;
       
       baueUebersichtstabelle();
@@ -724,6 +840,10 @@
         document.getElementById('tabEingabe').classList.add('active');
         document.getElementById('pageEingabe').classList.add('active');
         updateVerlaufAnzeige();
+      } else if(tabName === 'aushilfen') {
+        document.getElementById('tabAushilfen').classList.add('active');
+        document.getElementById('pageAushilfen').classList.add('active');
+        updateAushilfeVerlaufAnzeige();
       } else if(tabName === 'uebersicht') {
         document.getElementById('tabUebersicht').classList.add('active');
         document.getElementById('pageUebersicht').classList.add('active');
@@ -743,65 +863,111 @@
       const tbody = document.getElementById("overviewTableBody");
       tbody.innerHTML = "";
 
-      const mitarbeiterNamen = Object.keys(mitarbeiter).sort();
+      const alleFesten = Object.keys(mitarbeiter).map(n => ({ name: n, typ: 'fest' }));
+      const alleAushilfen = Object.keys(aushilfen).map(n => ({ name: n, typ: 'aushilfe' }));
+      const kombiniereNamen = [...alleFesten, ...alleAushilfen].sort((a, b) => a.name.localeCompare(b.name));
       
-      if(mitarbeiterNamen.length === 0) {
+      if(kombiniereNamen.length === 0) {
         tbody.innerHTML = `<tr><td colspan="16" style="text-align:center; color:var(--text-muted);">Keine Mitarbeiter angelegt</td></tr>`;
         return;
       }
 
-      mitarbeiterNamen.forEach(n => {
+      kombiniereNamen.forEach(m => {
         let uSum = 0, kSum = 0;
-        if(verlaufDetails[n]?.[j]) {
-          Object.values(verlaufDetails[n][j]).forEach(m => { 
-            uSum += m.urlaub || 0; 
-            kSum += m.krank || 0; 
-          });
-        }
-
-        const gesamtMinuten = mitarbeiter[n] || 0;
-        const saldoKlasse = gesamtMinuten >= 0 ? 'saldo-pos' : 'saldo-neg';
-
-        let rowHTML = `<tr>`;
-        rowHTML += `<td style="font-weight:600;">${n}</td>`;
-        rowHTML += `<td class="${saldoKlasse}">${minutenZuZeit(gesamtMinuten)}</td>`;
-        rowHTML += `<td>${uSum}</td>`;
-        rowHTML += `<td>${kSum}</td>`;
-
-        for(let i = 1; i <= 12; i++) {
-          const d = verlaufDetails[n]?.[j]?.[String(i).padStart(2,'0')];
-          if(d) {
-            const diff = zeitZuMinuten(d.ist) - zeitZuMinuten(d.soll);
-            const diffSign = diff >= 0 ? '+' : '';
-            const diffClass = diff >= 0 ? 'diff-pos' : 'diff-neg';
-            
-            rowHTML += `<td>
-              <div>${d.ist}</div>
-              <div class="${diffClass}" style="font-size:10px;">(${diffSign}${minutenZuZeit(diff)})</div>
-            </td>`;
-          } else {
-            rowHTML += `<td style="color:var(--text-muted);">-</td>`;
+        const n = m.name;
+        
+        if (m.typ === 'fest') {
+          if(verlaufDetails[n]?.[j]) {
+            Object.values(verlaufDetails[n][j]).forEach(mItem => { 
+              uSum += mItem.urlaub || 0; 
+              kSum += mItem.krank || 0; 
+            });
           }
+          const gesamtMinuten = mitarbeiter[n] || 0;
+          const saldoKlasse = gesamtMinuten >= 0 ? 'saldo-pos' : 'saldo-neg';
+
+          let rowHTML = `<tr>`;
+          rowHTML += `<td style="font-weight:600; display: flex; align-items: center; gap: 4px; border-bottom: none; height: 43px;">${n} <span class="status-badge fest">Fest</span></td>`;
+          rowHTML += `<td class="${saldoKlasse}">${minutenZuZeit(gesamtMinuten)}</td>`;
+          rowHTML += `<td>${uSum}</td>`;
+          rowHTML += `<td>${kSum}</td>`;
+
+          for(let i = 1; i <= 12; i++) {
+            const d = verlaufDetails[n]?.[j]?.[String(i).padStart(2,'0')];
+            if(d) {
+              const diff = zeitZuMinuten(d.ist) - zeitZuMinuten(d.soll);
+              const diffSign = diff >= 0 ? '+' : '';
+              const diffClass = diff >= 0 ? 'diff-pos' : 'diff-neg';
+              
+              rowHTML += `<td>
+                <div>${d.ist}</div>
+                <div class="${diffClass}" style="font-size:10px;">(${diffSign}${minutenZuZeit(diff)})</div>
+              </td>`;
+            } else {
+              rowHTML += `<td style="color:var(--text-muted);">-</td>`;
+            }
+          }
+          rowHTML += `</tr>`;
+          tbody.innerHTML += rowHTML;
+        } else {
+          const gesamtMinuten = aushilfen[n] || 0;
+          const saldoKlasse = gesamtMinuten >= 0 ? 'saldo-pos' : 'saldo-neg';
+
+          let rowHTML = `<tr>`;
+          rowHTML += `<td style="font-weight:600; display: flex; align-items: center; gap: 4px; border-bottom: none; height: 43px;">${n} <span class="status-badge aushilfe">Aushilfe</span></td>`;
+          rowHTML += `<td class="${saldoKlasse}">${minutenZuZeit(gesamtMinuten)}</td>`;
+          rowHTML += `<td style="color:var(--text-muted);">-</td>`;
+          rowHTML += `<td style="color:var(--text-muted);">-</td>`;
+
+          for(let i = 1; i <= 12; i++) {
+            const d = aushilfenVerlaufDetails[n]?.[j]?.[String(i).padStart(2,'0')];
+            if(d) {
+              const diff = zeitZuMinuten(d.gearbeitet) - zeitZuMinuten(d.gezahlt);
+              const diffSign = diff >= 0 ? '+' : '';
+              const diffClass = diff >= 0 ? 'diff-pos' : 'diff-neg';
+              
+              rowHTML += `<td>
+                <div>${d.gearbeitet}</div>
+                <div class="${diffClass}" style="font-size:10px;">(${diffSign}${minutenZuZeit(diff)})</div>
+              </td>`;
+            } else {
+              rowHTML += `<td style="color:var(--text-muted);">-</td>`;
+            }
+          }
+          rowHTML += `</tr>`;
+          tbody.innerHTML += rowHTML;
         }
-        rowHTML += `</tr>`;
-        tbody.innerHTML += rowHTML;
       });
     }
 
     function dropdownLaden() {
       const s = document.getElementById("mitarbeiterSelect");
+      const sAushilfe = document.getElementById("aushilfeSelect");
       const sUrlaub = document.getElementById("urlaubMitarbeiterSelect");
-      const cur = s.value;
+      
+      const curFeste = s.value;
+      const curAushilfe = sAushilfe.value;
       
       const mOptions = Object.keys(mitarbeiter).sort().map(n => `<option value="${n}">${n}</option>`).join("");
+      const aOptions = Object.keys(aushilfen).sort().map(n => `<option value="${n}">${n}</option>`).join("");
       
       s.innerHTML = '<option value="neu">+ Mitarbeiter anlegen</option>' + mOptions;
-      sUrlaub.innerHTML = '<option value="" disabled selected>Mitarbeiter wählen...</option>' + mOptions;
+      sAushilfe.innerHTML = '<option value="neu">+ Aushilfe anlegen</option>' + aOptions;
       
-      if(cur && mitarbeiter[cur]) s.value = cur;
+      sUrlaub.innerHTML = '<option value="" disabled selected>Mitarbeiter wählen...</option>' + 
+                          Object.keys(mitarbeiter).sort().map(n => `<option value="${n}">${n} (Fest)</option>`).join("") +
+                          Object.keys(aushilfen).sort().map(n => `<option value="${n}">${n} (Aushilfe)</option>`).join("");
+      
+      if(curFeste && mitarbeiter[curFeste]) s.value = curFeste;
+      if(curAushilfe && aushilfen[curAushilfe]) sAushilfe.value = curAushilfe;
+      
       mitarbeiterWechseln();
+      aushilfeWechseln();
     }
 
+    // ==========================================
+    // LOGIK FÜR FESTANGESTELLTE
+    // ==========================================
     function mitarbeiterWechseln() {
       const name = document.getElementById("mitarbeiterSelect").value;
       const isNew = name === "neu";
@@ -872,7 +1038,7 @@
                 ${d.urlaub > 0 ? `<span class="tag tag-u">🏖️ ${d.urlaub}</span>` : ''}
                 ${d.krank > 0 ? `<span class="tag tag-k">🤒 ${d.krank}</span>` : ''}
               </div>
-              ${zeitZuMinuten(d.auszahlung) !== 0 ? `<span class="payout-val">Auszahlung: ${d.auszahlung}h</span>` : ''}
+              ${zeitZuMinuten(d.auszahlung) !== 0 ? `<span class="payout-val">Auszahlung: ${d.auszahlung}</span>` : ''}
             </div>
             <div style="display:flex; align-items:center;">
               <div class="time-val">${d.ist} <span class="${diff >= 0 ? 'diff-pos' : 'diff-neg'}">(${diff >= 0 ? '+' : ''}${minutenZuZeit(diff)})</span></div>
@@ -910,14 +1076,23 @@
       }
 
       let name = sel.value === "neu" ? document.getElementById("neuerMitarbeiter").value.trim() : sel.value;
-      if(!name) return alert("Name angeben!");
+      if(!name) return alert("Name angegeben!");
       const dVal = document.getElementById("buchungsDatum").value;
       const dp = dVal.split("/"); if (dp.length !== 2) return alert("MM/JJ!");
       const mK = dp[0], jK = "20" + dp[1];
       if (verlaufDetails[name]?.[jK]?.[mK]) return alert("Existiert bereits!");
       
-      const istV = document.getElementById("ist").value || "00:00", sollV = document.getElementById("soll").value || "00:00", ausV = document.getElementById("auszahlung").value || "00:00";
+      let istV = document.getElementById("ist").value || "00:00";
+      const sollV = document.getElementById("soll").value || "00:00", ausV = document.getElementById("auszahlung").value || "00:00";
       const urlT = parseFloat(document.getElementById("urlaub").value) || 0, krkT = parseFloat(document.getElementById("krank").value) || 0;
+
+      if (urlT > 0 || krkT > 0) {
+        const stundenProTag = berechneStundenProTag(sollV);
+        const zusaetzlicheStundenDezimal = (stundenProTag * urlT) + (stundenProTag * krkT);
+        const zusaetzlicheMinuten = Math.round(zusaetzlicheStundenDezimal * 60);
+        const eingetrageneIstMinuten = zeitZuMinuten(istV);
+        istV = minutenZuZeit(eingetrageneIstMinuten + zusaetzlicheMinuten);
+      }
 
       if (sel.value === "neu") {
         let sM = zeitZuMinuten(document.getElementById("startSaldo").value || "00:00");
@@ -955,6 +1130,162 @@
       }
     }
 
+
+    // ==========================================
+    // LOGIK FÜR AUSHILFEN 
+    // ==========================================
+    function aushilfeWechseln() {
+      const name = document.getElementById("aushilfeSelect").value;
+      const isNew = name === "neu";
+      if (!istAushilfeBearbeitungsModus) {
+        document.getElementById("neueAushilfeBereich").style.display = isNew ? "block" : "none";
+        document.getElementById("editAushilfeBtn").style.display = isNew ? "none" : "block";
+        document.getElementById("aushilfeDeleteBtn").style.display = isNew ? "none" : "block";
+      }
+
+      const minuten = isNew ? 0 : (aushilfen[name] || 0);
+      const saldoTextElement = document.getElementById("aushilfeAktuellerSaldo");
+      const saldoBoxElement = document.getElementById("aushilfeSaldoBox");
+
+      saldoTextElement.textContent = minutenZuZeit(minuten);
+      document.getElementById("aushilfeStartSaldoDisplay").textContent = isNew ? "00:00" : minutenZuZeit(aushilfenStartSalden[name] || 0);
+      
+      if (minuten >= 0) {
+        saldoTextElement.className = "saldo-value saldo-pos";
+        saldoBoxElement.className = "saldo-box is-positive";
+      } else {
+        saldoTextElement.className = "saldo-value saldo-neg";
+        saldoBoxElement.className = "saldo-box is-negative";
+      }
+
+      if(!isNew) document.getElementById("aushilfeGearbeitet").value = aushilfenSollStundenSpeicher[name] || "";
+      updateAushilfeVerlaufAnzeige();
+    }
+
+    function aushilfeBearbeitenModus() {
+      const n = document.getElementById("aushilfeSelect").value;
+      if (n === "neu") return;
+      istAushilfeBearbeitungsModus = true; alterAushilfeNameFuerBearbeitung = n;
+      document.getElementById("aushilfeBereichTitel").textContent = "Aushilfe bearbeiten";
+      document.getElementById("neueAushilfe").value = n;
+      document.getElementById("aushilfeStartSaldo").value = minutenZuZeit(aushilfenStartSalden[n] || 0);
+      document.getElementById("neueAushilfeBereich").style.display = "block";
+      document.getElementById("btnAushilfeAbbrechen").style.display = "block";
+      document.getElementById("btnAushilfeSpeichern").textContent = "📝 Stammdaten speichern";
+    }
+
+    function aushilfeBearbeitenAbbrechen() {
+      istAushilfeBearbeitungsModus = false;
+      document.getElementById("neueAushilfeBereich").style.display = "none";
+      document.getElementById("btnAushilfeAbbrechen").style.display = "none";
+      document.getElementById("btnAushilfeSpeichern").textContent = "💾 Buchung speichern";
+      aushilfeWechseln();
+    }
+
+    function updateAushilfeVerlaufAnzeige() {
+      const n = document.getElementById("aushilfeSelect").value;
+      const j = document.getElementById("aushilfeJahrFilter").value;
+      const l = document.getElementById("aushilfeHistoryList");
+      if(!l) return;
+      l.innerHTML = "";
+      if (n === "neu" || !aushilfenVerlaufDetails[n]?.[j]) return;
+      
+      monatsNamen.forEach((mName, idx) => {
+        const mKey = String(idx + 1).padStart(2, '0');
+        const d = aushilfenVerlaufDetails[n][j][mKey];
+        if (d) {
+          const diff = zeitZuMinuten(d.gearbeitet) - zeitZuMinuten(d.gezahlt);
+          const li = document.createElement("li");
+          li.className = "history-item";
+          
+          li.innerHTML = `
+            <div style="flex-grow:1;">
+              <span style="font-weight:600;">${mName}</span>
+              <div style="font-size:11px; color:var(--text-muted); margin-top:4px;">Gezahlt: ${d.gezahlt}</div>
+            </div>
+            <div style="display:flex; align-items:center;">
+              <div class="time-val">${d.gearbeitet} <span class="${diff >= 0 ? 'diff-pos' : 'diff-neg'}">(${diff >= 0 ? '+' : ''}${minutenZuZeit(diff)})</span></div>
+              <button class="delete-entry-small" onclick="aushilfeMonatLoeschen('${n}', '${j}', '${mKey}')">✕</button>
+            </div>`;
+          l.appendChild(li);
+        }
+      });
+    }
+
+    async function aushilfeBerechnen() {
+      const sel = document.getElementById("aushilfeSelect");
+      if (istAushilfeBearbeitungsModus) {
+        let nName = document.getElementById("neueAushilfe").value.trim();
+        let nStart = zeitZuMinuten(document.getElementById("aushilfeStartSaldo").value || "00:00");
+        if (nName !== alterAushilfeNameFuerBearbeitung) {
+          aushilfen[nName] = aushilfen[alterAushilfeNameFuerBearbeitung];
+          aushilfenStartSalden[nName] = nStart;
+          aushilfenSollStundenSpeicher[nName] = aushilfenSollStundenSpeicher[alterAushilfeNameFuerBearbeitung];
+          aushilfenVerlaufDetails[nName] = aushilfenVerlaufDetails[alterAushilfeNameFuerBearbeitung] || {};
+          delete aushilfen[alterAushilfeNameFuerBearbeitung]; delete aushilfenStartSalden[alterAushilfeNameFuerBearbeitung];
+          delete aushilfenSollStundenSpeicher[alterAushilfeNameFuerBearbeitung]; delete aushilfenVerlaufDetails[alterAushilfeNameFuerBearbeitung];
+          
+          teamUrlaube.forEach(u => { if(u.name === alterAushilfeNameFuerBearbeitung) u.name = nName; });
+        } else { aushilfenStartSalden[nName] = nStart; }
+        
+        let s = aushilfenStartSalden[nName] || 0;
+        Object.values(aushilfenVerlaufDetails[nName] || {}).forEach(y => Object.values(y).forEach(m => {
+          s += (zeitZuMinuten(m.gearbeitet) - zeitZuMinuten(m.gezahlt));
+        }));
+        aushilfen[nName] = s;
+        await speichern(); aushilfeBearbeitenAbbrechen(); dropdownLaden();
+        document.getElementById("aushilfeSelect").value = nName; aushilfeWechseln();
+        return;
+      }
+
+      let name = sel.value === "neu" ? document.getElementById("neueAushilfe").value.trim() : sel.value;
+      if(!name) return alert("Name angegeben!");
+      const dVal = document.getElementById("aushilfeBuchungsDatum").value;
+      const dp = dVal.split("/"); if (dp.length !== 2) return alert("MM/JJ!");
+      const mK = dp[0], jK = "20" + dp[1];
+      if (aushilfenVerlaufDetails[name]?.[jK]?.[mK]) return alert("Existiert bereits!");
+      
+      const gearbeitetV = document.getElementById("aushilfeGearbeitet").value || "00:00";
+      const gezahltV = document.getElementById("aushilfeGezahlt").value || "00:00";
+
+      if (sel.value === "neu") {
+        let sM = zeitZuMinuten(document.getElementById("aushilfeStartSaldo").value || "00:00");
+        aushilfen[name] = sM; aushilfenStartSalden[name] = sM;
+      }
+      
+      aushilfen[name] += (zeitZuMinuten(gearbeitetV) - zeitZuMinuten(gezahltV));
+      aushilfenSollStundenSpeicher[name] = gearbeitetV;
+      
+      if (!aushilfenVerlaufDetails[name]) aushilfenVerlaufDetails[name] = {};
+      if (!aushilfenVerlaufDetails[name][jK]) aushilfenVerlaufDetails[name][jK] = {};
+      aushilfenVerlaufDetails[name][jK][mK] = { gearbeitet: gearbeitetV, gezahlt: gezahltV };
+      
+      await speichern(); jahrFilterAktualisieren(); dropdownLaden();
+      document.getElementById("aushilfeSelect").value = name; aushilfeWechseln();
+      
+      document.getElementById("aushilfeGezahlt").value = "";
+    }
+
+    async function aushilfeMonatLoeschen(n, j, m) {
+      if (!confirm("Löschen?")) return;
+      const d = aushilfenVerlaufDetails[n][j][m];
+      aushilfen[n] -= (zeitZuMinuten(d.gearbeitet) - zeitZuMinuten(d.gezahlt));
+      delete aushilfenVerlaufDetails[n][j][m];
+      await speichern(); jahrFilterAktualisieren(); aushilfeWechseln();
+    }
+
+    async function aushilfeLoeschen() {
+      const n = document.getElementById("aushilfeSelect").value;
+      if (confirm(`"${n}" unwiderruflich löschen?`)) {
+        delete aushilfen[n]; delete aushilfenSollStundenSpeicher[n]; delete aushilfenVerlaufDetails[n]; delete aushilfenStartSalden[n];
+        teamUrlaube = teamUrlaube.filter(u => u.name !== n);
+        await speichern(); location.reload();
+      }
+    }
+
+    // ==========================================
+    // PDF & BACKUP SYSTEM
+    // ==========================================
     function exportAuszahlungenPDF() {
       const d = new Date(); d.setMonth(d.getMonth() - 1);
       const standardWert = String(d.getMonth() + 1).padStart(2, '0') + "/" + String(d.getFullYear()).substring(2);
@@ -999,7 +1330,7 @@
       const printContainer = document.getElementById("printContainer");
       printContainer.innerHTML = `
         <div class="print-header">
-          <h2>Porterhouse – Auszahlungsübersicht</h2>
+          <h2>Porterhouse – Überstunden</h2>
           <p>Abrechnungszeitraum: <strong>${monatNameLang} ${jK}</strong> (Datenstand: ${new Date().toLocaleDateString('de-DE')})</p>
         </div>
         <table class="print-table">
@@ -1021,8 +1352,85 @@
       window.print();
     }
 
+    // Neuer Export für gezahlte Stunden der Aushilfen mit ausgeschriebener Zeit
+  function exportAushilfenGezahltPDF() {
+  const d = new Date();
+  d.setMonth(d.getMonth() - 1);
+  const standardWert = String(d.getMonth() + 1).padStart(2, '0') + "/" + String(d.getFullYear()).substring(2);
+  const eingabe = prompt("Für welchen Monat sollen die Aushilfen exportiert werden? (Format: MM/JJ)", standardWert);
+  if (!eingabe) return;
+
+  const dp = eingabe.split("/");
+  if (dp.length !== 2) return alert("Ungültiges Format! Bitte verwende MM/JJ (z.B. 04/26).");
+
+  const mK = dp[0];
+  const jK = "20" + dp[1];
+  const monatNameLang = monatsNamen[parseInt(mK) - 1] || mK;
+
+  let gesamtGezahltMinuten = 0;
+  let zeilenHTML = "";
+
+  Object.keys(aushilfen).sort().forEach(name => {
+    const daten = aushilfenVerlaufDetails[name]?.[jK]?.[mK];
+    let gezahlt = "00:00";
+    if (daten && daten.gezahlt) {
+      gezahlt = daten.gezahlt;
+    }
+    const min = zeitZuMinuten(gezahlt);
+    if (min !== 0) {
+      gesamtGezahltMinuten += min;
+      // Rechnet die Zeit um in "X Stunden Y Minuten"
+      const hrs = Math.floor(min / 60);
+      const mins = min % 60;
+      const klartextZeit = `${hrs} Stunden ${mins} Minuten`;
+
+      zeilenHTML += `
+        <tr>
+          <td><strong>${name}</strong></td>
+          <td style="text-align: right; font-family: monospace; font-size: 15px;">${klartextZeit}</td>
+        </tr>`;
+    }
+  });
+
+  if (gesamtGezahltMinuten === 0) {
+    alert(`Keine gezahlten Aushilfen-Stunden im Monat ${eingabe} gefunden.`);
+    return;
+  }
+
+  // Korrektur hier: gesamtGezahltMinuten statt totalGezahltMinuten verwendet
+  const totalHrs = Math.floor(gesamtGezahltMinuten / 60);
+  const totalMins = gesamtGezahltMinuten % 60; 
+
+  const printContainer = document.getElementById("printContainer");
+  printContainer.innerHTML = `
+    <div class="print-header">
+      <h2>Porterhouse – Aushilfen Abrechnungsübersicht</h2>
+      <p>Abrechnungszeitraum: <strong>${monatNameLang} ${jK}</strong> (Datenstand: ${new Date().toLocaleDateString('de-DE')})</p>
+    </div>
+    <table class="print-table">
+      <thead>
+        <tr>
+          <th>Aushilfe Name</th>
+          <th style="text-align: right;">Gezahlte Stunden</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${zeilenHTML}
+      </tbody>
+    </table>
+    <div class="print-total">
+      Gesamtsumme aller Stunden: ${totalHrs} Stunden ${totalMins} Minuten
+    </div>
+  `;
+
+  window.print();
+}
+
     function exportBackup() {
-      const b = new Blob([JSON.stringify({mitarbeiter,sollStundenSpeicher,verlaufDetails,startSalden,teamUrlaube})], {type:'application/json'});
+      const b = new Blob([JSON.stringify({
+        mitarbeiter,sollStundenSpeicher,verlaufDetails,startSalden,
+        aushilfen,aushilfenSollStundenSpeicher,aushilfenVerlaufDetails,aushilfenStartSalden,
+        teamUrlaube})], {type:'application/json'});
       const l = document.createElement("a"); l.href = URL.createObjectURL(b); l.download = "Backup_Porterhouse.json"; l.click();
     }
 
@@ -1030,14 +1438,15 @@
       const r = new FileReader();
       r.onload = async (e) => {
         const d = JSON.parse(e.target.result);
-        mitarbeiter=d.mitarbeiter; sollStundenSpeicher=d.sollStundenSpeicher; verlaufDetails=d.verlaufDetails; startSalden=d.startSalden;
+        mitarbeiter=d.mitarbeiter || {}; sollStundenSpeicher=d.sollStundenSpeicher || {}; verlaufDetails=d.verlaufDetails || {}; startSalden=d.startSalden || {};
+        aushilfen=d.aushilfen || {}; aushilfenSollStundenSpeicher=d.aushilfenSollStundenSpeicher || {}; aushilfenVerlaufDetails=d.aushilfenVerlaufDetails || {}; aushilfenStartSalden=d.aushilfenStartSalden || {};
         teamUrlaube=d.teamUrlaube || [];
         await speichern(); location.reload();
       };
       r.readAsText(i.files[0]);
     }
 
-    /* --- LOGIK DES URLAUBSPLANERS (TAB 3) --- */
+    /* --- LOGIK DES URLAUBSPLANERS --- */
     function initUrlaubKalenderJahre() {
       const s = document.getElementById("ucJahrSelect");
       s.innerHTML = "";
@@ -1055,7 +1464,6 @@
       updateUrlaubPlanerListe();
     }
 
-    // Liefert alle Urlaube an einem Tag zurück
     function werHatUrlaubDetails(dateString) {
       return teamUrlaube.filter(u => dateString >= u.von && dateString <= u.bis);
     }
@@ -1098,10 +1506,9 @@
           infoText += " (Wochenende)";
         }
 
-        // Farbliche Filterung nach Abteilungen und Schulblöcken
         let urlaubeAnDiesemTag = werHatUrlaubDetails(dateString);
         if (urlaubeAnDiesemTag.length > 0) {
-          let abteilungen = urlaubeAnDiesemTag.map(u => u.abt || 'Küche'); // Fallback zu Küche, falls Altdaten existieren
+          let abteilungen = urlaubeAnDiesemTag.map(u => u.abt || 'Küche');
           let istKueche = abteilungen.includes('Küche');
           let istService = abteilungen.includes('Service');
           let istSchule = abteilungen.includes('Schule');
@@ -1124,25 +1531,16 @@
             div.classList.add('uc-kueche');
           }
           
-          // JEDEN MITARBEITER ALS EIGENES BADGE UNTEREINANDER GENERIEREN
           urlaubeAnDiesemTag.forEach(u => {
             let infoSpan = document.createElement('span');
             infoSpan.className = 'uc-day-info';
-            
-            // 1. Maximale Länge bestimmen (Desktop: 8, Mobil: 5)
             const maxBuchstaben = window.innerWidth > 900 ? 8 : 5;
-            
-            // 2. Ersten Teil des Namens herausschneiden
             let gekuerzterName = u.name.substring(0, maxBuchstaben);
-            
-            // 3. Wenn im gekürzten Teil ein Leerzeichen ist, nur den Teil davor nehmen
             if (gekuerzterName.includes(' ')) {
               gekuerzterName = gekuerzterName.split(' ')[0];
             }
-            
             infoSpan.textContent = gekuerzterName;
             
-            // Dem Badge die jeweilige Abteilungsfarbe zuweisen (wichtig für den Mixed-Modus)
             if (u.abt === 'Service') {
               infoSpan.style.backgroundColor = 'var(--badge-service)';
             } else if (u.abt === 'Schule') {
@@ -1243,7 +1641,7 @@
       renderUrlaubPlaner();
     }
 
-    /* --- LOGIK DES RECHNERS (TAB 4) --- */
+    /* --- LOGIK DES RECHNERS --- */
     function lohnBerechnen() {
       const stundenInput = document.getElementById("rechnerStunden").value.trim();
       const lohnInput = parseFloat(document.getElementById("rechnerLohn").value) || 0;
@@ -1257,168 +1655,21 @@
         return;
       }
       
-      // Umrechnung von SS:MM in Minuten
       let gesamtMinuten = zeitZuMinuten(stundenInput);
       
-      // Fallback: Falls der User eine einfache Zahl statt SS:MM eingibt (z.B. "160")
       if (gesamtMinuten === 0 && stundenInput !== "" && !stundenInput.includes(":")) {
         const einfacheStunden = parseFloat(stundenInput) || 0;
         gesamtMinuten = einfacheStunden * 60;
       }
       
-      // Berechnung der Dezimalstunden
       const dezimalStunden = gesamtMinuten / 60;
       const bruttoLohn = dezimalStunden * lohnInput;
       
-      // Anzeige formatieren
       dezimalInfoElement.textContent = dezimalStunden.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " Dezimalstunden";
       ergebnisElement.textContent = bruttoLohn.toLocaleString("de-DE", { style: "currency", currency: "EUR" });
     }
 
     window.onload = datenLaden;
   </script>
-<style>
-    /* Spezifische Optimierungen für Mobilgeräte */
-    @media screen and (max-width: 900px) {
-      /* Allgemeine Anpassung der Abstände auf Smartphones */
-      body { padding: 8px; }
-      .container { padding: 15px; border-radius: 16px; }
-
-      /* --- URLAUB PLANER MOBIL-RESPONSIVE --- */
-      .layout-urlaub {
-        grid-template-columns: 1fr !important; /* Erzwingt einspaltiges Layout */
-        gap: 16px !important;
-      }
-      
-      .urlaub-sidebar-container {
-        order: 2; /* Formular & Liste rutschen unter den Kalender */
-      }
-      
-      .urlaub-calendar-panel {
-        order: 1; /* Kalender steht ganz oben */
-        padding: 15px 10px !important;
-      }
-
-      /* Verhindert das Herausragen des Kalenders */
-      .calendar-grid {
-        gap: 4px !important;
-      }
-
-      .uc-weekday {
-        font-size: 11px !important;
-        padding: 4px 0 !important;
-      }
-
-      /* Anpassung für Mobilgeräte: Höhe auto erzwingen */
-      .uc-day {
-        min-height: 65px !important; 
-        height: auto !important;
-        padding: 6px 2px !important;
-        border-radius: 8px !important;
-      }
-
-      .uc-day-num {
-        font-size: 12px !important;
-      }
-
-      /* Die kleinen Namenstags-Badges im Kalendertag lesbar halten */
-      .uc-day-info {
-        font-size: 8px !important;
-        padding: 1px 2px !important;
-        margin-top: 2px !important;
-        width: 100% !important;
-        border-radius: 2px !important;
-      }
-
-      /* --- JAHRESÜBERSICHT TABELLE MOBIL-RESPONSIVE --- */
-      body div.container div#pageUebersicht div.overview-panel div.table-responsive {
-        overflow-x: visible !important;
-        border: none !important;
-      }
-
-      table.overview-table thead {
-        display: none !important;
-      }
-
-      table.overview-table, 
-      table.overview-table tbody, 
-      table.overview-table tbody tr {
-        display: block !important;
-        width: 100% !important;
-        box-sizing: border-box !important;
-      }
-
-      table.overview-table tbody tr td {
-        display: flex !important;
-        justify-content: space-between !important;
-        align-items: center !important;
-        padding: 10px 5px !important;
-        border-bottom: 1px dashed var(--border-color) !important;
-        white-space: normal !important;
-        background: transparent !important;
-        width: 100% !important;
-        box-sizing: border-box !important;
-      }
-
-      table.overview-table tbody tr td > div:first-child {
-        text-align: right !important;
-        width: 100% !important;
-      }
-      table.overview-table tbody tr td .diff-pos,
-      table.overview-table tbody tr td .diff-neg {
-        text-align: right !important;
-        display: block !important;
-        margin-left: 0 !important;
-      }
-
-      table.overview-table tbody tr {
-        background: var(--card-bg) !important;
-        border: 1px solid var(--border-color) !important;
-        border-radius: 16px !important;
-        padding: 15px !important;
-        margin-bottom: 25px !important;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.03) !important;
-      }
-
-      table.overview-table tbody tr td:last-child {
-        border-bottom: none !important;
-      }
-
-      table.overview-table tbody tr td:first-child {
-        font-size: 18px !important;
-        font-family: var(--title-font) !important;
-        border-bottom: 2px solid var(--accent) !important;
-        padding-bottom: 12px !important;
-        margin-bottom: 10px !important;
-        color: var(--accent) !important;
-        font-weight: bold !important;
-        display: flex !important;
-      }
-      table.overview-table tbody tr td:first-child::before {
-        content: "Mitarbeiter:" !important;
-        font-weight: normal !important;
-        color: var(--text-muted) !important;
-        font-size: 14px !important;
-        font-family: var(--primary-font) !important;
-      }
-
-      table.overview-table tbody tr td:nth-child(2)::before { content: "Gesamtsaldo:" !important; font-weight: 600; color: var(--text-muted) !important; }
-      table.overview-table tbody tr td:nth-child(3)::before { content: "Urlaub (Tage):" !important; color: var(--text-muted) !important; }
-      table.overview-table tbody tr td:nth-child(4)::before { content: "Krank (Tage):" !important; color: var(--text-muted) !important; }
-
-      table.overview-table tbody tr td:nth-child(5)::before { content: "Januar:" !important; color: var(--text-muted) !important; }
-      table.overview-table tbody tr td:nth-child(6)::before { content: "Februar:" !important; color: var(--text-muted) !important; }
-      table.overview-table tbody tr td:nth-child(7)::before { content: "März:" !important; color: var(--text-muted) !important; }
-      table.overview-table tbody tr td:nth-child(8)::before { content: "April:" !important; color: var(--text-muted) !important; }
-      table.overview-table tbody tr td:nth-child(9)::before { content: "Mai:" !important; color: var(--text-muted) !important; }
-      table.overview-table tbody tr td:nth-child(10)::before { content: "Juni:" !important; color: var(--text-muted) !important; }
-      table.overview-table tbody tr td:nth-child(11)::before { content: "Juli:" !important; color: var(--text-muted) !important; }
-      table.overview-table tbody tr td:nth-child(12)::before { content: "August:" !important; color: var(--text-muted) !important; }
-      table.overview-table tbody tr td:nth-child(13)::before { content: "September:" !important; color: var(--text-muted) !important; }
-      table.overview-table tbody tr td:nth-child(14)::before { content: "Oktober:" !important; color: var(--text-muted) !important; }
-      table.overview-table tbody tr td:nth-child(15)::before { content: "November:" !important; color: var(--text-muted) !important; }
-      table.overview-table tbody tr td:nth-child(16)::before { content: "Dezember:" !important; color: var(--text-muted) !important; }
-    }
-  </style>
 </body>
 </html>
