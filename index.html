@@ -1435,7 +1435,7 @@ baueUebersichtstabelle = function(){
       });
     }
 
-    async function berechnen() {
+    async function berechnen(allesAuszahlen = false) {
       const sel = document.getElementById("mitarbeiterSelect");
       if (istBearbeitungsModus) {
         let nName = document.getElementById("neuerMitarbeiter").value.trim();
@@ -1466,7 +1466,12 @@ baueUebersichtstabelle = function(){
       const dVal = document.getElementById("buchungsDatum").value;
       const dp = dVal.split("/"); if (dp.length !== 2) return alert("MM/JJ!");
       const mK = dp[0], jK = "20" + dp[1];
-      if (verlaufDetails[name]?.[jK]?.[mK]) return alert("Existiert bereits!");
+      if (
+      verlaufDetails[name]?.[jK]?.[mK]
+      && !allesAuszahlen
+      ) {
+      return alert("Existiert bereits!");
+      }
       
       let istV = document.getElementById("ist").value || "00:00";
       const sollV = document.getElementById("soll").value || "00:00", ausV = document.getElementById("auszahlung").value || "00:00";
@@ -1485,6 +1490,9 @@ baueUebersichtstabelle = function(){
         mitarbeiter[name] = sM; startSalden[name] = sM;
       }
       mitarbeiter[name] += (zeitZuMinuten(istV) - zeitZuMinuten(sollV)) - zeitZuMinuten(ausV);
+      if (allesAuszahlen) {
+      mitarbeiter[name] = 0;
+      }
       sollStundenSpeicher[name] = sollV;
       if (!verlaufDetails[name]) verlaufDetails[name] = {};
       if (!verlaufDetails[name][jK]) verlaufDetails[name][jK] = {};
@@ -1503,25 +1511,53 @@ baueUebersichtstabelle = function(){
  * Berechnet den aktuellen Saldo basierend auf den Eingaben,
  * überträgt diesen in das Auszahlungsfeld und speichert.
  */
-function berechnenUndAuszahlen() {
-    // 1. Berechnung durchführen, um sicherzustellen, dass die Logik greift
-    // Wir rufen intern die Logik auf, die auch 'berechnen()' nutzt
-    const soll = zeitZuMinuten(document.getElementById("soll").value);
-    const ist = zeitZuMinuten(document.getElementById("ist").value);
-    const aktuellerStartSaldo = zeitZuMinuten(document.getElementById("aktuellerSaldo").innerText);
-    
-    // Annahme: Die Logik für den Endsaldo ist (Start + Ist - Soll)
-    const saldoInMinuten = aktuellerStartSaldo + (ist - soll);
-    
-    // 2. Das Auszahlungsfeld mit dem berechneten Saldo füllen
-    // Wir formatieren die Minuten zurück in ein Zeitformat (HH:MM)
-    document.getElementById("auszahlung").value = minutenZuZeit(saldoInMinuten);
-    
-    // 3. Jetzt die bestehende Speicher-Funktion auslösen
-    berechnen();
-    
-    // Feedback für den Nutzer
-    alert("Saldo wurde berechnet, in die Auszahlung übertragen und gespeichert. ACHTUNG: Bei Urlaub/Krank in dem Monat noch fehlerhaft");
+async function berechnenUndAuszahlen() {
+
+    const sollV =
+        document.getElementById("soll").value || "00:00";
+
+    const istV =
+        document.getElementById("ist").value || "00:00";
+
+    const soll =
+        zeitZuMinuten(sollV);
+
+    const ist =
+        zeitZuMinuten(istV);
+
+    const aktuellerSaldo =
+        zeitZuMinuten(
+            document.getElementById("aktuellerSaldo").innerText
+        );
+
+    // Auszahlung OHNE Urlaub/Krank hier manuell einzurechnen
+    // berechnen() macht das bereits selbst
+const urlT =
+    parseFloat(document.getElementById("urlaub").value) || 0;
+
+const krkT =
+    parseFloat(document.getElementById("krank").value) || 0;
+
+const stundenProTag =
+    berechneStundenProTag(sollV);
+
+const urlaubKrankMinuten =
+    Math.round(
+        ((stundenProTag * urlT) +
+        (stundenProTag * krkT)) * 60
+    );
+
+const auszahlung =
+    aktuellerSaldo +
+    (ist - soll) +
+    urlaubKrankMinuten;
+
+    document.getElementById("auszahlung").value =
+        minutenZuZeit(auszahlung);
+
+    await berechnen(true);
+
+    alert("Überstunden vollständig ausgezahlt.");
 }
 
 
