@@ -891,6 +891,8 @@ baueUebersichtstabelle = function(){
           </div>
           
           <button id="btnSpeichern" onclick="berechnen()">💾 Buchung speichern</button>
+
+          <button id="btnAuszahlen" onclick="berechnenUndAuszahlen()" style="background-color: var(--success); margin-top: 10px;">💰 Überstunden auszahlen</button>
           <div id="ergebnis" style="text-align:center; margin-top:12px; font-weight:600; color:var(--accent); font-size:13px;"></div>
         </div>
 
@@ -1496,6 +1498,33 @@ baueUebersichtstabelle = function(){
       document.getElementById("urlaub").value = ""; 
       document.getElementById("krank").value = "";
     }
+
+/**
+ * Berechnet den aktuellen Saldo basierend auf den Eingaben,
+ * überträgt diesen in das Auszahlungsfeld und speichert.
+ */
+function berechnenUndAuszahlen() {
+    // 1. Berechnung durchführen, um sicherzustellen, dass die Logik greift
+    // Wir rufen intern die Logik auf, die auch 'berechnen()' nutzt
+    const soll = zeitZuMinuten(document.getElementById("soll").value);
+    const ist = zeitZuMinuten(document.getElementById("ist").value);
+    const aktuellerStartSaldo = zeitZuMinuten(document.getElementById("aktuellerSaldo").innerText);
+    
+    // Annahme: Die Logik für den Endsaldo ist (Start + Ist - Soll)
+    const saldoInMinuten = aktuellerStartSaldo + (ist - soll);
+    
+    // 2. Das Auszahlungsfeld mit dem berechneten Saldo füllen
+    // Wir formatieren die Minuten zurück in ein Zeitformat (HH:MM)
+    document.getElementById("auszahlung").value = minutenZuZeit(saldoInMinuten);
+    
+    // 3. Jetzt die bestehende Speicher-Funktion auslösen
+    berechnen();
+    
+    // Feedback für den Nutzer
+    alert("Saldo wurde berechnet, in die Auszahlung übertragen und gespeichert. ACHTUNG: Bei Urlaub/Krank in dem Monat noch fehlerhaft");
+}
+
+
 
     async function monatLoeschen(n, j, m) {
       if (!confirm("Löschen?")) return;
