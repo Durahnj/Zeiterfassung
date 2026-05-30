@@ -1499,6 +1499,11 @@ baueUebersichtstabelle = function(){
       verlaufDetails[name][jK][mK] = { ist: istV, soll: sollV, auszahlung: ausV, urlaub: urlT, krank: krkT };
       
       await speichern(); jahrFilterAktualisieren(); dropdownLaden();
+      document.getElementById("mitarbeiterSelect").value = "neu";
+      document.getElementById("neuerMitarbeiter").value = "";
+      document.getElementById("startSaldo").value = "";
+      mitarbeiterWechseln();
+
       document.getElementById("mitarbeiterSelect").value = name; mitarbeiterWechseln();
       
       document.getElementById("ist").value = ""; 
@@ -1710,6 +1715,11 @@ const auszahlung =
       aushilfenVerlaufDetails[name][jK][mK] = { gearbeitet: gearbeitetV, gezahlt: gezahltV };
       
       await speichern(); jahrFilterAktualisieren(); dropdownLaden();
+      document.getElementById("aushilfeSelect").value = "neu";
+      document.getElementById("neueAushilfe").value = "";
+      document.getElementById("aushilfeStartSaldo").value = "";
+      aushilfeWechseln();
+
       document.getElementById("aushilfeSelect").value = name; aushilfeWechseln();
       
       document.getElementById("aushilfeGezahlt").value = "";
