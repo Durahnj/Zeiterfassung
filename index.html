@@ -344,7 +344,7 @@ baueUebersichtstabelle = function(){
     }
 
     .container {
-      width: 100%; max-width: 1200px;
+      width: 100%; max-width: 1400px;
       background: var(--card-bg);
       border-radius: 24px; padding: 30px;
       box-shadow: var(--card-shadow);
@@ -879,16 +879,27 @@ baueUebersichtstabelle = function(){
             </div>
           </div>
 
-          <div class="row" style="background: rgba(0,0,0,0.01); padding: 12px; border-radius: 12px; border: 1px solid var(--border-color); margin-bottom: 18px;">
-            <div>
-              <label>Urlaub (Tage)</label>
-              <input type="number" id="urlaub" placeholder="0" min="0" step="0.5">
-            </div>
-            <div>
-              <label>Krank (Tage)</label>
-              <input type="number" id="krank" placeholder="0" min="0" step="0.5">
-            </div>
-          </div>
+<div class="row" style="background: rgba(0,0,0,0.01); padding: 12px; border-radius: 12px; border: 1px solid var(--border-color); margin-bottom: 18px;">
+  <div>
+    <label>Urlaub (Tage)</label>
+    <input type="number" id="urlaub" placeholder="0" min="0" step="0.5">
+  </div>
+
+  <div>
+    <label>Krank (Tage)</label>
+    <input type="number" id="krank" placeholder="0" min="0" step="0.5">
+  </div>
+
+  <div>
+    <label>Schule (Tage)</label>
+    <input type="number" id="schule" placeholder="0" min="0" step="0.5">
+  </div>
+
+  <div>
+    <label>Feiertage</label>
+    <input type="number" id="feiertage" placeholder="0" min="0" step="0.5">
+  </div>
+</div>
           
           <button id="btnSpeichern" onclick="berechnen()">💾 Buchung speichern</button>
 
@@ -989,9 +1000,10 @@ baueUebersichtstabelle = function(){
             <thead>
               <tr>
                 <th>Name</th>
-                <th>Gesamtsaldo</th>
-                <th>Urlaub (T)</th>
-                <th>Krank (T)</th>
+                <th>Gesamt</th>
+                <th>Jahressaldo</th>
+                <th>Urlaub</th>
+                <th>Krank</th>
                 <th>Jan</th>
                 <th>Feb</th>
                 <th>Mär</th>
@@ -1261,12 +1273,18 @@ baueUebersichtstabelle = function(){
       kombiniereNamen.forEach(m => {
         let uSum = 0, kSum = 0;
         const n = m.name;
+        let jahresSaldo = 0;
         
         if (m.typ === 'fest') {
           if(verlaufDetails[n]?.[j]) {
             Object.values(verlaufDetails[n][j]).forEach(mItem => { 
               uSum += mItem.urlaub || 0; 
               kSum += mItem.krank || 0; 
+
+              const ist = zeitZuMinuten(mItem.ist || "00:00");
+              const soll = zeitZuMinuten(mItem.soll || "00:00");
+
+              jahresSaldo += (ist - soll);
             });
           }
           const gesamtMinuten = mitarbeiter[n] || 0;
@@ -1275,6 +1293,14 @@ baueUebersichtstabelle = function(){
           let rowHTML = `<tr>`;
           rowHTML += `<td style="font-weight:600; display: flex; align-items: center; gap: 4px; border-bottom: none; height: 43px;">${n} <span class="status-badge fest">Fest</span></td>`;
           rowHTML += `<td class="${saldoKlasse}">${minutenZuZeit(gesamtMinuten)}</td>`;
+          const jahresSaldoKlasse =
+              jahresSaldo >= 0 ? 'saldo-pos' : 'saldo-neg';
+
+          rowHTML += `
+          <td class="${jahresSaldoKlasse}">
+              ${jahresSaldo > 0 ? '+' : ''}
+              ${minutenZuZeit(jahresSaldo)}
+          </td>`;
           rowHTML += `<td>${uSum}</td>`;
           rowHTML += `<td>${kSum}</td>`;
 
@@ -1298,10 +1324,31 @@ baueUebersichtstabelle = function(){
         } else {
           const gesamtMinuten = aushilfen[n] || 0;
           const saldoKlasse = gesamtMinuten >= 0 ? 'saldo-pos' : 'saldo-neg';
+          let jahresSaldo = 0;
+
+          for(let i = 1; i <= 12; i++) {
+            const d = aushilfenVerlaufDetails[n]?.[j]?.[String(i).padStart(2,'0')];
+
+            if(d) {
+              jahresSaldo +=
+                zeitZuMinuten(d.gearbeitet) -
+                zeitZuMinuten(d.gezahlt);
+            }
+          }
+
+          const jahresSaldoKlasse =
+            jahresSaldo >= 0 ? 'saldo-pos' : 'saldo-neg';
 
           let rowHTML = `<tr>`;
           rowHTML += `<td style="font-weight:600; display: flex; align-items: center; gap: 4px; border-bottom: none; height: 43px;">${n} <span class="status-badge aushilfe">Aushilfe</span></td>`;
           rowHTML += `<td class="${saldoKlasse}">${minutenZuZeit(gesamtMinuten)}</td>`;
+
+          rowHTML += `
+          <td class="${jahresSaldoKlasse}">
+             ${jahresSaldo > 0 ? '+' : ''}
+             ${minutenZuZeit(jahresSaldo)}
+          </td>`;
+
           rowHTML += `<td style="color:var(--text-muted);">-</td>`;
           rowHTML += `<td style="color:var(--text-muted);">-</td>`;
 
@@ -1423,6 +1470,7 @@ baueUebersichtstabelle = function(){
               <div class="tags-container">
                 ${d.urlaub > 0 ? `<span class="tag tag-u">🏖️ ${d.urlaub}</span>` : ''}
                 ${d.krank > 0 ? `<span class="tag tag-k">🤒 ${d.krank}</span>` : ''}
+                ${d.schule > 0 ? `<span class="tag tag-u">📚 ${d.schule}</span>` : ''}
               </div>
               ${zeitZuMinuten(d.auszahlung) !== 0 ? `<span class="payout-val">Auszahlung: ${d.auszahlung}</span>` : ''}
             </div>
@@ -1475,11 +1523,20 @@ baueUebersichtstabelle = function(){
       
       let istV = document.getElementById("ist").value || "00:00";
       const sollV = document.getElementById("soll").value || "00:00", ausV = document.getElementById("auszahlung").value || "00:00";
-      const urlT = parseFloat(document.getElementById("urlaub").value) || 0, krkT = parseFloat(document.getElementById("krank").value) || 0;
+      const urlT = parseFloat(document.getElementById("urlaub").value) || 0;
+      const krkT = parseFloat(document.getElementById("krank").value) || 0;
+      const schT = parseFloat(document.getElementById("schule").value) || 0;
+      const feiT = parseFloat(document.getElementById("feiertage").value) || 0;
 
-      if (urlT > 0 || krkT > 0) {
+      if (urlT > 0 || krkT > 0 || schT > 0 || feiT > 0) {
+
         const stundenProTag = berechneStundenProTag(sollV);
-        const zusaetzlicheStundenDezimal = (stundenProTag * urlT) + (stundenProTag * krkT);
+
+        const zusaetzlicheStundenDezimal =
+             (stundenProTag * urlT) +
+             (stundenProTag * krkT) +
+             (stundenProTag * schT) +
+             (stundenProTag * feiT);
         const zusaetzlicheMinuten = Math.round(zusaetzlicheStundenDezimal * 60);
         const eingetrageneIstMinuten = zeitZuMinuten(istV);
         istV = minutenZuZeit(eingetrageneIstMinuten + zusaetzlicheMinuten);
@@ -1496,7 +1553,7 @@ baueUebersichtstabelle = function(){
       sollStundenSpeicher[name] = sollV;
       if (!verlaufDetails[name]) verlaufDetails[name] = {};
       if (!verlaufDetails[name][jK]) verlaufDetails[name][jK] = {};
-      verlaufDetails[name][jK][mK] = { ist: istV, soll: sollV, auszahlung: ausV, urlaub: urlT, krank: krkT };
+      verlaufDetails[name][jK][mK] = { ist: istV, soll: sollV, auszahlung: ausV, urlaub: urlT, krank: krkT, schule: schT, feiertage: feiT };
       
       await speichern(); jahrFilterAktualisieren(); dropdownLaden();
       document.getElementById("mitarbeiterSelect").value = "neu";
@@ -1510,6 +1567,8 @@ baueUebersichtstabelle = function(){
       document.getElementById("auszahlung").value = "";
       document.getElementById("urlaub").value = ""; 
       document.getElementById("krank").value = "";
+      document.getElementById("schule").value = "";
+      document.getElementById("feiertage").value = "";
     }
 
 /**
@@ -1543,19 +1602,29 @@ const urlT =
 const krkT =
     parseFloat(document.getElementById("krank").value) || 0;
 
+const schT =
+    parseFloat(document.getElementById("schule").value) || 0;
+
+const feiT =
+    parseFloat(document.getElementById("feiertage").value) || 0;
+
 const stundenProTag =
     berechneStundenProTag(sollV);
 
-const urlaubKrankMinuten =
+const zusatzMinuten =
     Math.round(
-        ((stundenProTag * urlT) +
-        (stundenProTag * krkT)) * 60
+        (
+            (stundenProTag * urlT) +
+            (stundenProTag * krkT) +
+            (stundenProTag * schT) +
+            (stundenProTag * feiT)
+        ) * 60
     );
 
 const auszahlung =
     aktuellerSaldo +
     (ist - soll) +
-    urlaubKrankMinuten;
+    zusatzMinuten;
 
     document.getElementById("auszahlung").value =
         minutenZuZeit(auszahlung);
@@ -2159,6 +2228,7 @@ function renderOverviewCards() {
 
     let urlaub = 0;
     let krank = 0;
+    let jahresSaldo = 0;
     let monateHTML = "";
 
     for(let i=1;i<=12;i++){
@@ -2174,6 +2244,9 @@ function renderOverviewCards() {
           urlaub += d.urlaub || 0;
           krank += d.krank || 0;
 
+          jahresSaldo +=
+              zeitZuMinuten(d.ist) -
+              zeitZuMinuten(d.soll);
           const diff = zeitZuMinuten(d.ist) - zeitZuMinuten(d.soll);
           const diffClass = diff >= 0 ? 'diff-pos' : 'diff-neg';
           const diffSign = diff >= 0 ? '+' : '';
