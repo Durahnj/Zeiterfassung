@@ -1954,13 +1954,30 @@ const auszahlung =
   window.print();
 }
 
-    function exportBackup() {
-      const b = new Blob([JSON.stringify({
-        mitarbeiter,sollStundenSpeicher,verlaufDetails,startSalden,
-        aushilfen,aushilfenSollStundenSpeicher,aushilfenVerlaufDetails,aushilfenStartSalden,
-        teamUrlaube})], {type:'application/json'});
-      const l = document.createElement("a"); l.href = URL.createObjectURL(b); l.download = "Backup_Porterhouse.json"; l.click();
-    }
+function exportBackup() {
+  const heute = new Date();
+  const datum =
+    heute.getFullYear().toString() +
+    String(heute.getMonth() + 1).padStart(2, "0") +
+    String(heute.getDate()).padStart(2, "0");
+
+  const b = new Blob([JSON.stringify({
+    mitarbeiter,
+    sollStundenSpeicher,
+    verlaufDetails,
+    startSalden,
+    aushilfen,
+    aushilfenSollStundenSpeicher,
+    aushilfenVerlaufDetails,
+    aushilfenStartSalden,
+    teamUrlaube
+  })], { type: "application/json" });
+
+  const l = document.createElement("a");
+  l.href = URL.createObjectURL(b);
+  l.download = `${datum}_Stunden_Backup.json`;
+  l.click();
+}
 
     async function importBackup(i) {
       const r = new FileReader();
