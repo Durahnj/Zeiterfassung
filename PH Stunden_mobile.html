@@ -866,6 +866,17 @@ body{
  padding:12px 0 24px 0;
 }
 
+.info-card{
+    margin:15px 0 20px;
+    padding:14px 18px;
+    border-radius:12px;
+    background:#eef9f4;
+    border:1px solid #b9e6d2;
+    color:#1f2937;
+    font-size:14px;
+    line-height:1.5;
+}
+
 .tab-btn{
  background:rgba(255,255,255,.03) !important;
  border:1px solid rgba(155,40,28,.35) !important;
@@ -1177,6 +1188,10 @@ body:not(.dark-mode) .btn-secondary{
       <div class="layout">
         <div class="sidebar">
           <h3>Aushilfen</h3>
+<div class="info-card">
+    <strong>🆕 NEU</strong><br>
+    Hat eine Aushilfe noch Minus- oder Plusstunden aus dem letzten Monat? Unter „Rechner“ könnt ihr die zu zahlenden Stunden einfach ausrechnen
+</div>
           <div class="select-row">
             <select id="aushilfeSelect" onchange="aushilfeWechseln()"></select>
             <button id="editAushilfeBtn" class="btn-edit" onclick="aushilfeBearbeitenModus()" title="Bearbeiten">✏️</button>
@@ -1355,7 +1370,17 @@ body:not(.dark-mode) .btn-secondary{
             <div class="ergebnis-value ergebnis-pos" id="rechnerErgebnis">0,00 €</div>
             <div style="font-size:11px; color:var(--text-muted); margin-top: 5px;" id="rechnerDezimalInfo">0,00 Dezimalstunden</div>
           </div>
-        </div>
+        
+<hr style="margin:24px 0;">
+<h3>Schnellrechner (Stunden)</h3>
+<label>Stunden 1 (SS:MM)</label>
+<input type="text" id="stunden1" placeholder="160:30" oninput="stundenAddieren()">
+<label>Stunden 2 (SS:MM)</label>
+<input type="text" id="stunden2" placeholder="12:45" oninput="stundenAddieren()">
+<div class="ergebnis-box is-rechner">
+<div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;font-weight:700;margin-bottom:5px;">Neue Stunden</div>
+<div class="ergebnis-value ergebnis-pos" id="stundenSumme">0:00</div></div>
+</div>
       </div>
     </div>
 
@@ -1407,6 +1432,16 @@ function toggleTheme(){
  });
 })();
 
+
+function stundenAddieren() {
+    const t1 = zeitZuMinuten(document.getElementById("stunden1").value);
+    const t2 = zeitZuMinuten(document.getElementById("stunden2").value);
+
+    const gesamt = t1 + t2;
+
+    document.getElementById("stundenSumme").textContent = minutenZuZeit(gesamt);
+}
+
 async function datenLaden() {
       try {
         const doc = await db.collection("porterhouse").doc("stundendaten").get();
@@ -1452,14 +1487,18 @@ async function datenLaden() {
       renderUrlaubPlaner();
     }
 
-    function zeitZuMinuten(zeit) {
-      if (!zeit || zeit === "0") return 0;
-      let neg = zeit.toString().startsWith("-");
-      let clean = neg ? zeit.substring(1) : zeit;
-      let t = clean.split(":");
-      if (t.length !== 2) return 0;
-      return (neg ? -1 : 1) * (parseInt(t[0]) * 60 + parseInt(t[1]));
-    }
+function zeitZuMinuten(zeit) {
+    if (!zeit) return 0;
+
+    const match = zeit.trim().match(/(-?\d+):(\d{2})/);
+    if (!match) return 0;
+
+    const stunden = parseInt(match[1], 10);
+    const minuten = parseInt(match[2], 10);
+
+    // Bei negativen Stunden werden auch die Minuten negativ
+    return (stunden * 60) + (stunden < 0 ? -minuten : minuten);
+}
 
     function minutenZuZeit(min) {
       let neg = min < 0; let m = Math.abs(min);
