@@ -1091,6 +1091,7 @@ body:not(.dark-mode) .btn-secondary{
       <button class="tab-btn" id="tabAushilfen" onclick="switchTab('aushilfen')">🤝 Aushilfen</button>
       <button class="tab-btn" id="tabUebersicht" onclick="switchTab('uebersicht')">📊 Übersicht</button>
       <button class="tab-btn" id="tabUrlaub" onclick="switchTab('urlaub')">🌴 Urlaubsplaner</button>
+      <button class="tab-btn" id="tabUrlaubUebersicht" onclick="switchTab('urlaubUebersicht')">📅 Übersicht Urlaub</button>
       <button class="tab-btn" id="tabRechner" onclick="switchTab('rechner')">🧮 Rechner</button>
     </div>
 
@@ -1115,6 +1116,21 @@ body:not(.dark-mode) .btn-secondary{
             <div style="font-size:10px; color:var(--text-muted); text-transform: uppercase; font-weight: 700;">Aktueller Saldo</div>
             <div class="saldo-value saldo-neg" id="aktuellerSaldo">00:00</div>
             <div class="start-saldo-info">Start: <span id="startSaldoDisplay">00:00</span></div>
+          </div>
+
+          <div class="urlaub-anspruch-panel" style="margin-top:20px; padding:15px; border:1px solid var(--border-color); border-radius:12px; background:rgba(0,0,0,0.015);">
+            <h3 style="margin-top:0; margin-bottom:12px;">Urlaubsanspruch</h3>
+            <div class="row">
+              <div>
+                <label>Jahr</label>
+                <select id="urlaubAnspruchJahr" onchange="urlaubAnspruchLaden()"></select>
+              </div>
+              <div>
+                <label>Urlaubsanspruch</label>
+                <input type="number" id="urlaubAnspruch" min="0" step="1" placeholder="z. B. 30">
+              </div>
+            </div>
+            <button type="button" class="btn-secondary" onclick="urlaubAnspruchSpeichern()" style="margin-top:8px;">💾 Jahresanspruch speichern</button>
           </div>
 
           <button class="btn-pdf" onclick="exportAuszahlungenPDF()">📄 Auszahlungen PDF</button>
@@ -1193,10 +1209,6 @@ body:not(.dark-mode) .btn-secondary{
       <div class="layout">
         <div class="sidebar">
           <h3>Aushilfen</h3>
-<div class="info-card">
-    <strong>🆕 NEU</strong><br>
-    Hat eine Aushilfe noch Minus- oder Plusstunden aus dem letzten Monat? Unter „Rechner“ könnt ihr die zu zahlenden Stunden einfach ausrechnen
-</div>
           <div class="select-row">
             <select id="aushilfeSelect" onchange="aushilfeWechseln()"></select>
             <button id="editAushilfeBtn" class="btn-edit" onclick="aushilfeBearbeitenModus()" title="Bearbeiten">✏️</button>
@@ -1332,19 +1344,8 @@ body:not(.dark-mode) .btn-secondary{
           </div>
 
           <div class="urlaub-list-panel">
-            <h3 id="urlaubListeTitel">Eingetragene Urlaube</h3>
+            <h3 id="urlaubListeTitel">Eingetragene Termine</h3>
             <ul id="urlaubPlanerListe" class="urlaubs-liste"></ul>
-          </div>
-
-          <div class="urlaub-list-panel">
-            <h3>Geplante Urlaubstage</h3>
-            <div class="row" style="margin-bottom:10px;">
-              <div>
-                <label>Jahr</label>
-                <select id="geplanteUrlaubstageJahr" onchange="renderGeplanteUrlaubstage()" style="margin:0;"></select>
-              </div>
-            </div>
-            <ul id="geplanteUrlaubstageListe" class="urlaubs-liste"></ul>
           </div>
         </div>
 
@@ -1369,6 +1370,40 @@ body:not(.dark-mode) .btn-secondary{
           </div>
 
           <div id="urlaubInfoBox">Klicke auf einen Tag für Details</div>
+        </div>
+      </div>
+    </div>
+
+    <div id="pageUrlaubUebersicht" class="page">
+      <div class="layout" style="display:block;">
+        <div class="booking-section" style="width:100%;">
+          <div style="display:flex; justify-content:space-between; align-items:center; gap:15px; flex-wrap:wrap; margin-bottom:18px;">
+            <div>
+              <h3 style="margin:0;">Übersicht Urlaub</h3>
+              <div style="color:var(--text-muted); font-size:13px; margin-top:4px;">Urlaubskonto aller Festangestellten</div>
+            </div>
+            <div style="min-width:150px;">
+              <label>Jahr</label>
+              <select id="urlaubUebersichtJahr" onchange="renderUrlaubUebersicht()"></select>
+            </div>
+          </div>
+
+          <div style="overflow-x:auto;">
+            <table class="overview-table" style="width:100%; min-width:760px;">
+              <thead>
+                <tr>
+                  <th>Mitarbeiter</th>
+                  <th>Anspruch</th>
+                  <th>Übertrag</th>
+                  <th>Verfügbar</th>
+                  <th>Geplant</th>
+                  <th>Genommen</th>
+                  <th>Rest</th>
+                </tr>
+              </thead>
+              <tbody id="urlaubUebersichtBody"></tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>
@@ -1426,12 +1461,15 @@ body:not(.dark-mode) .btn-secondary{
     // Globale Datenobjekte für Aushilfen
     let aushilfen = {}, aushilfenSollStundenSpeicher = {}, aushilfenVerlaufDetails = {}, aushilfenStartSalden = {};
     
-    let teamUrlaube = []; 
+    let teamUrlaube = [];
+    // Urlaubskonten je Festangestelltem und Jahr: { Name: { "2026": { anspruch: 30 } } }
+    let urlaubsKonten = {};
     let istBearbeitungsModus = false, alterNameFuerBearbeitung = "";
     let istAushilfeBearbeitungsModus = false, alterAushilfeNameFuerBearbeitung = "";
     
     let ucMonth = new Date().getMonth();
     let ucYear = new Date().getFullYear();
+    let urlaubBearbeitungsIndex = -1;
 
     
 function toggleTheme(){
@@ -1476,6 +1514,7 @@ async function datenLaden() {
           aushilfenStartSalden = d.aushilfenStartSalden || {};
           
           teamUrlaube = d.teamUrlaube || [];
+          urlaubsKonten = d.urlaubsKonten || {};
         }
         document.getElementById("loadingOverlay").style.display = "none";
         initApp();
@@ -1487,7 +1526,7 @@ async function datenLaden() {
         await db.collection("porterhouse").doc("stundendaten").set({
           mitarbeiter, sollStundenSpeicher, verlaufDetails, startSalden,
           aushilfen, aushilfenSollStundenSpeicher, aushilfenVerlaufDetails, aushilfenStartSalden,
-          teamUrlaube, lastChange: new Date().toISOString()
+          teamUrlaube, urlaubsKonten, lastChange: new Date().toISOString()
         });
       } catch (err) { alert("Cloud-Fehler!"); }
     }
@@ -1499,10 +1538,13 @@ async function datenLaden() {
       document.getElementById("buchungsDatum").value = standardDatum;
       document.getElementById("aushilfeBuchungsDatum").value = standardDatum;
       
-      dropdownLaden(); 
+      dropdownLaden();
       jahrFilterAktualisieren();
       initUrlaubKalenderJahre();
+      initUrlaubAnspruchJahre();
+      initUrlaubUebersichtJahre();
       renderUrlaubPlaner();
+      renderUrlaubUebersicht();
     }
 
 function zeitZuMinuten(zeit) {
@@ -1577,6 +1619,11 @@ function zeitZuMinuten(zeit) {
         document.getElementById('tabUrlaub').classList.add('active');
         document.getElementById('pageUrlaub').classList.add('active');
         renderUrlaubPlaner();
+      } else if(tabName === 'urlaubUebersicht') {
+        document.getElementById('tabUrlaubUebersicht').classList.add('active');
+        document.getElementById('pageUrlaubUebersicht').classList.add('active');
+        initUrlaubUebersichtJahre();
+        renderUrlaubUebersicht();
       } else if(tabName === 'rechner') {
         document.getElementById('tabRechner').classList.add('active');
         document.getElementById('pageRechner').classList.add('active');
@@ -1751,6 +1798,8 @@ function zeitZuMinuten(zeit) {
       }
 
       if(!isNew) document.getElementById("soll").value = sollStundenSpeicher[name] || "";
+      initUrlaubAnspruchJahre();
+      urlaubAnspruchLaden();
       updateVerlaufAnzeige();
     }
 
@@ -1820,6 +1869,10 @@ function zeitZuMinuten(zeit) {
           verlaufDetails[nName] = verlaufDetails[alterNameFuerBearbeitung] || {};
           delete mitarbeiter[alterNameFuerBearbeitung]; delete startSalden[alterNameFuerBearbeitung];
           delete sollStundenSpeicher[alterNameFuerBearbeitung]; delete verlaufDetails[alterNameFuerBearbeitung];
+          if (urlaubsKonten[alterNameFuerBearbeitung]) {
+            urlaubsKonten[nName] = urlaubsKonten[alterNameFuerBearbeitung];
+            delete urlaubsKonten[alterNameFuerBearbeitung];
+          }
           
           teamUrlaube.forEach(u => { if(u.name === alterNameFuerBearbeitung) u.name = nName; });
         } else { startSalden[nName] = nStart; }
@@ -1973,6 +2026,7 @@ const auszahlung =
       const n = document.getElementById("mitarbeiterSelect").value;
       if (confirm(`"${n}" unwiderruflich löschen?`)) {
         delete mitarbeiter[n]; delete sollStundenSpeicher[n]; delete verlaufDetails[n]; delete startSalden[n];
+        delete urlaubsKonten[n];
         teamUrlaube = teamUrlaube.filter(u => u.name !== n);
         await speichern(); location.reload();
       }
@@ -2295,7 +2349,8 @@ function exportBackup() {
     aushilfenSollStundenSpeicher,
     aushilfenVerlaufDetails,
     aushilfenStartSalden,
-    teamUrlaube
+    teamUrlaube,
+    urlaubsKonten
   })], { type: "application/json" });
 
   const l = document.createElement("a");
@@ -2311,6 +2366,7 @@ function exportBackup() {
         mitarbeiter=d.mitarbeiter || {}; sollStundenSpeicher=d.sollStundenSpeicher || {}; verlaufDetails=d.verlaufDetails || {}; startSalden=d.startSalden || {};
         aushilfen=d.aushilfen || {}; aushilfenSollStundenSpeicher=d.aushilfenSollStundenSpeicher || {}; aushilfenVerlaufDetails=d.aushilfenVerlaufDetails || {}; aushilfenStartSalden=d.aushilfenStartSalden || {};
         teamUrlaube=d.teamUrlaube || [];
+        urlaubsKonten=d.urlaubsKonten || {};
         await speichern(); location.reload();
       };
       r.readAsText(i.files[0]);
@@ -2334,62 +2390,200 @@ function exportBackup() {
       return u.abt !== 'Schule';
     }
 
-    function renderGeplanteUrlaubstage() {
-      const container = document.getElementById('geplanteUrlaubstageListe');
-      const jahrSelect = document.getElementById('geplanteUrlaubstageJahr');
-      if (!container || !jahrSelect) return;
-
-      const jahr = parseInt(jahrSelect.value || ucYear);
-      const personen = Object.keys(mitarbeiter).sort((a,b) => a.localeCompare(b));
-      container.innerHTML = '';
-
-      if (personen.length === 0) {
-        container.innerHTML = '<li style="color:var(--text-muted); text-align:center;">Keine Mitarbeiter vorhanden</li>';
-        return;
-      }
-
-      personen.forEach(name => {
-        const tage = teamUrlaube
-          .filter(u => u.name === name && istUrlaubEintrag(u) && parseInt((u.von || '').split('-')[0]) === jahr)
-          .reduce((sum, u) => sum + (Number(u.urlaubstage) || 0), 0);
-
-        const li = document.createElement('li');
-        li.className = 'urlaubs-item';
-        li.innerHTML = `<span><strong>${name}</strong></span><strong style="color:var(--accent);">${tage} ${tage === 1 ? 'Tag' : 'Tage'}</strong>`;
-        container.appendChild(li);
-      });;
-    }
-
-    function initGeplanteUrlaubstageJahre() {
-      const s = document.getElementById('geplanteUrlaubstageJahr');
+    function initUrlaubAnspruchJahre() {
+      const s = document.getElementById('urlaubAnspruchJahr');
       if (!s) return;
       const bisher = s.value;
       const jahre = new Set();
       const jNow = new Date().getFullYear();
-      for (let y = jNow - 1; y <= jNow + 3; y++) jahre.add(y);
-      teamUrlaube.forEach(u => {
-        jahre.add(parseInt(u.von.split('-')[0]));
-        jahre.add(parseInt(u.bis.split('-')[0]));
+      for (let y = jNow - 2; y <= jNow + 3; y++) jahre.add(y);
+      Object.values(urlaubsKonten).forEach(konto => {
+        Object.keys(konto || {}).forEach(y => jahre.add(parseInt(y, 10)));
       });
       s.innerHTML = '';
       [...jahre].filter(Number.isFinite).sort((a,b) => a-b).forEach(y => {
         const opt = document.createElement('option');
         opt.value = y; opt.textContent = y;
-        if (String(y) === String(bisher || ucYear)) opt.selected = true;
+        if (String(y) === String(bisher || jNow)) opt.selected = true;
         s.appendChild(opt);
       });
-      if (!s.value) s.value = ucYear;
+      if (!s.value) s.value = jNow;
+    }
+
+    function berechneUrlaubsUebertrag(name, jahr) {
+      const vorjahr = String(parseInt(jahr, 10) - 1);
+      const vorjahresKonto = urlaubsKonten[name]?.[vorjahr];
+      if (!vorjahresKonto) return 0;
+
+      const anspruch = Number(vorjahresKonto.anspruch) || 0;
+      const vorjahresUebertrag = berechneUrlaubsUebertrag(name, vorjahr);
+      const genommen = berechneGenommeneUrlaubstage(name, parseInt(vorjahr, 10));
+      // Resturlaub darf negativ werden und wird ins Folgejahr übernommen.
+      // Beispiel: 2026 = 30 Anspruch, -1 Übertrag, 30 genommen => -1 Übertrag für 2027.
+      return anspruch + vorjahresUebertrag - genommen;
+    }
+
+    function urlaubAnspruchLaden() {
+      const name = document.getElementById('mitarbeiterSelect')?.value;
+      const jahr = document.getElementById('urlaubAnspruchJahr')?.value;
+      const anspruch = document.getElementById('urlaubAnspruch');
+      if (!anspruch) return;
+      if (!name || name === 'neu' || !jahr) {
+        anspruch.value = '';
+        return;
+      }
+      const d = urlaubsKonten[name]?.[jahr] || {};
+      anspruch.value = d.anspruch ?? '';
+    }
+
+    async function urlaubAnspruchSpeichern() {
+      const name = document.getElementById('mitarbeiterSelect')?.value;
+      const jahr = document.getElementById('urlaubAnspruchJahr')?.value;
+      const anspruch = parseInt(document.getElementById('urlaubAnspruch')?.value, 10);
+
+      if (!name || name === 'neu') return alert('Bitte zuerst einen bestehenden Festangestellten auswählen.');
+      if (!jahr) return alert('Bitte ein Jahr auswählen.');
+      if (!Number.isInteger(anspruch) || anspruch < 0) return alert('Bitte einen gültigen Urlaubsanspruch eingeben.');
+
+      if (!urlaubsKonten[name]) urlaubsKonten[name] = {};
+      urlaubsKonten[name][jahr] = { anspruch };
+      await speichern();
+      initUrlaubAnspruchJahre();
+      urlaubAnspruchLaden();
+      initUrlaubUebersichtJahre();
+      renderUrlaubUebersicht();
+      alert(`Urlaubsanspruch ${jahr} für ${name} gespeichert.`);
+    }
+
+    function initUrlaubUebersichtJahre() {
+      const s = document.getElementById('urlaubUebersichtJahr');
+      if (!s) return;
+      const bisher = s.value;
+      const jahre = new Set();
+      const jNow = new Date().getFullYear();
+      for (let y = jNow - 2; y <= jNow + 3; y++) jahre.add(y);
+      Object.values(urlaubsKonten).forEach(konto => {
+        Object.keys(konto || {}).forEach(y => jahre.add(parseInt(y, 10)));
+      });
+      verlaufDetails && Object.values(verlaufDetails).forEach(person => {
+        Object.keys(person || {}).forEach(y => jahre.add(parseInt(y, 10)));
+      });
+      teamUrlaube.forEach(u => {
+        if (u.von) jahre.add(parseInt(u.von.split('-')[0], 10));
+        if (u.bis) jahre.add(parseInt(u.bis.split('-')[0], 10));
+      });
+      s.innerHTML = '';
+      [...jahre].filter(Number.isFinite).sort((a,b) => a-b).forEach(y => {
+        const opt = document.createElement('option');
+        opt.value = y; opt.textContent = y;
+        if (String(y) === String(bisher || jNow)) opt.selected = true;
+        s.appendChild(opt);
+      });
+      if (!s.value) s.value = jNow;
+    }
+
+    function berechneGeplanteUrlaubstage(name, jahr) {
+      return teamUrlaube
+        .filter(u => u.name === name && istUrlaubEintrag(u) && u.von && parseInt(u.von.split('-')[0], 10) === jahr)
+        .reduce((sum, u) => sum + (Number(u.urlaubstage) || 0), 0);
+    }
+
+    function berechneGenommeneUrlaubstage(name, jahr) {
+      const monate = verlaufDetails[name]?.[jahr] || {};
+      return Object.values(monate).reduce((sum, d) => sum + (Number(d?.urlaub) || 0), 0);
+    }
+
+    function renderUrlaubUebersicht() {
+      const tbody = document.getElementById('urlaubUebersichtBody');
+      const jahrSelect = document.getElementById('urlaubUebersichtJahr');
+      if (!tbody || !jahrSelect) return;
+      const jahr = parseInt(jahrSelect.value || new Date().getFullYear(), 10);
+      const personen = Object.keys(mitarbeiter).sort((a,b) => a.localeCompare(b));
+      tbody.innerHTML = '';
+
+      if (personen.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; color:var(--text-muted);">Keine Festangestellten vorhanden</td></tr>';
+        return;
+      }
+
+      personen.forEach(name => {
+        const konto = urlaubsKonten[name]?.[String(jahr)] || {};
+        const anspruch = Number(konto.anspruch) || 0;
+        const uebertrag = berechneUrlaubsUebertrag(name, jahr);
+        const verfuegbar = anspruch + uebertrag;
+        const geplant = berechneGeplanteUrlaubstage(name, jahr);
+        const genommen = berechneGenommeneUrlaubstage(name, jahr);
+        const rest = verfuegbar - genommen;
+        const restClass = rest < 0 ? 'diff-neg' : 'diff-pos';
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><strong>${name}</strong></td>
+          <td>${anspruch}</td>
+          <td>${uebertrag}</td>
+          <td><strong>${verfuegbar}</strong></td>
+          <td>${geplant}</td>
+          <td>${genommen}</td>
+          <td class="${restClass}"><strong>${rest}</strong></td>
+        `;
+        tbody.appendChild(tr);
+      });
     }
 
     function renderUrlaubPlaner() {
       renderUrlaubKalender();
-      updateUrlaubPlanerListe();
-      initGeplanteUrlaubstageJahre();
-      renderGeplanteUrlaubstage();
+      renderUrlaubListe();
     }
 
     function werHatUrlaubDetails(dateString) {
       return teamUrlaube.filter(u => dateString >= u.von && dateString <= u.bis);
+    }
+
+    function renderUrlaubListe() {
+      const container = document.getElementById('urlaubPlanerListe');
+      const titel = document.getElementById('urlaubListeTitel');
+      if (!container) return;
+
+      const jahr = ucYear;
+      if (titel) titel.textContent = `Eingetragene Termine ${jahr}`;
+      container.innerHTML = '';
+
+      const eintraege = teamUrlaube
+        .map((u, index) => ({...u, _index:index}))
+        .filter(u => {
+          const sJ = u.von ? parseInt(u.von.split('-')[0], 10) : NaN;
+          const eJ = u.bis ? parseInt(u.bis.split('-')[0], 10) : NaN;
+          return sJ === jahr || eJ === jahr;
+        })
+        .sort((a,b) => (a.von || '').localeCompare(b.von || ''));
+
+      if (eintraege.length === 0) {
+        container.innerHTML = `<li style="list-style:none; color:var(--text-muted); text-align:center; padding:10px 0;">Keine Termine für ${jahr}</li>`;
+        return;
+      }
+
+      const fDate = iso => iso ? iso.split('-').reverse().slice(0,2).join('.') : '';
+
+      eintraege.forEach(u => {
+        const item = document.createElement('li');
+        item.className = 'urlaubs-item';
+
+        let abtKlasse = 'kueche';
+        if (u.abt === 'Service') abtKlasse = 'service';
+        if (u.abt === 'Schule') abtKlasse = 'schule';
+
+        item.innerHTML = `
+          <span style="min-width:0;">
+            <strong>${u.name}</strong> <span class="list-badge ${abtKlasse}">${u.abt || 'Küche'}</span><br>
+            <small style="color:var(--text-muted);">${fDate(u.von)} - ${fDate(u.bis)} · ${Number(u.urlaubstage) || 0} Urlaubstag${(Number(u.urlaubstage) || 0) === 1 ? '' : 'e'}</small>
+          </span>
+          <span style="display:flex; gap:6px; margin-left:auto; flex-shrink:0;">
+            <button type="button" class="btn-edit" onclick="urlaubBearbeiten(${u._index})" title="Termin bearbeiten">✏️</button>
+            <button type="button" class="delete-entry-small" onclick="urlaubEntfernenIndex(${u._index})" title="Termin löschen">✕</button>
+          </span>
+        `;
+        container.appendChild(item);
+      });
     }
 
     function renderUrlaubKalender() {
@@ -2413,7 +2607,6 @@ function exportBackup() {
       for (let d = 1; d <= totalDays; d++) {
         let div = document.createElement('div');
         div.className = 'uc-day';
-        
         let numSpan = document.createElement('span');
         numSpan.className = 'uc-day-num';
         numSpan.textContent = d;
@@ -2422,7 +2615,6 @@ function exportBackup() {
         let checkDate = new Date(ucYear, ucMonth, d);
         let dateString = `${ucYear}-${String(ucMonth+1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
         let wDay = checkDate.getDay();
-
         let infoText = `${d}. ${monatsNamen[ucMonth]} ${ucYear}`;
 
         if (wDay === 0 || wDay === 6) {
@@ -2436,44 +2628,25 @@ function exportBackup() {
           let istKueche = abteilungen.includes('Küche');
           let istService = abteilungen.includes('Service');
           let istSchule = abteilungen.includes('Schule');
-
           let anzeigenNamen = urlaubeAnDiesemTag.map(u => `${u.name} (${u.abt || 'Küche'})`).join(", ");
-          
-          if (istSchule) {
-            infoText = `📚 Schulblock: ${anzeigenNamen}`;
-          } else {
-            infoText = `🌴 Urlaub: ${anzeigenNamen}`;
-          }
 
-          if (istSchule) {
-            div.classList.add('uc-schule');
-          } else if (istKueche && istService) {
-            div.classList.add('uc-mixed');
-          } else if (istService) {
-            div.classList.add('uc-service');
-          } else {
-            div.classList.add('uc-kueche');
-          }
-          
+          infoText = istSchule ? `📚 Schulblock: ${anzeigenNamen}` : `🌴 Urlaub: ${anzeigenNamen}`;
+          if (istSchule) div.classList.add('uc-schule');
+          else if (istKueche && istService) div.classList.add('uc-mixed');
+          else if (istService) div.classList.add('uc-service');
+          else div.classList.add('uc-kueche');
+
           urlaubeAnDiesemTag.forEach(u => {
             let infoSpan = document.createElement('span');
             infoSpan.className = 'uc-day-info';
             const maxBuchstaben = window.innerWidth > 900 ? 8 : 5;
             let gekuerzterName = u.name.substring(0, maxBuchstaben);
-            if (gekuerzterName.includes(' ')) {
-              gekuerzterName = gekuerzterName.split(' ')[0];
-            }
+            if (gekuerzterName.includes(' ')) gekuerzterName = gekuerzterName.split(' ')[0];
             infoSpan.textContent = gekuerzterName;
-            
-            if (u.abt === 'Service') {
-              infoSpan.style.backgroundColor = 'var(--badge-service)';
-            } else if (u.abt === 'Schule') {
-              infoSpan.style.backgroundColor = 'var(--badge-schule)';
-            } else {
-              infoSpan.style.backgroundColor = 'var(--badge-kueche)';
-            }
+            if (u.abt === 'Service') infoSpan.style.backgroundColor = 'var(--badge-service)';
+            else if (u.abt === 'Schule') infoSpan.style.backgroundColor = 'var(--badge-schule)';
+            else infoSpan.style.backgroundColor = 'var(--badge-kueche)';
             infoSpan.style.color = 'white';
-            
             div.appendChild(infoSpan);
           });
         }
@@ -2481,47 +2654,8 @@ function exportBackup() {
         div.addEventListener('click', () => {
           document.getElementById('urlaubInfoBox').textContent = infoText;
         });
-
         grid.appendChild(div);
       }
-    }
-
-    function updateUrlaubPlanerListe() {
-      const container = document.getElementById('urlaubPlanerListe');
-      const titel = document.getElementById('urlaubListeTitel');
-      container.innerHTML = '';
-      
-      titel.textContent = `Eingetragene Termine (${ucYear})`;
-
-      let gefilterteDaten = teamUrlaube.filter(u => {
-        const sJ = u.von.split('-')[0];
-        const eJ = u.bis.split('-')[0];
-        return sJ == ucYear || eJ == ucYear;
-      });
-
-      gefilterteDaten.sort((a,b) => a.von.localeCompare(b.von));
-
-      if (gefilterteDaten.length === 0) {
-        container.innerHTML = `<p style="color:var(--text-muted); text-align:center; margin:15px 0; font-size:13px;">Keine Einträge für ${ucYear}</p>`;
-        return;
-      }
-
-      gefilterteDaten.forEach((u) => {
-        const item = document.createElement('li');
-        item.className = 'urlaubs-item';
-        
-        const fDate = (iso) => iso.split('-').reverse().slice(0,2).join('.');
-        
-        let abtKlasse = 'kueche';
-        if (u.abt === 'Service') abtKlasse = 'service';
-        if (u.abt === 'Schule') abtKlasse = 'schule';
-        
-        item.innerHTML = `
-          <span><strong>${u.name}</strong> <span class="list-badge ${abtKlasse}">${u.abt || 'Küche'}</span> <br><small style="color:var(--text-muted);">${fDate(u.von)} - ${fDate(u.bis)}${istUrlaubEintrag(u) && u.urlaubstage != null ? ` · ${u.urlaubstage} Urlaubstage` : ''}</small></span>
-          <button class="delete-entry-small" onclick="urlaubEntfernen('${u.von}', '${u.name}')" style="margin-left:auto;">✕</button>
-        `;
-        container.appendChild(item);
-      });
     }
 
     async function urlaubSpeichern(e) {
@@ -2537,23 +2671,71 @@ function exportBackup() {
       if(von > bis) return alert("Das Enddatum darf nicht vor dem Startdatum liegen!");
       if (!Number.isInteger(urlaubstage) || urlaubstage < 0) return alert("Bitte die Anzahl der Urlaubstage eingeben.");
 
-      teamUrlaube.push({ name, abt, von, bis, urlaubstage });
+      const eintrag = { name, abt, von, bis, urlaubstage };
+      if (urlaubBearbeitungsIndex >= 0 && teamUrlaube[urlaubBearbeitungsIndex]) {
+        teamUrlaube[urlaubBearbeitungsIndex] = eintrag;
+      } else {
+        teamUrlaube.push(eintrag);
+      }
+
       await speichern();
-      
-      document.getElementById('urlaubVon').value = '';
-      document.getElementById('urlaubBis').value = '';
-      document.getElementById('urlaubstage').value = '';
-      document.getElementById('urlaubMitarbeiterSelect').value = '';
-      document.getElementById('urlaubAbteilungSelect').value = '';
-      
+      urlaubBearbeitungAbbrechen();
       renderUrlaubPlaner();
+      initUrlaubUebersichtJahre();
+      renderUrlaubUebersicht();
+    }
+
+    function urlaubBearbeiten(index) {
+      const u = teamUrlaube[index];
+      if (!u) return;
+      urlaubBearbeitungsIndex = index;
+      document.getElementById('urlaubMitarbeiterSelect').value = u.name || '';
+      document.getElementById('urlaubAbteilungSelect').value = u.abt || '';
+      document.getElementById('urlaubVon').value = u.von || '';
+      document.getElementById('urlaubBis').value = u.bis || '';
+      document.getElementById('urlaubstage').value = Number(u.urlaubstage) || 0;
+      const btn = document.querySelector('#urlaubEintragForm button[type="submit"]');
+      if (btn) btn.textContent = '💾 Änderung speichern';
+      let cancel = document.getElementById('urlaubBearbeitungAbbrechen');
+      if (!cancel) {
+        cancel = document.createElement('button');
+        cancel.type = 'button';
+        cancel.id = 'urlaubBearbeitungAbbrechen';
+        cancel.className = 'btn-secondary';
+        cancel.style.marginTop = '8px';
+        cancel.textContent = 'Abbrechen';
+        cancel.onclick = urlaubBearbeitungAbbrechen;
+        document.getElementById('urlaubEintragForm').appendChild(cancel);
+      }
+      document.getElementById('urlaubEintragForm').scrollIntoView({behavior:'smooth', block:'nearest'});
+    }
+
+    function urlaubBearbeitungAbbrechen() {
+      urlaubBearbeitungsIndex = -1;
+      const form = document.getElementById('urlaubEintragForm');
+      if (!form) return;
+      form.reset();
+      const btn = form.querySelector('button[type="submit"]');
+      if (btn) btn.textContent = '💾 Eintrag speichern';
+      const cancel = document.getElementById('urlaubBearbeitungAbbrechen');
+      if (cancel) cancel.remove();
+    }
+
+    async function urlaubEntfernenIndex(index) {
+      const u = teamUrlaube[index];
+      if (!u) return;
+      if (!confirm(`Eintrag für ${u.name} vom ${u.von} bis ${u.bis} löschen?`)) return;
+      teamUrlaube.splice(index, 1);
+      if (urlaubBearbeitungsIndex === index) urlaubBearbeitungAbbrechen();
+      await speichern();
+      renderUrlaubPlaner();
+      initUrlaubUebersichtJahre();
+      renderUrlaubUebersicht();
     }
 
     async function urlaubEntfernen(von, name) {
-      if (!confirm(`Eintrag für ${name} löschen?`)) return;
-      teamUrlaube = teamUrlaube.filter(u => !(u.von === von && u.name === name));
-      await speichern();
-      renderUrlaubPlaner();
+      const index = teamUrlaube.findIndex(u => u.von === von && u.name === name);
+      if (index >= 0) await urlaubEntfernenIndex(index);
     }
 
     function urlaubKalenderBlattern(richtung) {
