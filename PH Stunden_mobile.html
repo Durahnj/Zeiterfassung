@@ -462,10 +462,11 @@ baueUebersichtstabelle = function(){
     .select-row { display: flex; gap: 8px; align-items: flex-start; margin-bottom: 10px; }
     
     .btn-edit {
-      width: 44px; height: 44px; padding: 0; border-radius: 12px;
-      background: #fff; border: 1px solid var(--border-color);
-      font-size: 16px; display: flex; align-items: center; justify-content: center;
-      cursor: pointer; transition: 0.2s;
+      width: 26px !important; height: 26px !important; min-width: 26px !important; padding: 0 !important; border-radius: 7px !important;
+      background: #f5f5f5; border: 1px solid var(--border-color);
+      font-size: 12px !important; display: flex !important; align-items: center; justify-content: center;
+      cursor: pointer; transition: 0.2s; margin: 0 !important;
+      line-height: 1 !important;
     }
     .btn-edit:hover { background: #f5f5f5; border-color: var(--accent); }
 
@@ -730,7 +731,9 @@ body.dark-mode {
   
 /* ================= MOBILE ÜBERSICHT ================= */
 
-.overview-cards{
+/* Urlaubskacheln sind auf Desktop ausgeblendet und werden nur mobil angezeigt. */
+.overview-cards,
+.urlaub-uebersicht-cards{
   display:none;
 }
 
@@ -738,6 +741,13 @@ body.dark-mode {
 
   .table-responsive{
     display:none;
+  }
+
+  .urlaub-uebersicht-cards{
+    display:flex;
+    flex-direction:column;
+    gap:16px;
+    margin-top:16px;
   }
 
   .overview-cards{
@@ -790,6 +800,51 @@ body.dark-mode {
   }
 
   .overview-box-value{
+    font-size:15px;
+    font-weight:700;
+  }
+
+  /* Mobile cards for Urlaub overview */
+  .urlaub-uebersicht-card{
+    border:1px solid var(--border-color);
+    border-radius:16px;
+    padding:16px;
+    background:var(--card-bg);
+  }
+
+  .urlaub-uebersicht-card-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:14px;
+  }
+
+  .urlaub-uebersicht-card-name{
+    font-size:18px;
+    font-weight:700;
+  }
+
+  .urlaub-uebersicht-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
+  }
+
+  .urlaub-uebersicht-box{
+    background:rgba(0,0,0,0.03);
+    border-radius:10px;
+    padding:10px;
+  }
+
+  .urlaub-uebersicht-label{
+    font-size:10px;
+    text-transform:uppercase;
+    color:var(--text-muted);
+    margin-bottom:4px;
+    font-weight:700;
+  }
+
+  .urlaub-uebersicht-value{
     font-size:15px;
     font-weight:700;
   }
@@ -1320,7 +1375,7 @@ body:not(.dark-mode) .btn-secondary{
               <select id="urlaubMitarbeiterSelect" required></select>
               
               <label>Kategorie</label>
-              <select id="urlaubAbteilungSelect" required>
+              <select id="urlaubAbteilungSelect" required onchange="urlaubKategorieGeaendert()">
                 <option value="" disabled selected>Kategorie wählen...</option>
                 <option value="Küche">🧑‍🍳 Küche</option>
                 <option value="Service">🍷 Service</option>
@@ -1338,7 +1393,7 @@ body:not(.dark-mode) .btn-secondary{
                 </div>
               </div>
               <label>Urlaubstage</label>
-              <input type="number" id="urlaubstage" min="0" step="1" required placeholder="z. B. 5">
+              <input type="number" id="urlaubstage" min="0" step="1" placeholder="z. B. 5">
               <button type="submit">💾 Eintrag speichern</button>
             </form>
           </div>
@@ -1388,7 +1443,7 @@ body:not(.dark-mode) .btn-secondary{
             </div>
           </div>
 
-          <div style="overflow-x:auto;">
+          <div class="table-responsive urlaub-uebersicht-table">
             <table class="overview-table" style="width:100%; min-width:760px;">
               <thead>
                 <tr>
@@ -1404,6 +1459,7 @@ body:not(.dark-mode) .btn-secondary{
               <tbody id="urlaubUebersichtBody"></tbody>
             </table>
           </div>
+          <div id="urlaubUebersichtCards" class="urlaub-uebersicht-cards"></div>
         </div>
       </div>
     </div>
@@ -2373,15 +2429,65 @@ function exportBackup() {
     }
 
     /* --- LOGIK DES URLAUBSPLANERS --- */
+    function getUrlaubsJahre() {
+      const jNow = new Date().getFullYear();
+      const jahre = new Set([jNow, jNow + 1, jNow + 2]);
+
+      // Jahre mit bereits vorhandenen Urlaubskontodaten
+      Object.values(urlaubsKonten || {}).forEach(konto => {
+        Object.keys(konto || {}).forEach(y => {
+          const jahr = parseInt(y, 10);
+          if (Number.isFinite(jahr)) jahre.add(jahr);
+        });
+      });
+
+      // Jahre mit geplanten Urlaubsterminen
+      (teamUrlaube || []).forEach(u => {
+        [u.von, u.bis].forEach(d => {
+          if (!d) return;
+          const jahr = parseInt(d.split('-')[0], 10);
+          if (Number.isFinite(jahr)) jahre.add(jahr);
+        });
+      });
+
+      // Nur Jahre mit tatsächlich gebuchten Urlaubswerten in der Stundenaufzeichnung
+      Object.values(verlaufDetails || {}).forEach(person => {
+        Object.entries(person || {}).forEach(([y, monate]) => {
+          const hatUrlaub = Object.values(monate || {}).some(d => Number(d?.urlaub) !== 0);
+          if (!hatUrlaub) return;
+          const jahr = parseInt(y, 10);
+          if (Number.isFinite(jahr)) jahre.add(jahr);
+        });
+      });
+
+      return [...jahre].filter(Number.isFinite).sort((a, b) => a - b);
+    }
+
+    function fillUrlaubsJahreSelect(select, selectedYear) {
+      if (!select) return;
+      const jNow = new Date().getFullYear();
+      const bisher = parseInt(selectedYear, 10);
+      select.innerHTML = '';
+      getUrlaubsJahre().forEach(y => {
+        const opt = document.createElement('option');
+        opt.value = y;
+        opt.textContent = y;
+        if (y === (Number.isFinite(bisher) ? bisher : jNow)) opt.selected = true;
+        select.appendChild(opt);
+      });
+      if (!select.value) select.value = String(jNow);
+    }
+
     function initUrlaubKalenderJahre() {
       const s = document.getElementById("ucJahrSelect");
-      s.innerHTML = "";
-      const jNow = new Date().getFullYear();
-      for (let y = jNow - 1; y <= jNow + 3; y++) {
-        let opt = document.createElement('option');
-        opt.value = y; opt.textContent = y;
-        if (y === jNow) opt.selected = true;
-        s.appendChild(opt);
+      if (!s) return;
+      const bisher = ucYear || new Date().getFullYear();
+      fillUrlaubsJahreSelect(s, bisher);
+      if (getUrlaubsJahre().includes(bisher)) {
+        s.value = String(bisher);
+      } else {
+        ucYear = new Date().getFullYear();
+        s.value = String(ucYear);
       }
     }
 
@@ -2394,20 +2500,7 @@ function exportBackup() {
       const s = document.getElementById('urlaubAnspruchJahr');
       if (!s) return;
       const bisher = s.value;
-      const jahre = new Set();
-      const jNow = new Date().getFullYear();
-      for (let y = jNow - 2; y <= jNow + 3; y++) jahre.add(y);
-      Object.values(urlaubsKonten).forEach(konto => {
-        Object.keys(konto || {}).forEach(y => jahre.add(parseInt(y, 10)));
-      });
-      s.innerHTML = '';
-      [...jahre].filter(Number.isFinite).sort((a,b) => a-b).forEach(y => {
-        const opt = document.createElement('option');
-        opt.value = y; opt.textContent = y;
-        if (String(y) === String(bisher || jNow)) opt.selected = true;
-        s.appendChild(opt);
-      });
-      if (!s.value) s.value = jNow;
+      fillUrlaubsJahreSelect(s, bisher);
     }
 
     function berechneUrlaubsUebertrag(name, jahr) {
@@ -2459,27 +2552,7 @@ function exportBackup() {
       const s = document.getElementById('urlaubUebersichtJahr');
       if (!s) return;
       const bisher = s.value;
-      const jahre = new Set();
-      const jNow = new Date().getFullYear();
-      for (let y = jNow - 2; y <= jNow + 3; y++) jahre.add(y);
-      Object.values(urlaubsKonten).forEach(konto => {
-        Object.keys(konto || {}).forEach(y => jahre.add(parseInt(y, 10)));
-      });
-      verlaufDetails && Object.values(verlaufDetails).forEach(person => {
-        Object.keys(person || {}).forEach(y => jahre.add(parseInt(y, 10)));
-      });
-      teamUrlaube.forEach(u => {
-        if (u.von) jahre.add(parseInt(u.von.split('-')[0], 10));
-        if (u.bis) jahre.add(parseInt(u.bis.split('-')[0], 10));
-      });
-      s.innerHTML = '';
-      [...jahre].filter(Number.isFinite).sort((a,b) => a-b).forEach(y => {
-        const opt = document.createElement('option');
-        opt.value = y; opt.textContent = y;
-        if (String(y) === String(bisher || jNow)) opt.selected = true;
-        s.appendChild(opt);
-      });
-      if (!s.value) s.value = jNow;
+      fillUrlaubsJahreSelect(s, bisher);
     }
 
     function berechneGeplanteUrlaubstage(name, jahr) {
@@ -2495,14 +2568,17 @@ function exportBackup() {
 
     function renderUrlaubUebersicht() {
       const tbody = document.getElementById('urlaubUebersichtBody');
+      const cards = document.getElementById('urlaubUebersichtCards');
       const jahrSelect = document.getElementById('urlaubUebersichtJahr');
       if (!tbody || !jahrSelect) return;
       const jahr = parseInt(jahrSelect.value || new Date().getFullYear(), 10);
       const personen = Object.keys(mitarbeiter).sort((a,b) => a.localeCompare(b));
       tbody.innerHTML = '';
+      if (cards) cards.innerHTML = '';
 
       if (personen.length === 0) {
         tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; color:var(--text-muted);">Keine Festangestellten vorhanden</td></tr>';
+        if (cards) cards.innerHTML = '<div style="text-align:center; color:var(--text-muted); padding:10px;">Keine Festangestellten vorhanden</div>';
         return;
       }
 
@@ -2527,6 +2603,25 @@ function exportBackup() {
           <td class="${restClass}"><strong>${rest}</strong></td>
         `;
         tbody.appendChild(tr);
+
+        if (cards) {
+          const card = document.createElement('div');
+          card.className = 'urlaub-uebersicht-card';
+          card.innerHTML = `
+            <div class="urlaub-uebersicht-card-header">
+              <div class="urlaub-uebersicht-card-name">${name}</div>
+            </div>
+            <div class="urlaub-uebersicht-grid">
+              <div class="urlaub-uebersicht-box"><div class="urlaub-uebersicht-label">Anspruch</div><div class="urlaub-uebersicht-value">${anspruch} Tage</div></div>
+              <div class="urlaub-uebersicht-box"><div class="urlaub-uebersicht-label">Übertrag</div><div class="urlaub-uebersicht-value">${uebertrag} Tage</div></div>
+              <div class="urlaub-uebersicht-box"><div class="urlaub-uebersicht-label">Verfügbar</div><div class="urlaub-uebersicht-value">${verfuegbar} Tage</div></div>
+              <div class="urlaub-uebersicht-box"><div class="urlaub-uebersicht-label">Geplant</div><div class="urlaub-uebersicht-value">${geplant} Tage</div></div>
+              <div class="urlaub-uebersicht-box"><div class="urlaub-uebersicht-label">Genommen</div><div class="urlaub-uebersicht-value">${genommen} Tage</div></div>
+              <div class="urlaub-uebersicht-box"><div class="urlaub-uebersicht-label">Rest</div><div class="urlaub-uebersicht-value ${restClass}">${rest} Tage</div></div>
+            </div>
+          `;
+          cards.appendChild(card);
+        }
       });
     }
 
@@ -2658,13 +2753,31 @@ function exportBackup() {
       }
     }
 
+    function urlaubKategorieGeaendert() {
+      const kategorie = document.getElementById('urlaubAbteilungSelect');
+      const feld = document.getElementById('urlaubstage');
+      if (!kategorie || !feld) return;
+
+      const istSchule = kategorie.value === 'Schule';
+      feld.required = !istSchule;
+      if (istSchule) {
+        feld.value = '0';
+        feld.placeholder = '0';
+      } else {
+        if (feld.value === '0' && feld.dataset.autoSchoolZero === '1') feld.value = '';
+        feld.placeholder = 'z. B. 5';
+      }
+    }
+
     async function urlaubSpeichern(e) {
       e.preventDefault();
       const name = document.getElementById('urlaubMitarbeiterSelect').value;
       const abt = document.getElementById('urlaubAbteilungSelect').value;
       const von = document.getElementById('urlaubVon').value;
       const bis = document.getElementById('urlaubBis').value;
-      const urlaubstage = parseInt(document.getElementById('urlaubstage').value, 10);
+      const urlaubstageFeld = document.getElementById('urlaubstage');
+      const urlaubstageRaw = (urlaubstageFeld?.value || '').trim();
+      const urlaubstage = (abt === 'Schule' && urlaubstageRaw === '') ? 0 : parseInt(urlaubstageRaw, 10);
 
       if(!name) return alert("Bitte wähle einen Mitarbeiter aus!");
       if(!abt) return alert("Bitte wähle eine Kategorie aus!");
@@ -2691,6 +2804,7 @@ function exportBackup() {
       urlaubBearbeitungsIndex = index;
       document.getElementById('urlaubMitarbeiterSelect').value = u.name || '';
       document.getElementById('urlaubAbteilungSelect').value = u.abt || '';
+      urlaubKategorieGeaendert();
       document.getElementById('urlaubVon').value = u.von || '';
       document.getElementById('urlaubBis').value = u.bis || '';
       document.getElementById('urlaubstage').value = Number(u.urlaubstage) || 0;
@@ -2715,6 +2829,7 @@ function exportBackup() {
       const form = document.getElementById('urlaubEintragForm');
       if (!form) return;
       form.reset();
+      urlaubKategorieGeaendert();
       const btn = form.querySelector('button[type="submit"]');
       if (btn) btn.textContent = '💾 Eintrag speichern';
       const cancel = document.getElementById('urlaubBearbeitungAbbrechen');
