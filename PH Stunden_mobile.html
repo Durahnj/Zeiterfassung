@@ -50,7 +50,7 @@ function renderOverviewCards() {
           urlaub += d.urlaub || 0;
           krank += d.krank || 0;
 
-          const diff = zeitZuMinuten(d.ist) - zeitZuMinuten(d.soll);
+          const diff = zeitZuMinuten(d.ist) - zeitZuMinuten(d.soll) - raucherpausenMinuten(d);
           const diffClass = diff >= 0 ? 'diff-pos' : 'diff-neg';
           const diffSign = diff >= 0 ? '+' : '';
 
@@ -58,7 +58,7 @@ function renderOverviewCards() {
             <div class="overview-month">
               <strong>${monatsNamen[i-1].substring(0,3)}</strong>
               <div style="text-align:right;">
-                <div>${d.ist}</div>
+                <div>${effektiveIstZeit(d)}</div>
                 <div class="${diffClass}" style="font-size:11px;">
                   (${diffSign}${minutenZuZeit(diff)})
                 </div>
@@ -73,7 +73,7 @@ function renderOverviewCards() {
 
         if(d){
 
-          const diff = zeitZuMinuten(d.gearbeitet) - zeitZuMinuten(d.gezahlt);
+          const diff = zeitZuMinuten(d.gearbeitet) - zeitZuMinuten(d.gezahlt) - raucherpausenMinuten(d);
           const diffClass = diff >= 0 ? 'diff-pos' : 'diff-neg';
           const diffSign = diff >= 0 ? '+' : '';
 
@@ -81,7 +81,7 @@ function renderOverviewCards() {
             <div class="overview-month">
               <strong>${monatsNamen[i-1].substring(0,3)}</strong>
               <div style="text-align:right;">
-                <div>${d.gearbeitet}</div>
+                <div>${effektiveGearbeitetZeit(d)}</div>
                 <div class="${diffClass}" style="font-size:11px;">
                   (${diffSign}${minutenZuZeit(diff)})
                 </div>
@@ -194,7 +194,7 @@ function renderOverviewCards() {
           urlaub += d.urlaub || 0;
           krank += d.krank || 0;
 
-          const diff = zeitZuMinuten(d.ist) - zeitZuMinuten(d.soll);
+          const diff = effektiveIstMinuten(d) - zeitZuMinuten(d.soll);
           const diffClass = diff >= 0 ? 'diff-pos' : 'diff-neg';
           const diffSign = diff >= 0 ? '+' : '';
 
@@ -202,7 +202,7 @@ function renderOverviewCards() {
             <div class="overview-month">
               <strong>${monatsNamen[i-1].substring(0,3)}</strong>
               <div style="text-align:right;">
-                <div>${d.ist}</div>
+                <div>${effektiveIstZeit(d)}</div>
                 <div class="${diffClass}" style="font-size:11px;">
                   (${diffSign}${minutenZuZeit(diff)})
                 </div>
@@ -217,7 +217,7 @@ function renderOverviewCards() {
 
         if(d){
 
-          const diff = zeitZuMinuten(d.gearbeitet) - zeitZuMinuten(d.gezahlt);
+          const diff = effektiveGearbeitetMinuten(d) - zeitZuMinuten(d.gezahlt);
           const diffClass = diff >= 0 ? 'diff-pos' : 'diff-neg';
           const diffSign = diff >= 0 ? '+' : '';
 
@@ -225,7 +225,7 @@ function renderOverviewCards() {
             <div class="overview-month">
               <strong>${monatsNamen[i-1].substring(0,3)}</strong>
               <div style="text-align:right;">
-                <div>${d.gearbeitet}</div>
+                <div>${effektiveGearbeitetZeit(d)}</div>
                 <div class="${diffClass}" style="font-size:11px;">
                   (${diffSign}${minutenZuZeit(diff)})
                 </div>
@@ -984,6 +984,13 @@ body.dark-mode .btn-secondary{
  }
 }
 
+  .verwaltung-single{max-width:980px;margin:0 auto;}
+  .verwaltung-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;}
+  .verwaltung-person-card{padding:18px;border:1px solid var(--border-color);border-radius:14px;background:rgba(0,0,0,.015);}
+  .verwaltung-person-card > select{font-size:15px;font-weight:600;}
+  .verwaltung-tools{display:grid;grid-template-columns:1fr 1fr;gap:24px;}
+  .verwaltung-divider{height:1px;background:var(--border-color);margin:24px 0;}
+  @media(max-width:900px){.verwaltung-tools{grid-template-columns:1fr;}}
 </style>
 
 <style id="chatgpt-theme-fix">
@@ -1121,6 +1128,57 @@ body:not(.dark-mode) .btn-secondary{
 <style id="urlaubstage-style">
   #urlaubstageVorschau { color: var(--text-muted); }
   body.dark-mode #urlaubstageVorschau { background:#241a1a !important; border-color:#3d2a2a !important; }
+
+/* ===== Buchungsformular: klarere Gruppen + Toast ===== */
+.booking-group{
+  border:1px solid var(--border-color);
+  border-radius:16px;
+  padding:16px;
+  margin-bottom:16px;
+  background:rgba(0,0,0,.012);
+}
+.booking-group-title{
+  font-family:var(--title-font);
+  font-size:14px;
+  font-weight:700;
+  color:var(--text-main);
+  margin:0 0 14px;
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+.booking-group-hint{
+  margin:-6px 0 14px;
+  font-size:11px;
+  color:var(--text-muted);
+}
+body.dark-mode .booking-group{background:rgba(255,255,255,.018);}
+.save-toast{
+  position:fixed;
+  top:22px;
+  left:50%;
+  transform:translate(-50%,-16px);
+  z-index:12000;
+  min-width:min(440px,calc(100vw - 32px));
+  max-width:620px;
+  padding:13px 16px;
+  border-radius:14px;
+  border:1px solid rgba(22,163,74,.35);
+  background:#f0fdf4;
+  color:#166534;
+  box-shadow:0 14px 38px rgba(15,23,42,.18);
+  opacity:0;
+  pointer-events:none;
+  transition:opacity .2s ease, transform .2s ease;
+  font-weight:600;
+  font-size:13px;
+  text-align:center;
+}
+.save-toast.show{opacity:1;transform:translate(-50%,0);}
+.save-toast.error{background:#fff1f2;color:#991b1b;border-color:#fecaca;}
+body.dark-mode .save-toast{background:#123321;color:#86efac;border-color:#166534;}
+body.dark-mode .save-toast.error{background:#450a0a;color:#fca5a5;border-color:#7f1d1d;}
+@media(max-width:768px){.booking-group{padding:13px}.save-toast{top:12px;}}
 </style>
 </head>
 <body>
@@ -1131,6 +1189,7 @@ body:not(.dark-mode) .btn-secondary{
   </div>
 
   <div id="printContainer"></div>
+  <div id="saveToast" class="save-toast" role="status" aria-live="polite"></div>
 
   <div class="container">
 <div class="app-header">
@@ -1144,6 +1203,7 @@ body:not(.dark-mode) .btn-secondary{
     <div class="tabs">
       <button class="tab-btn active" id="tabEingabe" onclick="switchTab('eingabe')">✍️ Angestellte</button>
       <button class="tab-btn" id="tabAushilfen" onclick="switchTab('aushilfen')">🤝 Aushilfen</button>
+      <button class="tab-btn" id="tabVerwaltung" onclick="switchTab('verwaltung')">⚙️ Verwaltung</button>
       <button class="tab-btn" id="tabUebersicht" onclick="switchTab('uebersicht')">📊 Übersicht</button>
       <button class="tab-btn" id="tabUrlaub" onclick="switchTab('urlaub')">🌴 Urlaubsplaner</button>
       <button class="tab-btn" id="tabUrlaubUebersicht" onclick="switchTab('urlaubUebersicht')">📅 Übersicht Urlaub</button>
@@ -1154,95 +1214,69 @@ body:not(.dark-mode) .btn-secondary{
       <div class="layout">
         <div class="sidebar">
           <h3>Mitarbeiter (Fest)</h3>
-          <div class="select-row">
-            <select id="mitarbeiterSelect" onchange="mitarbeiterWechseln()"></select>
-            <button id="editMitarbeiterBtn" class="btn-edit" onclick="mitarbeiterBearbeitenModus()" title="Bearbeiten">✏️</button>
-          </div>
-          
-          <div id="neuerMitarbeiterBereich" style="display:none; background: rgba(0,0,0,0.02); padding: 15px; border-radius: 12px; border: 1px dashed var(--border-color); margin-bottom: 20px;">
-            <label id="bereichTitel" style="color:var(--accent)">Neuer Mitarbeiter</label>
-            <input type="text" id="neuerMitarbeiter" placeholder="Name">
-            <label>Start-Saldo (HH:MM)</label>
-            <input type="text" id="startSaldo" placeholder="00:00">
-            <button id="btnAbbrechen" class="btn-secondary" style="margin-top:5px; border-color:#dc2626; color:#dc2626; display:none;" onclick="bearbeitenAbbrechen()">Abbrechen</button>
-          </div>
-
+          <select id="mitarbeiterSelect" onchange="mitarbeiterWechseln()"></select>
           <div class="saldo-box is-negative" id="saldoBox">
             <div style="font-size:10px; color:var(--text-muted); text-transform: uppercase; font-weight: 700;">Aktueller Saldo</div>
             <div class="saldo-value saldo-neg" id="aktuellerSaldo">00:00</div>
             <div class="start-saldo-info">Start: <span id="startSaldoDisplay">00:00</span></div>
           </div>
-
-          <div class="urlaub-anspruch-panel" style="margin-top:20px; padding:15px; border:1px solid var(--border-color); border-radius:12px; background:rgba(0,0,0,0.015);">
-            <h3 style="margin-top:0; margin-bottom:12px;">Urlaubsanspruch</h3>
-            <div class="row">
-              <div>
-                <label>Jahr</label>
-                <select id="urlaubAnspruchJahr" onchange="urlaubAnspruchLaden()"></select>
-              </div>
-              <div>
-                <label>Urlaubsanspruch</label>
-                <input type="number" id="urlaubAnspruch" min="0" step="1" placeholder="z. B. 30">
-              </div>
-            </div>
-            <button type="button" class="btn-secondary" onclick="urlaubAnspruchSpeichern()" style="margin-top:8px;">💾 Jahresanspruch speichern</button>
-          </div>
-
-          <button class="btn-pdf" onclick="exportAuszahlungenPDF()">📄 Auszahlungen PDF</button>
-          <button class="btn-secondary" onclick="exportBackup()">📥 Backup</button>
-          <button class="btn-secondary" onclick="document.getElementById('importFile').click()">📤 Import</button>
-          <input type="file" id="importFile" style="display:none" accept=".json" onchange="importBackup(this)">
-          <button id="deleteBtn" class="btn-danger" onclick="mitarbeiterLoeschen()" style="display:none;">Mitarbeiter löschen</button>
+          <div class="info-card" style="margin-top:16px;">💡 Mitarbeiter und Stammdaten werden im Tab <strong>Verwaltung</strong> gepflegt.</div>
+	  <div class="info-card" style="margin-top:16px;">💡 <strong>Raucherpausen</strong> können eingegeben werden, müsst Ihr nicht manuell ausrechnen😉</div>
         </div>
 
         <div class="booking-section">
           <h3 id="buchungSektionTitel">Buchung erfassen</h3>
-          <div class="row">
-            <div>
-              <label>MM/JJ</label>
-              <input type="text" id="buchungsDatum" placeholder="04/26">
-            </div>
-            <div>
-              <label>Soll-Stunden</label>
-              <input type="text" id="soll" placeholder="160:00">
-            </div>
-          </div>
-          
-          <div class="row">
-            <div>
-              <label>Ist (Geleistet)</label>
-              <input type="text" id="ist" placeholder="168:00">
-            </div>
-            <div>
-              <label>Auszahlung</label>
-              <input type="text" id="auszahlung" placeholder="00:00">
+
+          <div class="booking-group">
+            <div class="booking-group-title">📅 1. Monatsdaten</div>
+            <div class="booking-group-hint">Diese beiden Werte bleiben nach dem Speichern stehen.</div>
+            <div class="row">
+              <div>
+                <label>MM/JJ</label>
+                <input type="text" id="buchungsDatum" placeholder="04/26">
+              </div>
+              <div>
+                <label>Soll-Stunden</label>
+                <input type="text" id="soll" placeholder="160:00">
+              </div>
             </div>
           </div>
 
-<div class="row" style="background: rgba(0,0,0,0.01); padding: 12px; border-radius: 12px; border: 1px solid var(--border-color); margin-bottom: 18px;">
-  <div>
-    <label>Urlaub (Tage)</label>
-    <input type="number" id="urlaub" placeholder="0" min="0" step="0.5">
-  </div>
+          <div class="booking-group">
+            <div class="booking-group-title">⏱️ 2. Arbeitszeit</div>
+            <div class="row">
+              <div>
+                <label>Ist (Geleistet)</label>
+                <input type="text" id="ist" placeholder="168:00">
+              </div>
+              <div>
+                <label>Auszahlung</label>
+                <input type="text" id="auszahlung" placeholder="00:00">
+              </div>
+            </div>
+          </div>
 
-  <div>
-    <label>Krank (Tage)</label>
-    <input type="number" id="krank" placeholder="0" min="0" step="0.5">
-  </div>
+          <div class="booking-group">
+            <div class="booking-group-title">🏖️ 3. Abwesenheiten & Pausen</div>
+            <div class="row">
+              <div><label>Urlaub (Tage)</label><input type="number" id="urlaub" placeholder="0" min="0" step="0.5"></div>
+              <div><label>Krank (Tage)</label><input type="number" id="krank" placeholder="0" min="0" step="0.5"></div>
+            </div>
+            <div class="row">
+              <div><label>Schule (Tage)</label><input type="number" id="schule" placeholder="0" min="0" step="0.5"></div>
+              <div><label>Feiertage</label><input type="number" id="feiertage" placeholder="0" min="0" step="0.5"></div>
+            </div>
+            <div class="row">
+              <div>
+                <label>Raucherpause (Anzahl)</label>
+                <input type="number" id="raucherpausen" min="0" step="1" placeholder="0">
+                <div class="booking-group-hint" style="margin-top:-10px;margin-bottom:0;">Je Raucherpause werden 2 Minuten abgezogen.</div>
+              </div>
+              <div></div>
+            </div>
+          </div>
 
-  <div>
-    <label>Schule (Tage)</label>
-    <input type="number" id="schule" placeholder="0" min="0" step="0.5">
-  </div>
-
-  <div>
-    <label>Feiertage</label>
-    <input type="number" id="feiertage" placeholder="0" min="0" step="0.5">
-  </div>
-</div>
-          
           <button id="btnSpeichern" onclick="berechnen()">💾 Buchung speichern</button>
-
           <button id="btnAuszahlen" onclick="berechnenUndAuszahlen()" style="background-color: var(--success); margin-top: 10px;">💰 Überstunden auszahlen</button>
           <div id="ergebnis" style="text-align:center; margin-top:12px; font-weight:600; color:var(--accent); font-size:13px;"></div>
         </div>
@@ -1264,49 +1298,47 @@ body:not(.dark-mode) .btn-secondary{
       <div class="layout">
         <div class="sidebar">
           <h3>Aushilfen</h3>
-          <div class="select-row">
-            <select id="aushilfeSelect" onchange="aushilfeWechseln()"></select>
-            <button id="editAushilfeBtn" class="btn-edit" onclick="aushilfeBearbeitenModus()" title="Bearbeiten">✏️</button>
-          </div>
-          
-          <div id="neueAushilfeBereich" style="display:none; background: rgba(0,0,0,0.02); padding: 15px; border-radius: 12px; border: 1px dashed var(--border-color); margin-bottom: 20px;">
-            <label id="aushilfeBereichTitel" style="color:var(--accent)">Neue Aushilfe</label>
-            <input type="text" id="neueAushilfe" placeholder="Name">
-            <label>Start-Saldo (HH:MM)</label>
-            <input type="text" id="aushilfeStartSaldo" placeholder="00:00">
-            <button id="btnAushilfeAbbrechen" class="btn-secondary" style="margin-top:5px; border-color:#dc2626; color:#dc2626; display:none;" onclick="aushilfeBearbeitenAbbrechen()">Abbrechen</button>
-          </div>
-
+          <select id="aushilfeSelect" onchange="aushilfeWechseln()"></select>
           <div class="saldo-box is-negative" id="aushilfeSaldoBox">
             <div style="font-size:10px; color:var(--text-muted); text-transform: uppercase; font-weight: 700;">Aktueller Saldo</div>
             <div class="saldo-value saldo-neg" id="aushilfeAktuellerSaldo">00:00</div>
             <div class="start-saldo-info">Start: <span id="aushilfeStartSaldoDisplay">00:00</span></div>
           </div>
-
-          <button class="btn-pdf" onclick="exportAushilfenGezahltPDF()">📄 Aushilfen PDF</button>
-          <button id="aushilfeDeleteBtn" class="btn-danger" onclick="aushilfeLoeschen()" style="display:none;">Aushilfe löschen</button>
+          <div class="info-card" style="margin-top:16px;">💡 Aushilfen und Stammdaten werden im Tab <strong>Verwaltung</strong> gepflegt.</div>
+	  <div class="info-card" style="margin-top:16px;">💡 <strong>Raucherpausen</strong> können eingegeben werden, müsst Ihr nicht manuell ausrechnen😉</div>
         </div>
 
         <div class="booking-section">
           <h3 id="aushilfeBuchungSektionTitel">Buchung erfassen (Aushilfe)</h3>
-          <div class="row">
-            <div>
-              <label>MM/JJ</label>
-              <input type="text" id="aushilfeBuchungsDatum" placeholder="04/26">
-            </div>
-            <div>
-              <label>Stunden gearbeitet</label>
-              <input type="text" id="aushilfeGearbeitet" placeholder="40:00">
+
+          <div class="booking-group">
+            <div class="booking-group-title">📅 1. Monatsdaten</div>
+            <div class="booking-group-hint">Der Monat bleibt nach dem Speichern stehen.</div>
+            <label>MM/JJ</label>
+            <input type="text" id="aushilfeBuchungsDatum" placeholder="04/26">
+          </div>
+
+          <div class="booking-group">
+            <div class="booking-group-title">⏱️ 2. Arbeitszeit</div>
+            <div class="row">
+              <div>
+                <label>Stunden gearbeitet</label>
+                <input type="text" id="aushilfeGearbeitet" placeholder="40:00">
+              </div>
+              <div>
+                <label>Stunden gezahlt</label>
+                <input type="text" id="aushilfeGezahlt" placeholder="40:00">
+              </div>
             </div>
           </div>
-          
-          <div class="row">
-            <div>
-              <label>Stunden gezahlt</label>
-              <input type="text" id="aushilfeGezahlt" placeholder="40:00">
-            </div>
+
+          <div class="booking-group">
+            <div class="booking-group-title">🚬 3. Pausen</div>
+            <label>Raucherpause (Anzahl)</label>
+            <input type="number" id="aushilfeRaucherpausen" min="0" step="1" placeholder="0">
+            <div class="booking-group-hint" style="margin-top:-10px;margin-bottom:0;">Je Raucherpause werden 2 Minuten abgezogen.</div>
           </div>
-          
+
           <button id="btnAushilfeSpeichern" onclick="aushilfeBerechnen()">💾 Buchung speichern</button>
         </div>
 
@@ -1319,6 +1351,77 @@ body:not(.dark-mode) .btn-secondary{
             </div>
           </div>
           <ul id="aushilfeHistoryList" class="history-list"></ul>
+        </div>
+      </div>
+    </div>
+
+    <div id="pageVerwaltung" class="page">
+      <div class="verwaltung-single">
+        <div class="overview-panel">
+          <div class="verwaltung-header">
+            <div>
+              <h2 style="margin:0 0 4px 0;">Verwaltung</h2>
+              <div style="color:var(--text-muted); font-size:13px;">Mitarbeiter und Aushilfen zentral verwalten.</div>
+            </div>
+          </div>
+
+          <div class="verwaltung-person-card">
+            <h3 style="margin-top:0;">Person auswählen</h3>
+            <select id="verwaltungPersonSelect" onchange="verwaltungPersonWechseln()"></select>
+
+            <div id="verwaltungPersonForm" style="margin-top:16px;">
+              <div class="row">
+                <div>
+                  <label>Art</label>
+                  <select id="verwaltungPersonTyp" onchange="verwaltungPersonTypGeaendert()">
+                    <option value="fest">Angestellt</option>
+                    <option value="aushilfe">Aushilfe</option>
+                  </select>
+                </div>
+                <div>
+                  <label>Name</label>
+                  <input type="text" id="verwaltungPersonName" placeholder="Name">
+                </div>
+              </div>
+
+              <div class="row">
+                <div>
+                  <label>Start-Saldo (HH:MM)</label>
+                  <input type="text" id="verwaltungPersonStartSaldo" placeholder="00:00">
+                </div>
+                <div></div>
+              </div>
+
+              <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:8px;">
+                <button id="btnVerwaltungSpeichern" onclick="verwaltungPersonSpeichern()">💾 Speichern</button>
+                <button id="btnVerwaltungLoeschen" class="btn-danger" onclick="verwaltungPersonLoeschen()" style="display:none;">🗑️ Löschen</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="verwaltung-divider"></div>
+
+          <div class="verwaltung-tools">
+            <div id="verwaltungUrlaubsanspruchPanel">
+              <h3 style="margin:0 0 10px 0;">Urlaubsanspruch</h3>
+              <div class="row">
+                <div><label>Jahr</label><select id="urlaubAnspruchJahr" onchange="urlaubAnspruchLaden()"></select></div>
+                <div><label>Urlaubsanspruch</label><input type="number" id="urlaubAnspruch" min="0" step="1" placeholder="z. B. 30"></div>
+              </div>
+              <button type="button" class="btn-secondary" onclick="urlaubAnspruchSpeichern()">💾 Jahresanspruch speichern</button>
+            </div>
+
+            <div>
+              <h3 style="margin:0 0 10px 0;">Datensicherung & Exporte</h3>
+              <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                <button class="btn-pdf" onclick="exportAuszahlungenPDF()">📄 Auszahlungen PDF</button>
+                <button class="btn-pdf" onclick="exportAushilfenGezahltPDF()">📄 Aushilfen PDF</button>
+                <button class="btn-secondary" onclick="exportBackup()">📥 Backup erstellen</button>
+                <button class="btn-secondary" onclick="document.getElementById('importFile').click()">📤 Backup importieren</button>
+                <input type="file" id="importFile" style="display:none" accept=".json" onchange="importBackup(this)">
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -1667,6 +1770,12 @@ function zeitZuMinuten(zeit) {
         document.getElementById('tabAushilfen').classList.add('active');
         document.getElementById('pageAushilfen').classList.add('active');
         updateAushilfeVerlaufAnzeige();
+      } else if(tabName === 'verwaltung') {
+        document.getElementById('tabVerwaltung').classList.add('active');
+        document.getElementById('pageVerwaltung').classList.add('active');
+        verwaltungDropdownsLaden();
+        initUrlaubAnspruchJahre();
+        urlaubAnspruchLaden();
       } else if(tabName === 'uebersicht') {
         document.getElementById('tabUebersicht').classList.add('active');
         document.getElementById('pageUebersicht').classList.add('active');
@@ -1714,7 +1823,7 @@ function zeitZuMinuten(zeit) {
               const ist = zeitZuMinuten(mItem.ist || "00:00");
               const soll = zeitZuMinuten(mItem.soll || "00:00");
 
-              jahresSaldo += (ist - soll);
+              jahresSaldo += (ist - soll - raucherpausenMinuten(mItem));
             });
           }
           const gesamtMinuten = mitarbeiter[n] || 0;
@@ -1736,12 +1845,12 @@ function zeitZuMinuten(zeit) {
           for(let i = 1; i <= 12; i++) {
             const d = verlaufDetails[n]?.[j]?.[String(i).padStart(2,'0')];
             if(d) {
-              const diff = zeitZuMinuten(d.ist) - zeitZuMinuten(d.soll);
+              const diff = effektiveIstMinuten(d) - zeitZuMinuten(d.soll);
               const diffSign = diff >= 0 ? '+' : '';
               const diffClass = diff >= 0 ? 'diff-pos' : 'diff-neg';
               
               rowHTML += `<td>
-                <div>${d.ist}</div>
+                <div>${effektiveIstZeit(d)}</div>
                 <div class="${diffClass}" style="font-size:10px;">(${diffSign}${minutenZuZeit(diff)})</div>
               </td>`;
             } else {
@@ -1761,7 +1870,7 @@ function zeitZuMinuten(zeit) {
             if(d) {
               jahresSaldo +=
                 zeitZuMinuten(d.gearbeitet) -
-                zeitZuMinuten(d.gezahlt);
+                zeitZuMinuten(d.gezahlt) - raucherpausenMinuten(d);
             }
           }
 
@@ -1783,12 +1892,12 @@ function zeitZuMinuten(zeit) {
           for(let i = 1; i <= 12; i++) {
             const d = aushilfenVerlaufDetails[n]?.[j]?.[String(i).padStart(2,'0')];
             if(d) {
-              const diff = zeitZuMinuten(d.gearbeitet) - zeitZuMinuten(d.gezahlt);
+              const diff = effektiveGearbeitetMinuten(d) - zeitZuMinuten(d.gezahlt);
               const diffSign = diff >= 0 ? '+' : '';
               const diffClass = diff >= 0 ? 'diff-pos' : 'diff-neg';
               
               rowHTML += `<td>
-                <div>${d.gearbeitet}</div>
+                <div>${effektiveGearbeitetZeit(d)}</div>
                 <div class="${diffClass}" style="font-size:10px;">(${diffSign}${minutenZuZeit(diff)})</div>
               </td>`;
             } else {
@@ -1801,29 +1910,259 @@ function zeitZuMinuten(zeit) {
       });
     }
 
+    function verwaltungDropdownsLaden(){
+      const sel = document.getElementById("verwaltungPersonSelect");
+      if(!sel) return;
+
+      const current = sel.value;
+      const personen = [
+        ...Object.keys(mitarbeiter).sort((a,b)=>a.localeCompare(b)).map(n => ({typ:"fest", name:n})),
+        ...Object.keys(aushilfen).sort((a,b)=>a.localeCompare(b)).map(n => ({typ:"aushilfe", name:n}))
+      ].sort((a,b)=>a.name.localeCompare(b.name) || a.typ.localeCompare(b.typ));
+
+      sel.innerHTML = '<option value="neu">+ Person anlegen</option>' +
+        personen.map(p => `<option value="${p.typ}|${encodeURIComponent(p.name)}">${p.name} — ${p.typ === "fest" ? "Angestellt" : "Aushilfe"}</option>`).join("");
+
+      if(current && current !== "neu" && [...sel.options].some(o=>o.value===current)) sel.value=current;
+      else if(current === "neu") sel.value="neu";
+      else if(personen.length) sel.selectedIndex=1;
+      else sel.value="neu";
+
+      verwaltungPersonWechseln();
+    }
+
+    function verwaltungPersonWechseln(){
+      const sel=document.getElementById("verwaltungPersonSelect");
+      const form=document.getElementById("verwaltungPersonForm");
+      const typ=document.getElementById("verwaltungPersonTyp");
+      const name=document.getElementById("verwaltungPersonName");
+      const start=document.getElementById("verwaltungPersonStartSaldo");
+      const del=document.getElementById("btnVerwaltungLoeschen");
+      if(!sel||!form||!typ||!name||!start) return;
+
+      const value=sel.value || "neu";
+      const isNew=value === "neu";
+      form.style.display="block";
+      aktualisiereUrlaubsanspruchSichtbarkeit();
+      del.style.display=isNew ? "none" : "inline-flex";
+      typ.disabled=!isNew;
+
+      if(isNew){
+        typ.value="fest";
+        name.value="";
+        start.value="00:00";
+        name.focus();
+        return;
+      }
+
+      const [t, encodedName]=value.split("|");
+      const n=decodeURIComponent(encodedName || "");
+      typ.value=t;
+      name.value=n;
+      start.value=minutenZuZeit(t === "fest" ? (startSalden[n]||0) : (aushilfenStartSalden[n]||0));
+      if(t === "fest"){
+        document.getElementById("mitarbeiterSelect").value=n;
+        mitarbeiterWechseln();
+      } else {
+        document.getElementById("aushilfeSelect").value=n;
+        aushilfeWechseln();
+      }
+      initUrlaubAnspruchJahre();
+      urlaubAnspruchLaden();
+    }
+
+    function verwaltungPersonTypGeaendert(){
+      const sel=document.getElementById("verwaltungPersonSelect");
+      if(sel && sel.value !== "neu") return;
+      document.getElementById("verwaltungPersonName").focus();
+    }
+
+    async function verwaltungPersonSpeichern(){
+      const sel=document.getElementById("verwaltungPersonSelect");
+      const typEl=document.getElementById("verwaltungPersonTyp");
+      const nameEl=document.getElementById("verwaltungPersonName");
+      const startEl=document.getElementById("verwaltungPersonStartSaldo");
+      const typ=typEl.value;
+      const name=nameEl.value.trim();
+      const start=zeitZuMinuten(startEl.value || "00:00");
+      if(!name) return alert("Bitte einen Namen eingeben.");
+
+      const isNew=sel.value === "neu";
+      if(isNew){
+        if(mitarbeiter[name] !== undefined || aushilfen[name] !== undefined) return alert("Dieser Name existiert bereits.");
+        if(typ === "fest"){
+          mitarbeiter[name]=start;
+          startSalden[name]=start;
+          sollStundenSpeicher[name]=sollStundenSpeicher[name]||"";
+          verlaufDetails[name]=verlaufDetails[name]||{};
+        } else {
+          aushilfen[name]=start;
+          aushilfenStartSalden[name]=start;
+          aushilfenSollStundenSpeicher[name]=aushilfenSollStundenSpeicher[name]||"";
+          aushilfenVerlaufDetails[name]=aushilfenVerlaufDetails[name]||{};
+        }
+      } else {
+        const [oldTyp,...parts]=sel.value.split("|");
+        const oldName=decodeURIComponent(parts.join("|"));
+        if(oldTyp !== typ) return alert("Die Art einer bestehenden Person kann nicht geändert werden. Bitte dafür eine neue Person anlegen.");
+
+        if(name !== oldName && (mitarbeiter[name] !== undefined || aushilfen[name] !== undefined)) return alert("Dieser Name existiert bereits.");
+
+        if(typ === "fest"){
+          const verlauf=verlaufDetails[oldName] || {};
+          const urlaub=urlaubsKonten[oldName];
+          const sollAlt=sollStundenSpeicher[oldName] || "";
+          delete mitarbeiter[oldName];
+          delete startSalden[oldName];
+          delete sollStundenSpeicher[oldName];
+          delete verlaufDetails[oldName];
+          mitarbeiter[name]=0;
+          startSalden[name]=start;
+          sollStundenSpeicher[name]=sollAlt;
+          verlaufDetails[name]=verlauf;
+          if(urlaub){ urlaubsKonten[name]=urlaub; delete urlaubsKonten[oldName]; }
+        } else {
+          const verlauf=aushilfenVerlaufDetails[oldName] || {};
+          const sollAlt=aushilfenSollStundenSpeicher[oldName] || "";
+          delete aushilfen[oldName];
+          delete aushilfenStartSalden[oldName];
+          delete aushilfenSollStundenSpeicher[oldName];
+          delete aushilfenVerlaufDetails[oldName];
+          aushilfen[name]=0;
+          aushilfenStartSalden[name]=start;
+          aushilfenSollStundenSpeicher[name]=sollAlt;
+          aushilfenVerlaufDetails[name]=verlauf;
+        }
+        teamUrlaube.forEach(u=>{ if(u.name===oldName) u.name=name; });
+
+        if(typ === "fest"){
+          let saldo=start;
+          Object.values(verlaufDetails[name]||{}).forEach(y=>Object.values(y).forEach(m=>{
+            saldo += zeitZuMinuten(m.ist)-zeitZuMinuten(m.soll)-zeitZuMinuten(m.auszahlung||"00:00")-raucherpausenMinuten(m);
+          }));
+          mitarbeiter[name]=saldo;
+        } else {
+          let saldo=start;
+          Object.values(aushilfenVerlaufDetails[name]||{}).forEach(y=>Object.values(y).forEach(m=>{
+            saldo += zeitZuMinuten(m.gearbeitet)-zeitZuMinuten(m.gezahlt)-raucherpausenMinuten(m);
+          }));
+          aushilfen[name]=saldo;
+        }
+      }
+
+      await speichern();
+      dropdownLaden();
+      verwaltungDropdownsLaden();
+      const target=`${typ}|${encodeURIComponent(name)}`;
+      document.getElementById("verwaltungPersonSelect").value=target;
+      verwaltungPersonWechseln();
+      toastZeigen(isNew ? `${name} wurde angelegt` : `${name} wurde gespeichert`);
+    }
+
+    function verlaufsdetailsFallsVorhanden(typ,name){
+      if(typ === "fest") return verlaufDetails[name] || {};
+      return aushilfenVerlaufDetails[name] || {};
+    }
+
+    async function verwaltungPersonLoeschen(){
+      const sel=document.getElementById("verwaltungPersonSelect");
+      if(!sel || sel.value === "neu") return;
+      const [typ, ...parts]=sel.value.split("|");
+      const name=decodeURIComponent(parts.join("|"));
+      if(!confirm(`"${name}" unwiderruflich löschen?`)) return;
+      if(typ === "fest"){
+        delete mitarbeiter[name]; delete sollStundenSpeicher[name]; delete verlaufDetails[name]; delete startSalden[name]; delete urlaubsKonten[name];
+      } else {
+        delete aushilfen[name]; delete aushilfenSollStundenSpeicher[name]; delete aushilfenVerlaufDetails[name]; delete aushilfenStartSalden[name];
+      }
+      teamUrlaube=teamUrlaube.filter(u=>u.name!==name);
+      await speichern();
+      dropdownLaden();
+      verwaltungDropdownsLaden();
+    }
+
+    // Zentraler UI-Zustand für die aktuell ausgewählten Personen.
+    // Dadurch bleibt die Auswahl auch nach Dropdown-Neuaufbau und Speichern stabil.
+    const auswahlZustand = { fest: "", aushilfe: "" };
+
+    function personVorhanden(typ, name) {
+      if (!name) return false;
+      const quelle = typ === "fest" ? mitarbeiter : aushilfen;
+      return Object.prototype.hasOwnProperty.call(quelle, name);
+    }
+
+    function auswahlMerken(typ, name) {
+      if (personVorhanden(typ, name)) auswahlZustand[typ] = name;
+    }
+
+    function toastZeigen(text, typ = "success") {
+      const toast = document.getElementById("saveToast");
+      if (!toast) return;
+      clearTimeout(toast._timer);
+      toast.textContent = `✓ ${text}`;
+      toast.className = `save-toast${typ === "error" ? " error" : ""}`;
+      requestAnimationFrame(() => toast.classList.add("show"));
+      toast._timer = setTimeout(() => toast.classList.remove("show"), 2600);
+    }
+
     function dropdownLaden() {
       const s = document.getElementById("mitarbeiterSelect");
       const sAushilfe = document.getElementById("aushilfeSelect");
       const sUrlaub = document.getElementById("urlaubMitarbeiterSelect");
+      const sVerwaltung = document.getElementById("mitarbeiterSelectVerwaltung");
+      const sAushilfeVerwaltung = document.getElementById("aushilfeSelectVerwaltung");
       
-      const curFeste = s.value;
-      const curAushilfe = sAushilfe.value;
+      const curFeste = auswahlZustand.fest || s.value;
+      const curAushilfe = auswahlZustand.aushilfe || sAushilfe.value;
       
       const mOptions = Object.keys(mitarbeiter).sort().map(n => `<option value="${n}">${n}</option>`).join("");
       const aOptions = Object.keys(aushilfen).sort().map(n => `<option value="${n}">${n}</option>`).join("");
       
-      s.innerHTML = '<option value="neu">+ Mitarbeiter anlegen</option>' + mOptions;
-      sAushilfe.innerHTML = '<option value="neu">+ Aushilfe anlegen</option>' + aOptions;
+      s.innerHTML = (mOptions || '<option value="">Keine Mitarbeiter</option>');
+      sAushilfe.innerHTML = (aOptions || '<option value="">Keine Aushilfen</option>');
+      if (sVerwaltung) sVerwaltung.innerHTML = '<option value="neu">+ Mitarbeiter anlegen</option>' + mOptions;
+      if (sAushilfeVerwaltung) sAushilfeVerwaltung.innerHTML = '<option value="neu">+ Aushilfe anlegen</option>' + aOptions;
       
       sUrlaub.innerHTML = '<option value="" disabled selected>Mitarbeiter wählen...</option>' + 
                           Object.keys(mitarbeiter).sort().map(n => `<option value="${n}">${n} (Fest)</option>`).join("") +
                           Object.keys(aushilfen).sort().map(n => `<option value="${n}">${n} (Aushilfe)</option>`).join("");
       
-      if(curFeste && mitarbeiter[curFeste]) s.value = curFeste;
-      if(curAushilfe && aushilfen[curAushilfe]) sAushilfe.value = curAushilfe;
+      const festeNamen = Object.keys(mitarbeiter).sort();
+      const aushilfeNamen = Object.keys(aushilfen).sort();
+      const festeAuswahl = personVorhanden("fest", curFeste) ? curFeste : (festeNamen[0] || "");
+      const aushilfeAuswahl = personVorhanden("aushilfe", curAushilfe) ? curAushilfe : (aushilfeNamen[0] || "");
+
+      s.value = festeAuswahl;
+      sAushilfe.value = aushilfeAuswahl;
+      auswahlZustand.fest = festeAuswahl;
+      auswahlZustand.aushilfe = aushilfeAuswahl;
       
       mitarbeiterWechseln();
       aushilfeWechseln();
+      verwaltungDropdownsLaden();
+    }
+
+    function raucherpausenMinuten(d){
+      return Math.max(0, parseInt(d?.raucherpausen,10)||0) * 2;
+    }
+
+    // Für die Monatsanzeige werden Raucherpausen wie Urlaub/Krankheit
+    // direkt auf die geleisteten Stunden angerechnet. Die gespeicherten
+    // Rohwerte bleiben erhalten; dadurch sind bestehende Buchungen kompatibel.
+    function effektiveIstMinuten(d){
+      return zeitZuMinuten(d?.ist || "00:00") - raucherpausenMinuten(d);
+    }
+
+    function effektiveGearbeitetMinuten(d){
+      return zeitZuMinuten(d?.gearbeitet || "00:00") - raucherpausenMinuten(d);
+    }
+
+    function effektiveIstZeit(d){
+      return minutenZuZeit(effektiveIstMinuten(d));
+    }
+
+    function effektiveGearbeitetZeit(d){
+      return minutenZuZeit(effektiveGearbeitetMinuten(d));
     }
 
     // ==========================================
@@ -1831,13 +2170,8 @@ function zeitZuMinuten(zeit) {
     // ==========================================
     function mitarbeiterWechseln() {
       const name = document.getElementById("mitarbeiterSelect").value;
-      const isNew = name === "neu";
-      if (!istBearbeitungsModus) {
-        document.getElementById("neuerMitarbeiterBereich").style.display = isNew ? "block" : "none";
-        document.getElementById("editMitarbeiterBtn").style.display = isNew ? "none" : "block";
-        document.getElementById("deleteBtn").style.display = isNew ? "none" : "block";
-      }
-
+      auswahlMerken("fest", name);
+      const isNew = name === "neu" || !name;
       const minuten = isNew ? 0 : (mitarbeiter[name] || 0);
       const saldoTextElement = document.getElementById("aktuellerSaldo");
       const saldoBoxElement = document.getElementById("saldoBox");
@@ -1860,6 +2194,9 @@ function zeitZuMinuten(zeit) {
     }
 
     function mitarbeiterBearbeitenModus() {
+      const verw = document.getElementById("mitarbeiterSelectVerwaltung");
+      const main = document.getElementById("mitarbeiterSelect");
+      if (verw && verw.value !== main.value) main.value = verw.value;
       const n = document.getElementById("mitarbeiterSelect").value;
       if (n === "neu") return;
       istBearbeitungsModus = true; alterNameFuerBearbeitung = n;
@@ -1868,15 +2205,16 @@ function zeitZuMinuten(zeit) {
       document.getElementById("startSaldo").value = minutenZuZeit(startSalden[n] || 0);
       document.getElementById("neuerMitarbeiterBereich").style.display = "block";
       document.getElementById("btnAbbrechen").style.display = "block";
-      document.getElementById("btnSpeichern").textContent = "📝 Stammdaten speichern";
+      document.getElementById("btnMitarbeiterStammdaten").style.display = "block";
     }
 
     function bearbeitenAbbrechen() {
       istBearbeitungsModus = false;
       document.getElementById("neuerMitarbeiterBereich").style.display = "none";
       document.getElementById("btnAbbrechen").style.display = "none";
-      document.getElementById("btnSpeichern").textContent = "💾 Buchung speichern";
+      document.getElementById("btnMitarbeiterStammdaten").style.display = "none";
       mitarbeiterWechseln();
+      verwaltungDropdownsLaden();
     }
 
     function updateVerlaufAnzeige() {
@@ -1891,7 +2229,7 @@ function zeitZuMinuten(zeit) {
         const mKey = String(idx + 1).padStart(2, '0');
         const d = verlaufDetails[n][j][mKey];
         if (d) {
-          const diff = zeitZuMinuten(d.ist) - zeitZuMinuten(d.soll);
+          const diff = effektiveIstMinuten(d) - zeitZuMinuten(d.soll);
           const li = document.createElement("li");
           li.className = "history-item";
           li.innerHTML = `
@@ -1901,15 +2239,43 @@ function zeitZuMinuten(zeit) {
                 ${d.urlaub > 0 ? `<span class="tag tag-u">🏖️ ${d.urlaub}</span>` : ''}
                 ${d.krank > 0 ? `<span class="tag tag-k">🤒 ${d.krank}</span>` : ''}
                 ${d.schule > 0 ? `<span class="tag tag-u">📚 ${d.schule}</span>` : ''}
+                ${d.raucherpausen > 0 ? `<span class="tag" style="background:#f3f4f6;color:#4b5563;">🚬 ${d.raucherpausen} (-${d.raucherpausen*2} Min.)</span>` : ''}
               </div>
               ${zeitZuMinuten(d.auszahlung) !== 0 ? `<span class="payout-val">Auszahlung: ${d.auszahlung}</span>` : ''}
             </div>
             <div style="display:flex; align-items:center;">
-              <div class="time-val">${d.ist} <span class="${diff >= 0 ? 'diff-pos' : 'diff-neg'}">(${diff >= 0 ? '+' : ''}${minutenZuZeit(diff)})</span></div>
+              <div class="time-val">${effektiveIstZeit(d)} <span class="${diff >= 0 ? 'diff-pos' : 'diff-neg'}">(${diff >= 0 ? '+' : ''}${minutenZuZeit(diff)})</span></div>
               <button class="delete-entry-small" onclick="monatLoeschen('${n}', '${j}', '${mKey}')">✕</button>
             </div>`;
           l.appendChild(li);
         }
+      });
+    }
+
+    function monatsEingabefelderLeeren() {
+      const felder = [
+        "ist",
+        "auszahlung",
+        "urlaub",
+        "krank",
+        "schule",
+        "feiertage",
+        "raucherpausen"
+      ];
+      felder.forEach(id => {
+        const feld = document.getElementById(id);
+        if (feld) feld.value = "";
+      });
+    }
+
+    function aushilfeMonatsEingabefelderLeeren() {
+      const felder = [
+        "aushilfeGezahlt",
+        "aushilfeRaucherpausen"
+      ];
+      felder.forEach(id => {
+        const feld = document.getElementById(id);
+        if (feld) feld.value = "";
       });
     }
 
@@ -1935,7 +2301,7 @@ function zeitZuMinuten(zeit) {
         
         let s = startSalden[nName] || 0;
         Object.values(verlaufDetails[nName] || {}).forEach(y => Object.values(y).forEach(m => {
-          s += (zeitZuMinuten(m.ist) - zeitZuMinuten(m.soll)) - zeitZuMinuten(m.auszahlung || "00:00");
+          s += (zeitZuMinuten(m.ist) - zeitZuMinuten(m.soll)) - zeitZuMinuten(m.auszahlung || "00:00") - raucherpausenMinuten(m);
         }));
         mitarbeiter[nName] = s;
         await speichern(); bearbeitenAbbrechen(); dropdownLaden();
@@ -1961,6 +2327,8 @@ function zeitZuMinuten(zeit) {
       const krkT = parseFloat(document.getElementById("krank").value) || 0;
       const schT = parseFloat(document.getElementById("schule").value) || 0;
       const feiT = parseFloat(document.getElementById("feiertage").value) || 0;
+      const raucherT = Math.max(0, parseInt(document.getElementById("raucherpausen").value, 10) || 0);
+      const raucherMinuten = raucherT * 2;
 
       if (urlT > 0 || krkT > 0 || schT > 0 || feiT > 0) {
 
@@ -1980,29 +2348,27 @@ function zeitZuMinuten(zeit) {
         let sM = zeitZuMinuten(document.getElementById("startSaldo").value || "00:00");
         mitarbeiter[name] = sM; startSalden[name] = sM;
       }
-      mitarbeiter[name] += (zeitZuMinuten(istV) - zeitZuMinuten(sollV)) - zeitZuMinuten(ausV);
+      mitarbeiter[name] += (zeitZuMinuten(istV) - zeitZuMinuten(sollV)) - zeitZuMinuten(ausV) - raucherMinuten;
       if (allesAuszahlen) {
       mitarbeiter[name] = 0;
       }
       sollStundenSpeicher[name] = sollV;
       if (!verlaufDetails[name]) verlaufDetails[name] = {};
       if (!verlaufDetails[name][jK]) verlaufDetails[name][jK] = {};
-      verlaufDetails[name][jK][mK] = { ist: istV, soll: sollV, auszahlung: ausV, urlaub: urlT, krank: krkT, schule: schT, feiertage: feiT };
+      verlaufDetails[name][jK][mK] = { ist: istV, soll: sollV, auszahlung: ausV, urlaub: urlT, krank: krkT, schule: schT, feiertage: feiT, raucherpausen: raucherT };
       
-      await speichern(); jahrFilterAktualisieren(); dropdownLaden();
-      document.getElementById("mitarbeiterSelect").value = "neu";
-      document.getElementById("neuerMitarbeiter").value = "";
-      document.getElementById("startSaldo").value = "";
-      mitarbeiterWechseln();
+      // Nach dem Speichern dieselbe Person aktiv lassen. Wichtig: Der Haupt-Dropdown
+      // besitzt keinen "neu"-Eintrag mehr. Ein zwischenzeitliches Setzen auf "neu"
+      // machte die Auswahl leer und ließ beim Neuaufbau einen anderen Mitarbeiter aktiv werden.
+      const gespeicherterMitarbeiter = name;
+      auswahlMerken("fest", gespeicherterMitarbeiter);
+      await speichern();
+      jahrFilterAktualisieren();
+      dropdownLaden();
 
-      document.getElementById("mitarbeiterSelect").value = name; mitarbeiterWechseln();
-      
-      document.getElementById("ist").value = ""; 
-      document.getElementById("auszahlung").value = "";
-      document.getElementById("urlaub").value = ""; 
-      document.getElementById("krank").value = "";
-      document.getElementById("schule").value = "";
-      document.getElementById("feiertage").value = "";
+      // Nach einer Monatsbuchung bleiben ausschließlich MM/JJ und Soll-Stunden stehen.
+      monatsEingabefelderLeeren();
+      toastZeigen(`${monatsNamen[parseInt(mK,10)-1] || mK} für ${gespeicherterMitarbeiter} gespeichert`);
     }
 
 /**
@@ -2041,6 +2407,7 @@ const schT =
 
 const feiT =
     parseFloat(document.getElementById("feiertage").value) || 0;
+const raucherT = Math.max(0, parseInt(document.getElementById("raucherpausen").value, 10) || 0);
 
 const stundenProTag =
     berechneStundenProTag(sollV);
@@ -2073,7 +2440,7 @@ const auszahlung =
     async function monatLoeschen(n, j, m) {
       if (!confirm("Löschen?")) return;
       const d = verlaufDetails[n][j][m];
-      mitarbeiter[n] -= (zeitZuMinuten(d.ist) - zeitZuMinuten(d.soll) - zeitZuMinuten(d.auszahlung || "00:00"));
+      mitarbeiter[n] -= (zeitZuMinuten(d.ist) - zeitZuMinuten(d.soll) - zeitZuMinuten(d.auszahlung || "00:00") - raucherpausenMinuten(d));
       delete verlaufDetails[n][j][m];
       await speichern(); jahrFilterAktualisieren(); mitarbeiterWechseln();
     }
@@ -2094,13 +2461,8 @@ const auszahlung =
     // ==========================================
     function aushilfeWechseln() {
       const name = document.getElementById("aushilfeSelect").value;
-      const isNew = name === "neu";
-      if (!istAushilfeBearbeitungsModus) {
-        document.getElementById("neueAushilfeBereich").style.display = isNew ? "block" : "none";
-        document.getElementById("editAushilfeBtn").style.display = isNew ? "none" : "block";
-        document.getElementById("aushilfeDeleteBtn").style.display = isNew ? "none" : "block";
-      }
-
+      auswahlMerken("aushilfe", name);
+      const isNew = name === "neu" || !name;
       const minuten = isNew ? 0 : (aushilfen[name] || 0);
       const saldoTextElement = document.getElementById("aushilfeAktuellerSaldo");
       const saldoBoxElement = document.getElementById("aushilfeSaldoBox");
@@ -2121,6 +2483,9 @@ const auszahlung =
     }
 
     function aushilfeBearbeitenModus() {
+      const verw = document.getElementById("aushilfeSelectVerwaltung");
+      const main = document.getElementById("aushilfeSelect");
+      if (verw && verw.value !== main.value) main.value = verw.value;
       const n = document.getElementById("aushilfeSelect").value;
       if (n === "neu") return;
       istAushilfeBearbeitungsModus = true; alterAushilfeNameFuerBearbeitung = n;
@@ -2129,15 +2494,16 @@ const auszahlung =
       document.getElementById("aushilfeStartSaldo").value = minutenZuZeit(aushilfenStartSalden[n] || 0);
       document.getElementById("neueAushilfeBereich").style.display = "block";
       document.getElementById("btnAushilfeAbbrechen").style.display = "block";
-      document.getElementById("btnAushilfeSpeichern").textContent = "📝 Stammdaten speichern";
+      document.getElementById("btnAushilfeStammdaten").style.display = "block";
     }
 
     function aushilfeBearbeitenAbbrechen() {
       istAushilfeBearbeitungsModus = false;
       document.getElementById("neueAushilfeBereich").style.display = "none";
       document.getElementById("btnAushilfeAbbrechen").style.display = "none";
-      document.getElementById("btnAushilfeSpeichern").textContent = "💾 Buchung speichern";
+      document.getElementById("btnAushilfeStammdaten").style.display = "none";
       aushilfeWechseln();
+      verwaltungDropdownsLaden();
     }
 
     function updateAushilfeVerlaufAnzeige() {
@@ -2152,17 +2518,17 @@ const auszahlung =
         const mKey = String(idx + 1).padStart(2, '0');
         const d = aushilfenVerlaufDetails[n][j][mKey];
         if (d) {
-          const diff = zeitZuMinuten(d.gearbeitet) - zeitZuMinuten(d.gezahlt);
+          const diff = effektiveGearbeitetMinuten(d) - zeitZuMinuten(d.gezahlt);
           const li = document.createElement("li");
           li.className = "history-item";
           
           li.innerHTML = `
             <div style="flex-grow:1;">
               <span style="font-weight:600;">${mName}</span>
-              <div style="font-size:11px; color:var(--text-muted); margin-top:4px;">Gezahlt: ${d.gezahlt}</div>
+              <div style="font-size:11px; color:var(--text-muted); margin-top:4px;">Gezahlt: ${d.gezahlt}${d.raucherpausen > 0 ? ` · 🚬 ${d.raucherpausen} (-${d.raucherpausen*2} Min.)` : ''}</div>
             </div>
             <div style="display:flex; align-items:center;">
-              <div class="time-val">${d.gearbeitet} <span class="${diff >= 0 ? 'diff-pos' : 'diff-neg'}">(${diff >= 0 ? '+' : ''}${minutenZuZeit(diff)})</span></div>
+              <div class="time-val">${effektiveGearbeitetZeit(d)} <span class="${diff >= 0 ? 'diff-pos' : 'diff-neg'}">(${diff >= 0 ? '+' : ''}${minutenZuZeit(diff)})</span></div>
               <button class="delete-entry-small" onclick="aushilfeMonatLoeschen('${n}', '${j}', '${mKey}')">✕</button>
             </div>`;
           l.appendChild(li);
@@ -2188,7 +2554,7 @@ const auszahlung =
         
         let s = aushilfenStartSalden[nName] || 0;
         Object.values(aushilfenVerlaufDetails[nName] || {}).forEach(y => Object.values(y).forEach(m => {
-          s += (zeitZuMinuten(m.gearbeitet) - zeitZuMinuten(m.gezahlt));
+          s += (zeitZuMinuten(m.gearbeitet) - zeitZuMinuten(m.gezahlt) - raucherpausenMinuten(m));
         }));
         aushilfen[nName] = s;
         await speichern(); aushilfeBearbeitenAbbrechen(); dropdownLaden();
@@ -2205,34 +2571,37 @@ const auszahlung =
       
       const gearbeitetV = document.getElementById("aushilfeGearbeitet").value || "00:00";
       const gezahltV = document.getElementById("aushilfeGezahlt").value || "00:00";
+      const raucherT = Math.max(0, parseInt(document.getElementById("aushilfeRaucherpausen").value, 10) || 0);
 
       if (sel.value === "neu") {
         let sM = zeitZuMinuten(document.getElementById("aushilfeStartSaldo").value || "00:00");
         aushilfen[name] = sM; aushilfenStartSalden[name] = sM;
       }
       
-      aushilfen[name] += (zeitZuMinuten(gearbeitetV) - zeitZuMinuten(gezahltV));
+      aushilfen[name] += (zeitZuMinuten(gearbeitetV) - zeitZuMinuten(gezahltV) - (raucherT * 2));
       aushilfenSollStundenSpeicher[name] = gearbeitetV;
       
       if (!aushilfenVerlaufDetails[name]) aushilfenVerlaufDetails[name] = {};
       if (!aushilfenVerlaufDetails[name][jK]) aushilfenVerlaufDetails[name][jK] = {};
-      aushilfenVerlaufDetails[name][jK][mK] = { gearbeitet: gearbeitetV, gezahlt: gezahltV };
+      aushilfenVerlaufDetails[name][jK][mK] = { gearbeitet: gearbeitetV, gezahlt: gezahltV, raucherpausen: raucherT };
       
-      await speichern(); jahrFilterAktualisieren(); dropdownLaden();
-      document.getElementById("aushilfeSelect").value = "neu";
-      document.getElementById("neueAushilfe").value = "";
-      document.getElementById("aushilfeStartSaldo").value = "";
-      aushilfeWechseln();
+      // Auch bei Aushilfen nach dem Speichern exakt dieselbe Person aktiv lassen.
+      const gespeicherteAushilfe = name;
+      auswahlMerken("aushilfe", gespeicherteAushilfe);
+      await speichern();
+      jahrFilterAktualisieren();
+      dropdownLaden();
 
-      document.getElementById("aushilfeSelect").value = name; aushilfeWechseln();
-      
-      document.getElementById("aushilfeGezahlt").value = "";
+      // Gearbeitet bleibt als Monatsvorgabe stehen; gezahlte Stunden und Raucherpause
+      // werden nach der Buchung geleert.
+      aushilfeMonatsEingabefelderLeeren();
+      toastZeigen(`${monatsNamen[parseInt(mK,10)-1] || mK} für ${gespeicherteAushilfe} gespeichert`);
     }
 
     async function aushilfeMonatLoeschen(n, j, m) {
       if (!confirm("Löschen?")) return;
       const d = aushilfenVerlaufDetails[n][j][m];
-      aushilfen[n] -= (zeitZuMinuten(d.gearbeitet) - zeitZuMinuten(d.gezahlt));
+      aushilfen[n] -= (zeitZuMinuten(d.gearbeitet) - zeitZuMinuten(d.gezahlt) - raucherpausenMinuten(d));
       delete aushilfenVerlaufDetails[n][j][m];
       await speichern(); jahrFilterAktualisieren(); aushilfeWechseln();
     }
@@ -2516,25 +2885,54 @@ function exportBackup() {
       return anspruch + vorjahresUebertrag - genommen;
     }
 
+    function urlaubAnspruchPerson() {
+      const verwSel = document.getElementById('verwaltungPersonSelect');
+      if (verwSel && verwSel.value && verwSel.value !== 'neu') {
+        const [typ, ...parts] = verwSel.value.split('|');
+        return { typ, name: decodeURIComponent(parts.join('|')) };
+      }
+
+      const mitarbeiterSel = document.getElementById('mitarbeiterSelect');
+      const name = mitarbeiterSel?.value;
+      return { typ: name && name !== 'neu' ? 'fest' : null, name: name && name !== 'neu' ? name : null };
+    }
+
+    function aktualisiereUrlaubsanspruchSichtbarkeit() {
+      const panel = document.getElementById('verwaltungUrlaubsanspruchPanel');
+      if (!panel) return;
+      const person = urlaubAnspruchPerson();
+      const sichtbar = person.typ === 'fest' && !!person.name;
+      panel.style.display = sichtbar ? '' : 'none';
+      if (!sichtbar) {
+        const anspruch = document.getElementById('urlaubAnspruch');
+        if (anspruch) anspruch.value = '';
+      }
+    }
+
     function urlaubAnspruchLaden() {
-      const name = document.getElementById('mitarbeiterSelect')?.value;
       const jahr = document.getElementById('urlaubAnspruchJahr')?.value;
       const anspruch = document.getElementById('urlaubAnspruch');
       if (!anspruch) return;
-      if (!name || name === 'neu' || !jahr) {
+
+      const person = urlaubAnspruchPerson();
+      aktualisiereUrlaubsanspruchSichtbarkeit();
+
+      if (person.typ !== 'fest' || !person.name || !jahr) {
         anspruch.value = '';
         return;
       }
-      const d = urlaubsKonten[name]?.[jahr] || {};
+
+      const d = urlaubsKonten[person.name]?.[jahr] || {};
       anspruch.value = d.anspruch ?? '';
     }
 
     async function urlaubAnspruchSpeichern() {
-      const name = document.getElementById('mitarbeiterSelect')?.value;
+      const person = urlaubAnspruchPerson();
+      const name = person.name;
       const jahr = document.getElementById('urlaubAnspruchJahr')?.value;
       const anspruch = parseInt(document.getElementById('urlaubAnspruch')?.value, 10);
 
-      if (!name || name === 'neu') return alert('Bitte zuerst einen bestehenden Festangestellten auswählen.');
+      if (person.typ !== 'fest' || !name) return alert('Der Urlaubsanspruch kann nur für eine angestellte Person eingetragen werden.');
       if (!jahr) return alert('Bitte ein Jahr auswählen.');
       if (!Number.isInteger(anspruch) || anspruch < 0) return alert('Bitte einen gültigen Urlaubsanspruch eingeben.');
 
@@ -2545,7 +2943,7 @@ function exportBackup() {
       urlaubAnspruchLaden();
       initUrlaubUebersichtJahre();
       renderUrlaubUebersicht();
-      alert(`Urlaubsanspruch ${jahr} für ${name} gespeichert.`);
+      toastZeigen(`Urlaubsanspruch ${jahr} für ${name} gespeichert`);
     }
 
     function initUrlaubUebersichtJahre() {
@@ -2943,7 +3341,7 @@ function renderOverviewCards() {
           jahresSaldo +=
               zeitZuMinuten(d.ist) -
               zeitZuMinuten(d.soll);
-          const diff = zeitZuMinuten(d.ist) - zeitZuMinuten(d.soll);
+          const diff = effektiveIstMinuten(d) - zeitZuMinuten(d.soll);
           const diffClass = diff >= 0 ? 'diff-pos' : 'diff-neg';
           const diffSign = diff >= 0 ? '+' : '';
 
@@ -2951,7 +3349,7 @@ function renderOverviewCards() {
             <div class="overview-month">
               <strong>${monatsNamen[i-1].substring(0,3)}</strong>
               <div style="text-align:right;">
-                <div>${d.ist}</div>
+                <div>${effektiveIstZeit(d)}</div>
                 <div class="${diffClass}" style="font-size:11px;">
                   (${diffSign}${minutenZuZeit(diff)})
                 </div>
@@ -2966,7 +3364,7 @@ function renderOverviewCards() {
 
         if(d){
 
-          const diff = zeitZuMinuten(d.gearbeitet) - zeitZuMinuten(d.gezahlt);
+          const diff = effektiveGearbeitetMinuten(d) - zeitZuMinuten(d.gezahlt);
           const diffClass = diff >= 0 ? 'diff-pos' : 'diff-neg';
           const diffSign = diff >= 0 ? '+' : '';
 
@@ -2974,7 +3372,7 @@ function renderOverviewCards() {
             <div class="overview-month">
               <strong>${monatsNamen[i-1].substring(0,3)}</strong>
               <div style="text-align:right;">
-                <div>${d.gearbeitet}</div>
+                <div>${effektiveGearbeitetZeit(d)}</div>
                 <div class="${diffClass}" style="font-size:11px;">
                   (${diffSign}${minutenZuZeit(diff)})
                 </div>
