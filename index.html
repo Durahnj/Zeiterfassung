@@ -1201,16 +1201,16 @@ body.dark-mode .save-toast.error{background:#450a0a;color:#fca5a5;border-color:#
 </div>
 
     <div class="tabs">
-      <button class="tab-btn active" id="tabEingabe" onclick="switchTab('eingabe')">✍️ Angestellte</button>
+      <button class="tab-btn" id="tabEingabe" onclick="switchTab('eingabe')">✍️ Angestellte</button>
       <button class="tab-btn" id="tabAushilfen" onclick="switchTab('aushilfen')">🤝 Aushilfen</button>
       <button class="tab-btn" id="tabVerwaltung" onclick="switchTab('verwaltung')">⚙️ Verwaltung</button>
-      <button class="tab-btn" id="tabUebersicht" onclick="switchTab('uebersicht')">📊 Übersicht</button>
+      <button class="tab-btn active" id="tabUebersicht" onclick="switchTab('uebersicht')">📊 Übersicht</button>
       <button class="tab-btn" id="tabUrlaub" onclick="switchTab('urlaub')">🌴 Urlaubsplaner</button>
       <button class="tab-btn" id="tabUrlaubUebersicht" onclick="switchTab('urlaubUebersicht')">📅 Übersicht Urlaub</button>
       <button class="tab-btn" id="tabRechner" onclick="switchTab('rechner')">🧮 Rechner</button>
     </div>
 
-    <div id="pageEingabe" class="page active">
+    <div id="pageEingabe" class="page">
       <div class="layout">
         <div class="sidebar">
           <h3>Mitarbeiter (Fest)</h3>
@@ -1374,7 +1374,7 @@ body.dark-mode .save-toast.error{background:#450a0a;color:#fca5a5;border-color:#
                 <div>
                   <label>Art</label>
                   <select id="verwaltungPersonTyp" onchange="verwaltungPersonTypGeaendert()">
-                    <option value="fest">Angestellt</option>
+                    <option value="fest">Fest</option>
                     <option value="aushilfe">Aushilfe</option>
                   </select>
                 </div>
@@ -1426,7 +1426,7 @@ body.dark-mode .save-toast.error{background:#450a0a;color:#fca5a5;border-color:#
       </div>
     </div>
 
-    <div id="pageUebersicht" class="page">
+    <div id="pageUebersicht" class="page active">
       <div class="overview-panel">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 15px;">
           <h3 style="margin: 0;">Jahresübersicht aller Mitarbeiter</h3>
@@ -1704,6 +1704,7 @@ async function datenLaden() {
       initUrlaubUebersichtJahre();
       renderUrlaubPlaner();
       renderUrlaubUebersicht();
+      switchTab('uebersicht');
     }
 
 function zeitZuMinuten(zeit) {
@@ -1921,7 +1922,7 @@ function zeitZuMinuten(zeit) {
       ].sort((a,b)=>a.name.localeCompare(b.name) || a.typ.localeCompare(b.typ));
 
       sel.innerHTML = '<option value="neu">+ Person anlegen</option>' +
-        personen.map(p => `<option value="${p.typ}|${encodeURIComponent(p.name)}">${p.name} — ${p.typ === "fest" ? "Angestellt" : "Aushilfe"}</option>`).join("");
+        personen.map(p => `<option value="${p.typ}|${encodeURIComponent(p.name)}">${p.name} — ${p.typ === "fest" ? "Fest" : "Aushilfe"}</option>`).join("");
 
       if(current && current !== "neu" && [...sel.options].some(o=>o.value===current)) sel.value=current;
       else if(current === "neu") sel.value="neu";
@@ -3013,7 +3014,7 @@ function exportBackup() {
               <div class="urlaub-uebersicht-box"><div class="urlaub-uebersicht-label">Anspruch</div><div class="urlaub-uebersicht-value">${anspruch} Tage</div></div>
               <div class="urlaub-uebersicht-box"><div class="urlaub-uebersicht-label">Übertrag</div><div class="urlaub-uebersicht-value">${uebertrag} Tage</div></div>
               <div class="urlaub-uebersicht-box"><div class="urlaub-uebersicht-label">Verfügbar</div><div class="urlaub-uebersicht-value">${verfuegbar} Tage</div></div>
-              <div class="urlaub-uebersicht-box"><div class="urlaub-uebersicht-label">Geplant</div><div class="urlaub-uebersicht-value">${geplant} Tage</div></div>
+              <div class="urlaub-uebersicht-box"><div class="urlaub-uebersicht-label">Eingereicht</div><div class="urlaub-uebersicht-value">${geplant} Tage</div></div>
               <div class="urlaub-uebersicht-box"><div class="urlaub-uebersicht-label">Genommen</div><div class="urlaub-uebersicht-value">${genommen} Tage</div></div>
               <div class="urlaub-uebersicht-box"><div class="urlaub-uebersicht-label">Rest</div><div class="urlaub-uebersicht-value ${restClass}">${rest} Tage</div></div>
             </div>
