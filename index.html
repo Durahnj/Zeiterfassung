@@ -990,7 +990,27 @@ body.dark-mode .btn-secondary{
   .verwaltung-person-card > select{font-size:15px;font-weight:600;}
   .verwaltung-tools{display:grid;grid-template-columns:1fr 1fr;gap:24px;}
   .verwaltung-divider{height:1px;background:var(--border-color);margin:24px 0;}
-  @media(max-width:900px){.verwaltung-tools{grid-template-columns:1fr;}}
+  .verwaltung-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px;}
+  .verwaltung-actions button{flex:1 1 180px;display:inline-flex;align-items:center;justify-content:center;text-align:center;}
+  .btn-archive{background:#7c5a10 !important;color:#fff !important;border:1px solid #9a741d !important;}
+  .btn-archive:hover{background:#65480b !important;}
+  .btn-danger{background:#dc2626 !important;color:#fff !important;border:1px solid #dc2626 !important;text-align:center !important;display:inline-flex;align-items:center;justify-content:center;}
+  .btn-danger:hover{background:#b91c1c !important;}
+  .archiv-toggle-wrap{margin-top:24px;padding-top:24px;border-top:1px solid var(--border-color);}
+  .archiv-toggle{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;}
+  .archiv-panel{display:none;margin-top:14px;padding:16px;border:1px solid var(--border-color);border-radius:14px;background:rgba(0,0,0,.012);}
+  .archiv-panel.open{display:block;}
+  .archiv-header{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px;}
+  .archiv-count{font-size:11px;font-weight:700;color:var(--text-muted);background:rgba(127,127,127,.10);padding:4px 9px;border-radius:999px;}
+  .archiv-list{display:grid;gap:10px;max-height:420px;overflow-y:auto;padding-right:4px;}
+  .archiv-empty{padding:14px;border:1px dashed var(--border-color);border-radius:12px;color:var(--text-muted);font-size:13px;text-align:center;}
+  .archiv-item{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:14px;align-items:center;padding:14px;border:1px solid var(--border-color);border-radius:14px;background:rgba(0,0,0,.012);}
+  .archiv-name{font-weight:700;color:var(--text-main);}
+  .archiv-meta{font-size:12px;color:var(--text-muted);margin-top:4px;}
+  .archiv-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;}
+  .archiv-actions button{width:auto;min-width:140px;padding:10px 12px;font-size:12px;margin:0 !important;display:inline-flex;align-items:center;justify-content:center;text-align:center;line-height:1.2;min-height:38px;}
+  body.dark-mode .archiv-item, body.dark-mode .archiv-panel{background:rgba(255,255,255,.018);}
+  @media(max-width:900px){.verwaltung-tools{grid-template-columns:1fr;}.archiv-item{grid-template-columns:1fr}.archiv-actions{justify-content:stretch}.archiv-actions button{flex:1 1 150px;}}
 </style>
 
 <style id="chatgpt-theme-fix">
@@ -1392,9 +1412,9 @@ body.dark-mode .save-toast.error{background:#450a0a;color:#fca5a5;border-color:#
                 <div></div>
               </div>
 
-              <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:8px;">
+              <div class="verwaltung-actions">
                 <button id="btnVerwaltungSpeichern" onclick="verwaltungPersonSpeichern()">💾 Speichern</button>
-                <button id="btnVerwaltungLoeschen" class="btn-danger" onclick="verwaltungPersonLoeschen()" style="display:none;">🗑️ Löschen</button>
+                <button id="btnVerwaltungArchivieren" class="btn-archive" onclick="verwaltungPersonArchivieren()" style="display:none;">📦 Archivieren</button>
               </div>
             </div>
           </div>
@@ -1420,6 +1440,17 @@ body.dark-mode .save-toast.error{background:#450a0a;color:#fca5a5;border-color:#
                 <div><label>Urlaubsanspruch</label><input type="number" id="urlaubAnspruch" min="0" step="1" placeholder="z. B. 30"></div>
               </div>
               <button type="button" class="btn-secondary" onclick="urlaubAnspruchSpeichern()">💾 Jahresanspruch speichern</button>
+            </div>
+          </div>
+
+          <div class="archiv-toggle-wrap">
+            <button type="button" id="btnArchivToggle" class="btn-secondary archiv-toggle" onclick="toggleArchiv()" aria-expanded="false" aria-controls="archivPanel">📦 Archiv <span id="archivToggleCount">(0)</span></button>
+            <div id="archivPanel" class="archiv-panel">
+              <div class="archiv-header">
+                <h3 style="margin:0;">📦 Archivierte Mitarbeiter</h3>
+                <span id="archivCount" class="archiv-count">0 archiviert</span>
+              </div>
+              <div id="archivListe" class="archiv-list"></div>
             </div>
           </div>
         </div>
@@ -1621,6 +1652,9 @@ body.dark-mode .save-toast.error{background:#450a0a;color:#fca5a5;border-color:#
     let aushilfen = {}, aushilfenSollStundenSpeicher = {}, aushilfenVerlaufDetails = {}, aushilfenStartSalden = {};
     
     let teamUrlaube = [];
+    // Archivierte Personen inklusive aller historischen Daten.
+    // Schlüssel: "fest|Name" bzw. "aushilfe|Name".
+    let archiviertePersonen = {};
     // Urlaubskonten je Festangestelltem und Jahr: { Name: { "2026": { anspruch: 30 } } }
     let urlaubsKonten = {};
     let istBearbeitungsModus = false, alterNameFuerBearbeitung = "";
@@ -1674,6 +1708,7 @@ async function datenLaden() {
           
           teamUrlaube = d.teamUrlaube || [];
           urlaubsKonten = d.urlaubsKonten || {};
+          archiviertePersonen = d.archiviertePersonen || {};
         }
         document.getElementById("loadingOverlay").style.display = "none";
         initApp();
@@ -1685,7 +1720,7 @@ async function datenLaden() {
         await db.collection("porterhouse").doc("stundendaten").set({
           mitarbeiter, sollStundenSpeicher, verlaufDetails, startSalden,
           aushilfen, aushilfenSollStundenSpeicher, aushilfenVerlaufDetails, aushilfenStartSalden,
-          teamUrlaube, urlaubsKonten, lastChange: new Date().toISOString()
+          teamUrlaube, urlaubsKonten, archiviertePersonen, lastChange: new Date().toISOString()
         });
       } catch (err) { alert("Cloud-Fehler!"); }
     }
@@ -1930,6 +1965,7 @@ function zeitZuMinuten(zeit) {
       else sel.value="neu";
 
       verwaltungPersonWechseln();
+      archivListeRendern();
     }
 
     function verwaltungPersonWechseln(){
@@ -1938,14 +1974,14 @@ function zeitZuMinuten(zeit) {
       const typ=document.getElementById("verwaltungPersonTyp");
       const name=document.getElementById("verwaltungPersonName");
       const start=document.getElementById("verwaltungPersonStartSaldo");
-      const del=document.getElementById("btnVerwaltungLoeschen");
+      const archiveBtn=document.getElementById("btnVerwaltungArchivieren");
       if(!sel||!form||!typ||!name||!start) return;
 
       const value=sel.value || "neu";
       const isNew=value === "neu";
       form.style.display="block";
       aktualisiereUrlaubsanspruchSichtbarkeit();
-      del.style.display=isNew ? "none" : "inline-flex";
+      if(archiveBtn) archiveBtn.style.display=isNew ? "none" : "inline-flex";
       typ.disabled=!isNew;
 
       if(isNew){
@@ -1990,7 +2026,7 @@ function zeitZuMinuten(zeit) {
 
       const isNew=sel.value === "neu";
       if(isNew){
-        if(mitarbeiter[name] !== undefined || aushilfen[name] !== undefined) return alert("Dieser Name existiert bereits.");
+        if(mitarbeiter[name] !== undefined || aushilfen[name] !== undefined || archivNameVorhanden(name)) return alert("Dieser Name existiert bereits – eventuell im Archiv.");
         if(typ === "fest"){
           mitarbeiter[name]=start;
           startSalden[name]=start;
@@ -2007,7 +2043,7 @@ function zeitZuMinuten(zeit) {
         const oldName=decodeURIComponent(parts.join("|"));
         if(oldTyp !== typ) return alert("Die Art einer bestehenden Person kann nicht geändert werden. Bitte dafür eine neue Person anlegen.");
 
-        if(name !== oldName && (mitarbeiter[name] !== undefined || aushilfen[name] !== undefined)) return alert("Dieser Name existiert bereits.");
+        if(name !== oldName && (mitarbeiter[name] !== undefined || aushilfen[name] !== undefined || archivNameVorhanden(name))) return alert("Dieser Name existiert bereits – eventuell im Archiv.");
 
         if(typ === "fest"){
           const verlauf=verlaufDetails[oldName] || {};
@@ -2065,21 +2101,162 @@ function zeitZuMinuten(zeit) {
       return aushilfenVerlaufDetails[name] || {};
     }
 
-    async function verwaltungPersonLoeschen(){
+    function archivSchluessel(typ, name){
+      return `${typ}|${name}`;
+    }
+
+    function archivNameVorhanden(name){
+      return Object.values(archiviertePersonen || {}).some(p => p && p.name === name);
+    }
+
+    function htmlEsc(v){
+      return String(v ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function toggleArchiv(){
+      const panel=document.getElementById("archivPanel");
+      const btn=document.getElementById("btnArchivToggle");
+      if(!panel || !btn) return;
+      const wirdGeoeffnet=!panel.classList.contains("open");
+      panel.classList.toggle("open", wirdGeoeffnet);
+      btn.setAttribute("aria-expanded", wirdGeoeffnet ? "true" : "false");
+      btn.childNodes[0].textContent=wirdGeoeffnet ? "📦 Archiv schließen " : "📦 Archiv ";
+      if(wirdGeoeffnet) archivListeRendern();
+    }
+
+    function archivListeRendern(){
+      const liste=document.getElementById("archivListe");
+      const count=document.getElementById("archivCount");
+      if(!liste) return;
+      const personen=Object.entries(archiviertePersonen || {})
+        .map(([key,p])=>({key,...p}))
+        .sort((a,b)=>(b.archiviertAm||"").localeCompare(a.archiviertAm||"") || (a.name||"").localeCompare(b.name||""));
+
+      if(count) count.textContent=`${personen.length} archiviert`;
+      const toggleCount=document.getElementById("archivToggleCount");
+      if(toggleCount) toggleCount.textContent=`(${personen.length})`;
+      if(!personen.length){
+        liste.innerHTML='<div class="archiv-empty">Noch keine Personen archiviert.</div>';
+        return;
+      }
+
+      liste.innerHTML=personen.map(p=>{
+        const typText=p.typ === "fest" ? "Fest" : "Aushilfe";
+        const austritt=p.austrittsdatum ? new Date(`${p.austrittsdatum}T12:00:00`).toLocaleDateString("de-DE") : "nicht angegeben";
+        const key=encodeURIComponent(p.key);
+        return `<div class="archiv-item">
+          <div>
+            <div class="archiv-name">${htmlEsc(p.name)} <span class="status-badge ${p.typ}">${typText}</span></div>
+            <div class="archiv-meta">Ausgeschieden: ${htmlEsc(austritt)} · Daten bleiben vollständig gespeichert</div>
+          </div>
+          <div class="archiv-actions">
+            <button type="button" class="btn-secondary" onclick="archivPersonReaktivieren('${key}')">↩️ Reaktivieren</button>
+            <button type="button" class="btn-danger" onclick="archivPersonEndgueltigLoeschen('${key}')">🗑️ Endgültig löschen</button>
+          </div>
+        </div>`;
+      }).join("");
+    }
+
+    async function verwaltungPersonArchivieren(){
       const sel=document.getElementById("verwaltungPersonSelect");
       if(!sel || sel.value === "neu") return;
       const [typ, ...parts]=sel.value.split("|");
       const name=decodeURIComponent(parts.join("|"));
-      if(!confirm(`"${name}" unwiderruflich löschen?`)) return;
+      const heuteObj=new Date();
+      const heuteAnzeige=`${String(heuteObj.getDate()).padStart(2,"0")}.${String(heuteObj.getMonth()+1).padStart(2,"0")}.${heuteObj.getFullYear()}`;
+      const austrittsdatum=prompt(`Austrittsdatum für "${name}" (TT.MM.JJJJ):`, heuteAnzeige);
+      if(austrittsdatum === null) return;
+      const datumAnzeige=(austrittsdatum || heuteAnzeige).trim();
+      const match=datumAnzeige.match(/^(\d{2})\.(\d{2})\.(\d{4})$/);
+      if(!match) return alert("Bitte das Austrittsdatum im Format TT.MM.JJJJ eingeben.");
+      const [,tag,monat,jahr]=match;
+      const pruefDatum=new Date(Number(jahr),Number(monat)-1,Number(tag));
+      if(pruefDatum.getFullYear()!==Number(jahr) || pruefDatum.getMonth()!==Number(monat)-1 || pruefDatum.getDate()!==Number(tag)) return alert("Bitte ein gültiges Austrittsdatum im Format TT.MM.JJJJ eingeben.");
+      const datum=`${jahr}-${monat}-${tag}`;
+      if(!confirm(`"${name}" archivieren?\n\nDie Person verschwindet aus den aktiven Listen. Alle bisherigen Daten bleiben erhalten.`)) return;
+
+      const key=archivSchluessel(typ,name);
+      if(archiviertePersonen[key]) return alert("Diese Person ist bereits archiviert.");
+
       if(typ === "fest"){
+        archiviertePersonen[key]={
+          typ,name,austrittsdatum:datum,archiviertAm:new Date().toISOString(),
+          saldo:mitarbeiter[name] || 0,
+          startSaldo:startSalden[name] || 0,
+          sollStunden:sollStundenSpeicher[name] || "",
+          verlauf:verlaufDetails[name] || {},
+          urlaubskonto:urlaubsKonten[name] || {},
+          teamUrlaube:teamUrlaube.filter(u=>u.name===name)
+        };
         delete mitarbeiter[name]; delete sollStundenSpeicher[name]; delete verlaufDetails[name]; delete startSalden[name]; delete urlaubsKonten[name];
       } else {
+        archiviertePersonen[key]={
+          typ,name,austrittsdatum:datum,archiviertAm:new Date().toISOString(),
+          saldo:aushilfen[name] || 0,
+          startSaldo:aushilfenStartSalden[name] || 0,
+          sollStunden:aushilfenSollStundenSpeicher[name] || "",
+          verlauf:aushilfenVerlaufDetails[name] || {},
+          teamUrlaube:teamUrlaube.filter(u=>u.name===name)
+        };
         delete aushilfen[name]; delete aushilfenSollStundenSpeicher[name]; delete aushilfenVerlaufDetails[name]; delete aushilfenStartSalden[name];
       }
       teamUrlaube=teamUrlaube.filter(u=>u.name!==name);
       await speichern();
       dropdownLaden();
-      verwaltungDropdownsLaden();
+      jahrFilterAktualisieren();
+      renderUrlaubPlaner();
+      renderUrlaubUebersicht();
+      archivListeRendern();
+      toastZeigen(`${name} wurde archiviert`);
+    }
+
+    async function archivPersonReaktivieren(encodedKey){
+      const key=decodeURIComponent(encodedKey);
+      const p=archiviertePersonen[key];
+      if(!p) return alert("Archivierter Datensatz wurde nicht gefunden.");
+      if(mitarbeiter[p.name] !== undefined || aushilfen[p.name] !== undefined) return alert("Eine aktive Person mit diesem Namen existiert bereits.");
+      if(!confirm(`"${p.name}" wieder als aktive Person aufnehmen?`)) return;
+
+      if(p.typ === "fest"){
+        mitarbeiter[p.name]=p.saldo || 0;
+        startSalden[p.name]=p.startSaldo || 0;
+        sollStundenSpeicher[p.name]=p.sollStunden || "";
+        verlaufDetails[p.name]=p.verlauf || {};
+        urlaubsKonten[p.name]=p.urlaubskonto || {};
+      } else {
+        aushilfen[p.name]=p.saldo || 0;
+        aushilfenStartSalden[p.name]=p.startSaldo || 0;
+        aushilfenSollStundenSpeicher[p.name]=p.sollStunden || "";
+        aushilfenVerlaufDetails[p.name]=p.verlauf || {};
+      }
+      if(Array.isArray(p.teamUrlaube)) teamUrlaube.push(...p.teamUrlaube);
+      delete archiviertePersonen[key];
+      await speichern();
+      dropdownLaden();
+      jahrFilterAktualisieren();
+      renderUrlaubPlaner();
+      renderUrlaubUebersicht();
+      archivListeRendern();
+      const target=`${p.typ}|${encodeURIComponent(p.name)}`;
+      const sel=document.getElementById("verwaltungPersonSelect");
+      if(sel){ sel.value=target; verwaltungPersonWechseln(); }
+      toastZeigen(`${p.name} wurde reaktiviert`);
+    }
+
+    async function archivPersonEndgueltigLoeschen(encodedKey){
+      const key=decodeURIComponent(encodedKey);
+      const p=archiviertePersonen[key];
+      if(!p) return;
+      if(!confirm(`"${p.name}" wirklich ENDGÜLTIG löschen?\n\nDabei werden auch die archivierten Stunden-, Urlaubs- und Verlaufsdaten unwiderruflich entfernt.`)) return;
+      delete archiviertePersonen[key];
+      await speichern();
+      archivListeRendern();
+      toastZeigen(`${p.name} wurde endgültig gelöscht`);
     }
 
     // Zentraler UI-Zustand für die aktuell ausgewählten Personen.
@@ -2776,7 +2953,8 @@ function exportBackup() {
     aushilfenVerlaufDetails,
     aushilfenStartSalden,
     teamUrlaube,
-    urlaubsKonten
+    urlaubsKonten,
+    archiviertePersonen
   })], { type: "application/json" });
 
   const l = document.createElement("a");
@@ -2793,6 +2971,7 @@ function exportBackup() {
         aushilfen=d.aushilfen || {}; aushilfenSollStundenSpeicher=d.aushilfenSollStundenSpeicher || {}; aushilfenVerlaufDetails=d.aushilfenVerlaufDetails || {}; aushilfenStartSalden=d.aushilfenStartSalden || {};
         teamUrlaube=d.teamUrlaube || [];
         urlaubsKonten=d.urlaubsKonten || {};
+        archiviertePersonen=d.archiviertePersonen || {};
         await speichern(); location.reload();
       };
       r.readAsText(i.files[0]);
