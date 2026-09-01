@@ -502,7 +502,7 @@ baueUebersichtstabelle = function(){
 
     .btn-secondary { background: #f5f5f5; color: #444; border: 1px solid var(--border-color); margin-bottom: 8px; padding: 10px; font-size: 12px; }
     .btn-pdf { background: var(--info); margin-bottom: 8px; padding: 10px; font-size: 12px; }
-    .btn-danger { background: #fff1f2; color: var(--danger); border: 1px solid #fecaca; margin-top: 10px; }
+    .btn-danger { background: var(--danger) !important; color: #ffffff !important; border: 1px solid var(--danger); margin-top: 10px; text-align: center; display:flex; align-items:center; justify-content:center; gap:8px; font-weight:700; }
 
     .saldo-box, .ergebnis-box { 
       margin: 20px 0; 
@@ -1402,15 +1402,6 @@ body.dark-mode .save-toast.error{background:#450a0a;color:#fca5a5;border-color:#
           <div class="verwaltung-divider"></div>
 
           <div class="verwaltung-tools">
-            <div id="verwaltungUrlaubsanspruchPanel">
-              <h3 style="margin:0 0 10px 0;">Urlaubsanspruch</h3>
-              <div class="row">
-                <div><label>Jahr</label><select id="urlaubAnspruchJahr" onchange="urlaubAnspruchLaden()"></select></div>
-                <div><label>Urlaubsanspruch</label><input type="number" id="urlaubAnspruch" min="0" step="1" placeholder="z. B. 30"></div>
-              </div>
-              <button type="button" class="btn-secondary" onclick="urlaubAnspruchSpeichern()">💾 Jahresanspruch speichern</button>
-            </div>
-
             <div>
               <h3 style="margin:0 0 10px 0;">Datensicherung & Exporte</h3>
               <div style="display:flex; gap:10px; flex-wrap:wrap;">
@@ -1420,6 +1411,15 @@ body.dark-mode .save-toast.error{background:#450a0a;color:#fca5a5;border-color:#
                 <button class="btn-secondary" onclick="document.getElementById('importFile').click()">📤 Backup importieren</button>
                 <input type="file" id="importFile" style="display:none" accept=".json" onchange="importBackup(this)">
               </div>
+            </div>
+
+            <div id="verwaltungUrlaubsanspruchPanel">
+              <h3 style="margin:0 0 10px 0;">Urlaubsanspruch</h3>
+              <div class="row">
+                <div><label>Jahr</label><select id="urlaubAnspruchJahr" onchange="urlaubAnspruchLaden()"></select></div>
+                <div><label>Urlaubsanspruch</label><input type="number" id="urlaubAnspruch" min="0" step="1" placeholder="z. B. 30"></div>
+              </div>
+              <button type="button" class="btn-secondary" onclick="urlaubAnspruchSpeichern()">💾 Jahresanspruch speichern</button>
             </div>
           </div>
         </div>
