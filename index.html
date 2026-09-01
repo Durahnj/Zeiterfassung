@@ -1199,6 +1199,31 @@ body.dark-mode .booking-group{background:rgba(255,255,255,.018);}
 body.dark-mode .save-toast{background:#123321;color:#86efac;border-color:#166534;}
 body.dark-mode .save-toast.error{background:#450a0a;color:#fca5a5;border-color:#7f1d1d;}
 @media(max-width:768px){.booking-group{padding:13px}.save-toast{top:12px;}}
+
+/* --- Hilfe-System --- */
+.header-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:flex-end;}
+.help-btn{width:24px !important;height:24px !important;min-width:24px !important;margin:0 !important;padding:0 !important;border:1px solid transparent !important;border-radius:50% !important;background:transparent !important;color:var(--text-muted) !important;font-size:14px !important;font-weight:600;line-height:22px;cursor:pointer;box-shadow:none !important;display:inline-flex;align-items:center;justify-content:center;}
+.help-btn:hover{background:rgba(127,127,127,.08) !important;border-color:transparent !important;color:var(--text-main) !important;transform:none !important;box-shadow:none !important;}
+.help-main-btn{width:auto;margin:0;padding:7px 11px;border:1px solid var(--border-color);border-radius:8px;background:var(--card-bg);color:var(--text-main);font-size:12px;font-weight:700;cursor:pointer;box-shadow:none;}
+.help-main-btn:hover{border-color:var(--border-color);background:var(--bg-color);color:var(--text-main);transform:none;}
+.help-inline{display:none;margin:10px 0 14px;padding:12px 14px;border-radius:10px;background:#eef6ff;border:1px solid #bfdbfe;color:#1e3a5f;font-size:13px;line-height:1.55;}
+.help-inline.open{display:block;}
+.help-inline strong{color:inherit;}
+.help-warning{background:#fff7ed;border-color:#fdba74;color:#7c2d12;}
+.help-title-row{display:flex;align-items:center;justify-content:space-between;gap:10px;}
+.help-title-row h3,.help-title-row .booking-group-title{margin:0;}
+.help-modal{display:none;position:fixed;inset:0;z-index:9998;background:rgba(15,23,42,.55);padding:24px;overflow:auto;}
+.help-modal.open{display:flex;align-items:flex-start;justify-content:center;}
+.help-modal-card{width:min(760px,100%);margin:auto;background:var(--card-bg);color:var(--text-main);border:1px solid var(--border-color);border-radius:16px;padding:22px;box-shadow:0 24px 70px rgba(0,0,0,.35);opacity:1;}
+.help-modal-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px;}
+.help-modal-head h2{margin:0;}
+.help-close{width:auto;margin:0;padding:7px 11px;background:var(--card-bg);color:var(--text-main);border:1px solid var(--border-color);}
+.help-steps{margin:10px 0 0;padding-left:22px;line-height:1.6;}
+.help-formats{margin-top:16px;padding:12px 14px;border-radius:10px;background:var(--bg-color);border:1px solid var(--border-color);font-size:13px;line-height:1.6;}
+body.dark-mode .help-inline{background:#10243a;border-color:#284d73;color:#dbeafe;}
+body.dark-mode .help-warning{background:#3b2113;border-color:#9a5b2b;color:#fed7aa;}
+@media(max-width:768px){.app-header{align-items:flex-start}.header-actions{width:100%;justify-content:flex-start}.help-modal{padding:10px}.help-modal-card{padding:16px}.help-title-row{align-items:flex-start}.help-btn{white-space:nowrap;}}
+
 </style>
 </head>
 <body>
@@ -1209,6 +1234,22 @@ body.dark-mode .save-toast.error{background:#450a0a;color:#fca5a5;border-color:#
   </div>
 
   <div id="printContainer"></div>
+<div id="helpModal" class="help-modal" onclick="if(event.target===this) toggleHelpModal(false)">
+  <div class="help-modal-card" role="dialog" aria-modal="true" aria-labelledby="helpModalTitle">
+    <div class="help-modal-head"><h2 id="helpModalTitle">❓ Hilfe &amp; Kurzanleitung</h2><button class="help-close" onclick="toggleHelpModal(false)">✕ Schließen</button></div>
+    <p>Stunden-Pro unterstützt dich bei Monatsbuchungen, Stundenkonten, Urlaub und Auswertungen.</p>
+    <ol class="help-steps">
+      <li><strong>Mitarbeiter verwalten:</strong> Unter <strong>Verwaltung</strong> Festangestellte und Aushilfen anlegen sowie Startsaldo und Urlaubsanspruch pflegen.</li>
+      <li><strong>Monatsdaten erfassen:</strong> Unter <strong>Angestellte</strong> bzw. <strong>Aushilfen</strong> Arbeitszeiten und weitere Monatsdaten eintragen.</li>
+      <li><strong>Saldo kontrollieren:</strong> Ein positiver Saldo ist Zeitguthaben, ein negativer Saldo sind Minusstunden.</li>
+      <li><strong>Urlaub planen:</strong> Im <strong>Urlaubsplaner</strong> Urlaub und Schulblöcke eintragen. Die <strong>Übersicht Urlaub</strong> zeigt das Urlaubskonto.</li>
+      <li><strong>Auswerten &amp; sichern:</strong> Die <strong>Übersicht</strong> zeigt Jahreswerte. Unter <strong>Verwaltung</strong> können PDFs und Backups erstellt werden.</li>
+    </ol>
+    <div class="help-formats"><strong>Wichtige Formate</strong><br>Zeit: <code>160:30</code> = 160 Stunden 30 Minuten<br>Monat: <code>04/26</code> = April 2026<br>Urlaub/Krank/Schule/Feiertag: Anzahl der Tage<br>Raucherpause: Anzahl der Pausen; je Pause werden 2 Minuten abgezogen.<br><br><strong>Abwesenheiten in Stunden:</strong> Bei Festangestellten werden Urlaub, Krankheit, Schule und Feiertage automatisch in Stunden umgerechnet. Grundlage sind die monatlichen Sollstunden ÷ 4,33 ÷ 5; die Tageszeit wird auf halbe Stunden gerundet. Die genaue Erklärung findest du unter <strong>Angestellte → Abwesenheiten &amp; Pausen → 💡</strong>.</div>
+    <div class="info-card" style="margin-top:14px;">💡 Bei einzelnen Bereichen findest du zusätzlich das Symbol <strong>💡</strong>. Dort wird nur die jeweilige Funktion erklärt.</div>
+  </div>
+</div>
+
   <div id="saveToast" class="save-toast" role="status" aria-live="polite"></div>
 
   <div class="container">
@@ -1217,7 +1258,7 @@ body.dark-mode .save-toast.error{background:#450a0a;color:#fca5a5;border-color:#
 <h1>Stundenaufzeichnung</h1>
 <div class="subtitle">Personalverwaltung Porterhouse</div>
 </div>
-<button class="theme-toggle" onclick="toggleTheme()">🌙 Dark Mode</button>
+<div class="header-actions"><button type="button" class="help-main-btn" onclick="toggleHelpModal(true)">❓ Hilfe</button><button class="theme-toggle" onclick="toggleTheme()">🌙 Dark Mode</button></div>
 </div>
 
     <div class="tabs">
@@ -1240,16 +1281,15 @@ body.dark-mode .save-toast.error{background:#450a0a;color:#fca5a5;border-color:#
             <div class="saldo-value saldo-neg" id="aktuellerSaldo">00:00</div>
             <div class="start-saldo-info">Start: <span id="startSaldoDisplay">00:00</span></div>
           </div>
-          <div class="info-card" style="margin-top:16px;">💡 Mitarbeiter und Stammdaten werden im Tab <strong>Verwaltung</strong> gepflegt.</div>
-	  <div class="info-card" style="margin-top:16px;">💡 <strong>Raucherpausen</strong> können eingegeben werden, müsst Ihr nicht manuell ausrechnen😉</div>
+          <div class="help-title-row" style="margin-top:16px;"><span style="font-size:12px;font-weight:700;color:var(--text-muted);">Stundenkonto</span><button type="button" class="help-btn" aria-label="Hilfe anzeigen" title="Hilfe" onclick="toggleInlineHelp('helpSaldoFest')">💡</button></div>
+          <div id="helpSaldoFest" class="help-inline"><strong>Was bedeutet der Saldo?</strong><br>Ein positiver Wert bedeutet Zeitguthaben, ein negativer Wert Minusstunden. Der angezeigte Startsaldo ist der Ausgangswert, von dem die weiteren Monatsbuchungen aus gerechnet werden. Mitarbeiter und Stammdaten werden im Tab <strong>Verwaltung</strong> gepflegt.</div>
         </div>
 
         <div class="booking-section">
-          <h3 id="buchungSektionTitel">Buchung erfassen</h3>
+          <div class="help-title-row"><h3 id="buchungSektionTitel">Buchung erfassen</h3><button type="button" class="help-btn" aria-label="Hilfe anzeigen" title="Hilfe" onclick="toggleInlineHelp('helpFestBuchung')">💡</button></div><div id="helpFestBuchung" class="help-inline"><strong>So funktioniert die Monatsbuchung:</strong> Wähle den Mitarbeiter aus, trage Monat, Sollstunden und tatsächlich geleistete Stunden ein und ergänze bei Bedarf Abwesenheiten, Pausen oder eine Auszahlung. Mit <strong>Buchung speichern</strong> wird der Monat übernommen und der Saldo aktualisiert.</div>
 
           <div class="booking-group">
-            <div class="booking-group-title">📅 1. Monatsdaten</div>
-            <div class="booking-group-hint">Diese beiden Werte bleiben nach dem Speichern stehen.</div>
+            <div class="help-title-row"><div class="booking-group-title">📅 1. Monatsdaten</div><button type="button" class="help-btn" aria-label="Hilfe anzeigen" title="Hilfe" onclick="toggleInlineHelp('helpMonatsdaten')">💡</button></div><div id="helpMonatsdaten" class="help-inline"><strong>Monat &amp; Sollstunden:</strong> Monat im Format <code>MM/JJ</code>, z. B. <code>04/26</code>. Stunden im Format <code>Stunden:Minuten</code>, z. B. <code>160:30</code>. Diese Werte bleiben nach dem Speichern stehen.</div>
             <div class="row">
               <div>
                 <label>MM/JJ</label>
@@ -1263,7 +1303,7 @@ body.dark-mode .save-toast.error{background:#450a0a;color:#fca5a5;border-color:#
           </div>
 
           <div class="booking-group">
-            <div class="booking-group-title">⏱️ 2. Arbeitszeit</div>
+            <div class="help-title-row"><div class="booking-group-title">⏱️ 2. Arbeitszeit</div><button type="button" class="help-btn" aria-label="Hilfe anzeigen" title="Hilfe" onclick="toggleInlineHelp('helpArbeitszeit')">💡</button></div><div id="helpArbeitszeit" class="help-inline"><strong>Ist &amp; Auszahlung:</strong> Unter „Ist“ stehen die tatsächlich geleisteten Stunden. „Auszahlung“ ist für Stunden gedacht, die aus dem vorhandenen Zeitguthaben ausgezahlt werden sollen.</div>
             <div class="row">
               <div>
                 <label>Ist (Geleistet)</label>
@@ -1277,7 +1317,7 @@ body.dark-mode .save-toast.error{background:#450a0a;color:#fca5a5;border-color:#
           </div>
 
           <div class="booking-group">
-            <div class="booking-group-title">🏖️ 3. Abwesenheiten & Pausen</div>
+            <div class="help-title-row"><div class="booking-group-title">🏖️ 3. Abwesenheiten &amp; Pausen</div><button type="button" class="help-btn" aria-label="Hilfe anzeigen" title="Hilfe" onclick="toggleInlineHelp('helpAbwesenheiten')">💡</button></div><div id="helpAbwesenheiten" class="help-inline"><strong>Wie werden Urlaub, Krankheit, Schule und Feiertage in Stunden umgerechnet?</strong><br>Stunden-Pro berechnet zuerst eine durchschnittliche Arbeitszeit pro Tag. Dafür werden die eingetragenen <strong>monatlichen Sollstunden durch 4,33 Wochen und anschließend durch 5 Arbeitstage</strong> geteilt. Das Ergebnis wird auf die nächste halbe Stunde gerundet.<br><br><strong>Beispiel:</strong> Bei <code>173:20</code> Sollstunden ergibt die Berechnung <strong>8 Stunden pro Tag</strong>. Ein eingetragener Urlaubstag, Krankheitstag, Schultag oder Feiertag wird deshalb mit <strong>8:00 Stunden</strong> zu den Ist-Stunden hinzugerechnet. Bei einem halben Tag entsprechend mit <strong>4:00 Stunden</strong>.<br><br>Raucherpausen werden getrennt davon mit <strong>2 Minuten je Pause</strong> abgezogen.</div>
             <div class="row">
               <div><label>Urlaub (Tage)</label><input type="number" id="urlaub" placeholder="0" min="0" step="0.5"></div>
               <div><label>Krank (Tage)</label><input type="number" id="krank" placeholder="0" min="0" step="0.5"></div>
@@ -1290,19 +1330,19 @@ body.dark-mode .save-toast.error{background:#450a0a;color:#fca5a5;border-color:#
               <div>
                 <label>Raucherpause (Anzahl)</label>
                 <input type="number" id="raucherpausen" min="0" step="1" placeholder="0">
-                <div class="booking-group-hint" style="margin-top:-10px;margin-bottom:0;">Je Raucherpause werden 2 Minuten abgezogen.</div>
               </div>
               <div></div>
             </div>
           </div>
 
+          <div class="help-title-row" style="margin-bottom:8px;"><span></span><button type="button" class="help-btn" aria-label="Hilfe anzeigen" title="Hilfe" onclick="toggleInlineHelp('helpAuszahlung')">💡</button></div><div id="helpAuszahlung" class="help-inline"><strong>Überstunden auszahlen:</strong> Verwende diese Funktion, wenn das vorhandene Zeitguthaben vollständig ausgezahlt werden soll. Die Auszahlung wird beim Monat dokumentiert.</div>
           <button id="btnSpeichern" onclick="berechnen()">💾 Buchung speichern</button>
           <button id="btnAuszahlen" onclick="berechnenUndAuszahlen()" style="background-color: var(--success); margin-top: 10px;">💰 Überstunden auszahlen</button>
           <div id="ergebnis" style="text-align:center; margin-top:12px; font-weight:600; color:var(--accent); font-size:13px;"></div>
         </div>
 
         <div class="history-panel">
-          <h3>Verlauf</h3>
+          <div class="help-title-row"><h3>Verlauf</h3><button type="button" class="help-btn" aria-label="Hilfe anzeigen" title="Hilfe" onclick="toggleInlineHelp('helpVerlaufFest')">💡</button></div><div id="helpVerlaufFest" class="help-inline">Hier siehst du die bereits gespeicherten Monate des ausgewählten Mitarbeiters. Über den Jahresfilter kannst du gezielt ein bestimmtes Jahr anzeigen.</div>
           <div class="row">
             <div style="flex:1">
               <label>Jahr filtern</label>
@@ -1324,22 +1364,21 @@ body.dark-mode .save-toast.error{background:#450a0a;color:#fca5a5;border-color:#
             <div class="saldo-value saldo-neg" id="aushilfeAktuellerSaldo">00:00</div>
             <div class="start-saldo-info">Start: <span id="aushilfeStartSaldoDisplay">00:00</span></div>
           </div>
-          <div class="info-card" style="margin-top:16px;">💡 Aushilfen und Stammdaten werden im Tab <strong>Verwaltung</strong> gepflegt.</div>
-	  <div class="info-card" style="margin-top:16px;">💡 <strong>Raucherpausen</strong> können eingegeben werden, müsst Ihr nicht manuell ausrechnen😉</div>
+          <div class="help-title-row" style="margin-top:16px;"><span style="font-size:12px;font-weight:700;color:var(--text-muted);">Stundenkonto</span><button type="button" class="help-btn" aria-label="Hilfe anzeigen" title="Hilfe" onclick="toggleInlineHelp('helpSaldoAushilfe')">💡</button></div>
+          <div id="helpSaldoAushilfe" class="help-inline"><strong>Was bedeutet der Saldo?</strong><br>Bei Aushilfen wird zwischen gearbeiteten und gezahlten Stunden unterschieden. Die Differenz verändert das Stundenkonto. Raucherpausen werden zusätzlich abgezogen. Ein positiver Wert ist Zeitguthaben, ein negativer Wert sind Minusstunden.</div>
         </div>
 
         <div class="booking-section">
-          <h3 id="aushilfeBuchungSektionTitel">Buchung erfassen (Aushilfe)</h3>
+          <div class="help-title-row"><h3 id="aushilfeBuchungSektionTitel">Buchung erfassen (Aushilfe)</h3><button type="button" class="help-btn" aria-label="Hilfe anzeigen" title="Hilfe" onclick="toggleInlineHelp('helpAushilfeBuchung')">💡</button></div><div id="helpAushilfeBuchung" class="help-inline"><strong>Aushilfen buchen:</strong> Trage die gearbeiteten und die gezahlten Stunden ein. Die Differenz verändert das Stundenkonto. Beispiel: 42:00 gearbeitet und 40:00 gezahlt ergeben zunächst +2:00 Stunden. Eingetragene Raucherpausen werden zusätzlich abgezogen.</div>
 
           <div class="booking-group">
-            <div class="booking-group-title">📅 1. Monatsdaten</div>
-            <div class="booking-group-hint">Der Monat bleibt nach dem Speichern stehen.</div>
+            <div class="help-title-row"><div class="booking-group-title">📅 1. Monatsdaten</div><button type="button" class="help-btn" aria-label="Hilfe anzeigen" title="Hilfe" onclick="toggleInlineHelp('helpAushilfeMonat')">💡</button></div><div id="helpAushilfeMonat" class="help-inline">Monat im Format <code>MM/JJ</code>, z. B. <code>04/26</code>. Der Monat bleibt nach dem Speichern stehen.</div>
             <label>MM/JJ</label>
             <input type="text" id="aushilfeBuchungsDatum" placeholder="04/26">
           </div>
 
           <div class="booking-group">
-            <div class="booking-group-title">⏱️ 2. Arbeitszeit</div>
+            <div class="help-title-row"><div class="booking-group-title">⏱️ 2. Arbeitszeit</div><button type="button" class="help-btn" aria-label="Hilfe anzeigen" title="Hilfe" onclick="toggleInlineHelp('helpAushilfeZeit')">💡</button></div><div id="helpAushilfeZeit" class="help-inline"><strong>Gearbeitet</strong> sind die tatsächlich geleisteten Stunden. <strong>Gezahlt</strong> sind die Stunden, die abgerechnet bzw. bezahlt wurden. Die Differenz verändert das Stundenkonto. Raucherpausen werden zusätzlich von den gearbeiteten Stunden abgezogen.</div>
             <div class="row">
               <div>
                 <label>Stunden gearbeitet</label>
@@ -1353,17 +1392,16 @@ body.dark-mode .save-toast.error{background:#450a0a;color:#fca5a5;border-color:#
           </div>
 
           <div class="booking-group">
-            <div class="booking-group-title">🚬 3. Pausen</div>
+            <div class="help-title-row"><div class="booking-group-title">🚬 3. Pausen</div><button type="button" class="help-btn" aria-label="Hilfe anzeigen" title="Hilfe" onclick="toggleInlineHelp('helpAushilfePause')">💡</button></div><div id="helpAushilfePause" class="help-inline">Gib nur die Anzahl der Raucherpausen ein. Stunden-Pro zieht automatisch <strong>2 Minuten je Pause</strong> von den gearbeiteten Stunden ab.</div>
             <label>Raucherpause (Anzahl)</label>
             <input type="number" id="aushilfeRaucherpausen" min="0" step="1" placeholder="0">
-            <div class="booking-group-hint" style="margin-top:-10px;margin-bottom:0;">Je Raucherpause werden 2 Minuten abgezogen.</div>
           </div>
 
           <button id="btnAushilfeSpeichern" onclick="aushilfeBerechnen()">💾 Buchung speichern</button>
         </div>
 
         <div class="history-panel">
-          <h3>Verlauf</h3>
+          <div class="help-title-row"><h3>Verlauf</h3><button type="button" class="help-btn" aria-label="Hilfe anzeigen" title="Hilfe" onclick="toggleInlineHelp('helpVerlaufAushilfe')">💡</button></div><div id="helpVerlaufAushilfe" class="help-inline">Hier siehst du die bereits gespeicherten Monate der ausgewählten Aushilfe. Über den Jahresfilter kannst du gezielt ein bestimmtes Jahr anzeigen.</div>
           <div class="row">
             <div style="flex:1">
               <label>Jahr filtern</label>
@@ -1380,7 +1418,7 @@ body.dark-mode .save-toast.error{background:#450a0a;color:#fca5a5;border-color:#
         <div class="overview-panel">
           <div class="verwaltung-header">
             <div>
-              <h2 style="margin:0 0 4px 0;">Verwaltung</h2>
+              <div class="help-title-row"><h2 style="margin:0 0 4px 0;">Verwaltung</h2><button type="button" class="help-btn" aria-label="Hilfe anzeigen" title="Hilfe" onclick="toggleInlineHelp('helpVerwaltung')">💡</button></div><div id="helpVerwaltung" class="help-inline">Hier werden Stammdaten von Festangestellten und Aushilfen gepflegt. Du kannst Personen anlegen, bearbeiten oder archivieren sowie Urlaubsansprüche, Exporte und Datensicherungen verwalten.</div>
               <div style="color:var(--text-muted); font-size:13px;">Mitarbeiter und Aushilfen zentral verwalten.</div>
             </div>
           </div>
@@ -1411,6 +1449,7 @@ body.dark-mode .save-toast.error{background:#450a0a;color:#fca5a5;border-color:#
                 </div>
                 <div></div>
               </div>
+              <div class="help-title-row" style="margin-top:-4px;margin-bottom:8px;"><span></span><button type="button" class="help-btn" aria-label="Hilfe anzeigen" title="Hilfe" onclick="toggleInlineHelp('helpStartsaldo')">💡</button></div><div id="helpStartsaldo" class="help-inline"><strong>Was ist der Startsaldo?</strong><br>Der Startsaldo ist der Stundenstand, mit dem eine Person in Stunden-Pro beginnt. Er ist besonders wichtig, wenn die Stunden vorher anders geführt wurden – zum Beispiel in einer alten Software, in einer Tabelle oder auf Papier – und der bisherige Stand übernommen werden soll. Auch bereits geleistete Stunden aus einer Probearbeit oder aus einer vorherigen Beschäftigungszeit können hier als Ausgangswert eingetragen werden. Ein positiver Wert bedeutet vorhandenes Zeitguthaben, ein negativer Wert bestehende Minusstunden.</div>
 
               <div class="verwaltung-actions">
                 <button id="btnVerwaltungSpeichern" onclick="verwaltungPersonSpeichern()">💾 Speichern</button>
@@ -1430,11 +1469,12 @@ body.dark-mode .save-toast.error{background:#450a0a;color:#fca5a5;border-color:#
                 <button class="btn-secondary" onclick="exportBackup()">📥 Backup erstellen</button>
                 <button class="btn-secondary" onclick="document.getElementById('importFile').click()">📤 Backup importieren</button>
                 <input type="file" id="importFile" style="display:none" accept=".json" onchange="importBackup(this)">
+                <div class="help-inline help-warning open" style="flex-basis:100%;margin:4px 0 0;"><strong>⚠️ Achtung beim Backup-Import:</strong> Beim Import werden die aktuell in Stunden-Pro vorhandenen Daten durch die Daten aus der ausgewählten Sicherungsdatei <strong>überschrieben</strong>. Erstelle deshalb am besten vorher ein aktuelles Backup und importiere nur eine Sicherung, deren Inhalt und Stand bekannt sind.</div>
               </div>
             </div>
 
             <div id="verwaltungUrlaubsanspruchPanel">
-              <h3 style="margin:0 0 10px 0;">Urlaubsanspruch</h3>
+              <div class="help-title-row"><h3 style="margin:0 0 10px 0;">Urlaubsanspruch</h3><button type="button" class="help-btn" aria-label="Hilfe anzeigen" title="Hilfe" onclick="toggleInlineHelp('helpAnspruch')">💡</button></div><div id="helpAnspruch" class="help-inline">Hier wird der jährliche Urlaubsanspruch des ausgewählten Festangestellten hinterlegt, z. B. 30 Tage. Dieser Wert bildet die Grundlage für die Urlaubsübersicht.</div>
               <div class="row">
                 <div><label>Jahr</label><select id="urlaubAnspruchJahr" onchange="urlaubAnspruchLaden()"></select></div>
                 <div><label>Urlaubsanspruch</label><input type="number" id="urlaubAnspruch" min="0" step="1" placeholder="z. B. 30"></div>
@@ -1444,7 +1484,11 @@ body.dark-mode .save-toast.error{background:#450a0a;color:#fca5a5;border-color:#
           </div>
 
           <div class="archiv-toggle-wrap">
-            <button type="button" id="btnArchivToggle" class="btn-secondary archiv-toggle" onclick="toggleArchiv()" aria-expanded="false" aria-controls="archivPanel">📦 Archiv <span id="archivToggleCount">(0)</span></button>
+            <div class="help-title-row" style="margin-bottom:10px;">
+              <button type="button" id="btnArchivToggle" class="btn-secondary archiv-toggle" onclick="toggleArchiv()" aria-expanded="false" aria-controls="archivPanel">📦 Archiv <span id="archivToggleCount">(0)</span></button>
+              <button type="button" class="help-btn" aria-label="Hilfe zum Archiv anzeigen" title="Hilfe" onclick="toggleInlineHelp('helpArchiv')">💡</button>
+            </div>
+            <div id="helpArchiv" class="help-inline"><strong>Was passiert beim Archivieren?</strong><br>Wenn ein Mitarbeiter nicht mehr aktiv beschäftigt ist, kannst du ihn archivieren. Die Person verschwindet dadurch aus den aktiven Mitarbeiterlisten, ihre bereits gespeicherten Stunden- und Verlaufsdaten bleiben aber im Archiv erhalten. Beim Archivieren wird zusätzlich das Austrittsdatum erfasst.<br><br>Über das Archiv kannst du die bisherigen Daten später weiterhin ansehen. Wird die Person erneut beschäftigt, kann sie aus dem Archiv wieder aktiviert werden.</div>
             <div id="archivPanel" class="archiv-panel">
               <div class="archiv-header">
                 <h3 style="margin:0;">📦 Archivierte Mitarbeiter</h3>
@@ -1460,7 +1504,7 @@ body.dark-mode .save-toast.error{background:#450a0a;color:#fca5a5;border-color:#
     <div id="pageUebersicht" class="page active">
       <div class="overview-panel">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 15px;">
-          <h3 style="margin: 0;">Jahresübersicht aller Mitarbeiter</h3>
+          <div><div class="help-title-row"><h3 style="margin:0;">Jahresübersicht aller Mitarbeiter</h3><button type="button" class="help-btn" aria-label="Hilfe anzeigen" title="Hilfe" onclick="toggleInlineHelp('helpUebersicht')">💡</button></div><div id="helpUebersicht" class="help-inline"><strong>Jahresübersicht verstehen:</strong> „Gesamt“ zeigt den aktuellen gesamten Stundenstand einschließlich Startsaldo und aller gespeicherten Jahre. „Jahressaldo“ zeigt die Veränderung innerhalb des ausgewählten Jahres. Bei Festangestellten werden zusätzlich Urlaub und Krankheit summiert. Die Monatsspalten zeigen den jeweiligen Monatswert.</div></div>
           <div style="width: 150px;">
             <label>Jahr filtern</label>
             <select id="uebersichtJahrFilter" onchange="baueUebersichtstabelle()" style="margin:0;"></select>
@@ -1503,7 +1547,7 @@ body.dark-mode .save-toast.error{background:#450a0a;color:#fca5a5;border-color:#
         <div class="urlaub-sidebar-container" style="display: flex; flex-direction: column; gap: 24px;">
           
           <div class="urlaub-form-panel">
-            <h3>Eintrag erstellen</h3>
+            <div class="help-title-row"><h3>Eintrag erstellen</h3><button type="button" class="help-btn" aria-label="Hilfe anzeigen" title="Hilfe" onclick="toggleInlineHelp('helpUrlaubEintrag')">💡</button></div><div id="helpUrlaubEintrag" class="help-inline">Wähle Mitarbeiter, Kategorie und Zeitraum aus. Unter <strong>Urlaubstage</strong> trägst du die Anzahl der Urlaubstage ein, die tatsächlich vom Urlaubskonto abgezogen werden soll.</div>
             <form id="urlaubEintragForm" onsubmit="urlaubSpeichern(event)">
               <label>Mitarbeiter</label>
               <select id="urlaubMitarbeiterSelect" required></select>
@@ -1527,7 +1571,7 @@ body.dark-mode .save-toast.error{background:#450a0a;color:#fca5a5;border-color:#
                 </div>
               </div>
               <label>Urlaubstage</label>
-              <input type="number" id="urlaubstage" min="0" step="1" placeholder="z. B. 5">
+              <input type="number" id="urlaubstage" min="0" step="1" placeholder="z. B. 5"><div class="booking-group-hint" style="margin-top:-10px;">Nicht automatisch aus dem Zeitraum berechnet – tatsächliche Urlaubstage eintragen.</div>
               <button type="submit">💾 Eintrag speichern</button>
             </form>
           </div>
@@ -1540,7 +1584,7 @@ body.dark-mode .save-toast.error{background:#450a0a;color:#fca5a5;border-color:#
 
         <div class="urlaub-calendar-panel">
           <div class="calendar-header">
-            <h2 id="ucMonthYearDisplay">Monat Jahr</h2>
+            <div class="help-title-row"><h2 id="ucMonthYearDisplay">Monat Jahr</h2><button type="button" class="help-btn" aria-label="Hilfe anzeigen" title="Hilfe" onclick="toggleInlineHelp('helpUrlaubKalender')">💡</button></div><div id="helpUrlaubKalender" class="help-inline">Der Kalender zeigt eingetragene Abwesenheiten nach Kategorie. Küche, Service und Schulblock sind farblich getrennt. Klicke auf einen belegten Tag, um Details zu sehen.</div>
             <div class="calendar-nav-buttons">
               <button onclick="urlaubKalenderBlattern(-1)">&lt;</button>
               <button onclick="urlaubKalenderBlattern(1)">&gt;</button>
@@ -1568,7 +1612,7 @@ body.dark-mode .save-toast.error{background:#450a0a;color:#fca5a5;border-color:#
         <div class="booking-section" style="width:100%;">
           <div style="display:flex; justify-content:space-between; align-items:center; gap:15px; flex-wrap:wrap; margin-bottom:18px;">
             <div>
-              <h3 style="margin:0;">Übersicht Urlaub</h3>
+              <div class="help-title-row"><h3 style="margin:0;">Übersicht Urlaub</h3><button type="button" class="help-btn" aria-label="Hilfe anzeigen" title="Hilfe" onclick="toggleInlineHelp('helpUrlaubUebersicht')">💡</button></div><div id="helpUrlaubUebersicht" class="help-inline"><strong>Urlaubskonto verstehen:</strong><br><strong>Anspruch:</strong> hinterlegter Urlaubsanspruch des gewählten Jahres.<br><strong>Übertrag:</strong> Urlaub, der aus dem <strong>Vorjahr</strong> übernommen wurde.<br><strong>Verfügbar:</strong> Anspruch plus Übertrag.<br><strong>Eingereicht:</strong> für das Jahr im Urlaubsplaner erfasste Urlaubstage.<br><strong>Genommen:</strong> Urlaubstage, deren Zeitraum bereits begonnen hat bzw. vergangen ist.<br><strong>Rest:</strong> noch verbleibende Urlaubstage.</div>
               <div style="color:var(--text-muted); font-size:13px; margin-top:4px;">Urlaubskonto aller Festangestellten</div>
             </div>
             <div style="min-width:150px;">
@@ -1601,7 +1645,7 @@ body.dark-mode .save-toast.error{background:#450a0a;color:#fca5a5;border-color:#
     <div id="pageRechner" class="page">
       <div class="layout-rechner">
         <div class="rechner-panel">
-          <h3>Schnellrechner (Lohn)</h3>
+          <div class="help-title-row"><h3>Schnellrechner (Lohn)</h3><button type="button" class="help-btn" aria-label="Hilfe anzeigen" title="Hilfe" onclick="toggleInlineHelp('helpLohnRechner')">💡</button></div><div id="helpLohnRechner" class="help-inline">Gib die Arbeitszeit im Format <code>Stunden:Minuten</code> und den Stundenlohn ein. Der Rechner wandelt die Zeit in Dezimalstunden um und zeigt den berechneten Bruttolohn.</div>
           <label>Stunden (SS:MM)</label>
           <input type="text" id="rechnerStunden" placeholder="160:30" oninput="lohnBerechnen()">
           
@@ -1615,7 +1659,7 @@ body.dark-mode .save-toast.error{background:#450a0a;color:#fca5a5;border-color:#
           </div>
         
 <hr style="margin:24px 0;">
-<h3>Schnellrechner (Stunden)</h3>
+<div class="help-title-row"><h3>Schnellrechner (Stunden)</h3><button type="button" class="help-btn" aria-label="Hilfe anzeigen" title="Hilfe" onclick="toggleInlineHelp('helpStundenRechner')">💡</button></div><div id="helpStundenRechner" class="help-inline">Hier kannst du Stundenstände schnell miteinander verrechnen. Gib die Werte im Format <code>Stunden:Minuten</code> ein. Für Minusstunden ein Minuszeichen verwenden, z. B. <code>-12:45</code>.<br><br><strong>Hinweis:</strong> Die Rechner verändern keine gespeicherten Mitarbeiterdaten.</div>
 <label>Stunden Gearbeitet (SS:MM)</label>
 <input type="text" id="stunden1" placeholder="160:30" oninput="stundenAddieren()">
 <label>Minus- Plusstunden (SS:MM)</label>
@@ -1630,6 +1674,11 @@ body.dark-mode .save-toast.error{background:#450a0a;color:#fca5a5;border-color:#
   </div>
 
   <script>
+
+function toggleInlineHelp(id){ const el=document.getElementById(id); if(el) el.classList.toggle('open'); }
+function toggleHelpModal(force){ const el=document.getElementById('helpModal'); if(!el) return; const open=typeof force==='boolean'?force:!el.classList.contains('open'); el.classList.toggle('open',open); document.body.style.overflow=open?'hidden':''; }
+document.addEventListener('keydown',e=>{ if(e.key==='Escape') toggleHelpModal(false); });
+
     const firebaseConfig = {
       apiKey: "AIzaSyAPF3obb17GU4zgrsOQFq6BCuQCMp2m6V4",
       authDomain: "stundenph.firebaseapp.com",
