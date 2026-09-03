@@ -1222,6 +1222,70 @@ body.dark-mode .save-toast.error{background:#450a0a;color:#fca5a5;border-color:#
 .help-formats{margin-top:16px;padding:12px 14px;border-radius:10px;background:var(--bg-color);border:1px solid var(--border-color);font-size:13px;line-height:1.6;}
 body.dark-mode .help-inline{background:#10243a;border-color:#284d73;color:#dbeafe;}
 body.dark-mode .help-warning{background:#3b2113;border-color:#9a5b2b;color:#fed7aa;}
+
+.field-help-row{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px;}
+.field-help-row label{margin:0;}
+.action-help-wrap{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:start;flex:1;}
+.action-help-wrap .action-help-box{grid-column:1 / -1;margin-top:2px;}
+.export-help-wrap{display:grid;grid-template-columns:auto auto;gap:7px;align-items:start;}
+.export-help-wrap .btn-pdf{margin:0;}
+.export-help-wrap .export-help-box{grid-column:1 / -1;max-width:360px;margin-top:2px;}
+.uc-day.uc-geschlossen{
+  background:rgba(155,40,28,.10) !important;
+  border-color:rgba(214,74,59,.65) !important;
+  box-shadow:inset 0 0 0 1px rgba(214,74,59,.22);
+}
+.uc-day.uc-geschlossen .uc-day-num{color:var(--accent-highlight);font-weight:800;}
+.uc-day.uc-geschlossen.uc-kueche,
+.uc-day.uc-geschlossen.uc-service,
+.uc-day.uc-geschlossen.uc-schule,
+.uc-day.uc-geschlossen.uc-mixed{
+  box-shadow:inset 0 0 0 2px rgba(214,74,59,.75);
+}
+.uc-closed-info{
+  margin-top:auto;
+  font-size:8px;
+  line-height:1.1;
+  font-weight:800;
+  text-transform:uppercase;
+  letter-spacing:.25px;
+  color:var(--accent-highlight);
+  text-align:center;
+}
+body.dark-mode .uc-day.uc-geschlossen{
+  background:rgba(155,40,28,.18) !important;
+  border-color:rgba(214,74,59,.72) !important;
+}
+@media(max-width:768px){
+  .action-help-wrap{width:100%;}
+  .export-help-wrap{width:100%;grid-template-columns:minmax(0,1fr) auto;}
+  .export-help-wrap .btn-pdf{width:100%;}
+}
+
+
+/* Art und Name in der Verwaltung bewusst direkt nebeneinander halten */
+#verwaltungPersonTyp,
+#verwaltungPersonName{
+  margin-bottom:16px;
+}
+@media (min-width:769px){
+  #verwaltungPersonTyp{
+    min-width:0;
+  }
+}
+
+.verwaltung-art-name-row{
+  display:grid !important;
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+  gap:12px;
+  align-items:start;
+}
+@media(max-width:560px){
+  .verwaltung-art-name-row{
+    grid-template-columns:1fr;
+  }
+}
+
 @media(max-width:768px){.app-header{align-items:flex-start}.header-actions{width:100%;justify-content:flex-start}.help-modal{padding:10px}.help-modal-card{padding:16px}.help-title-row{align-items:flex-start}.help-btn{white-space:nowrap;}}
 
 </style>
@@ -1428,32 +1492,52 @@ body.dark-mode .help-warning{background:#3b2113;border-color:#9a5b2b;color:#fed7
             <select id="verwaltungPersonSelect" onchange="verwaltungPersonWechseln()"></select>
 
             <div id="verwaltungPersonForm" style="margin-top:16px;">
-              <div class="row">
+              <div class="row verwaltung-art-name-row">
                 <div>
-                  <label>Art</label>
+                  <div class="field-help-row">
+                    <label>Art</label>
+                    <button type="button" class="help-btn" aria-label="Hilfe zur Art anzeigen" title="Hilfe" onclick="toggleInlineHelp('helpPersonArt')">💡</button>
+                  </div>
                   <select id="verwaltungPersonTyp" onchange="verwaltungPersonTypGeaendert()">
                     <option value="fest">Fest</option>
                     <option value="aushilfe">Aushilfe</option>
                   </select>
+                  <div id="helpPersonArt" class="help-inline">
+                    <strong>Was passiert beim Wechsel der Art?</strong><br>
+                    <strong>Aushilfe → Fest:</strong> Die bisherigen Monatswerte bleiben erhalten. „Gearbeitet“ wird zu <strong>Ist</strong>, „Gezahlt“ zu <strong>Soll</strong>. Der bisherige Startsaldo bleibt bestehen.<br><br>
+                    <strong>Fest → Aushilfe:</strong> Die bisherigen Monatswerte bleiben erhalten. <strong>Ist</strong> wird zu „Gearbeitet“, <strong>Soll</strong> zu „Gezahlt“. Abwesenheiten, die bereits in den Ist-Stunden enthalten sind, bleiben damit im Stundenverlauf berücksichtigt.<br><br>
+                    <strong>Wichtig:</strong> Aushilfen führen in Stunden-Pro kein Urlaubskonto. Beim Wechsel von Fest auf Aushilfe wird deshalb der aktive Urlaubsanspruch bzw. das Urlaubskonto für die neue Beschäftigungsart nicht weitergeführt. Vor dem Wechsel erscheint zusätzlich eine Sicherheitsabfrage.
+                  </div>
                 </div>
                 <div>
-                  <label>Name</label>
+                  <div class="field-help-row">
+                    <label>Name</label>
+                    <button type="button" class="help-btn" aria-label="Hilfe zum Namen anzeigen" title="Hilfe" onclick="toggleInlineHelp('helpPersonName')">💡</button>
+                  </div>
                   <input type="text" id="verwaltungPersonName" placeholder="Name">
+                  <div id="helpPersonName" class="help-inline"><strong>Hinweis zum Namen:</strong><br>Jeder Name darf in Stunden-Pro nur einmal vergeben werden. Es darf also nicht gleichzeitig zwei Mitarbeiter bzw. Aushilfen mit exakt demselben Namen geben. Bitte verwende bei Namensgleichheit eine eindeutige Ergänzung.</div>
                 </div>
               </div>
 
               <div class="row">
                 <div>
-                  <label>Start-Saldo (HH:MM)</label>
+                  <div class="field-help-row">
+                    <label>Start-Saldo (HH:MM)</label>
+                    <button type="button" class="help-btn" aria-label="Hilfe zum Startsaldo anzeigen" title="Hilfe" onclick="toggleInlineHelp('helpStartsaldo')">💡</button>
+                  </div>
                   <input type="text" id="verwaltungPersonStartSaldo" placeholder="00:00">
+                  <div id="helpStartsaldo" class="help-inline"><strong>Was ist der Startsaldo?</strong><br>Der Startsaldo ist der Stundenstand, mit dem eine Person in Stunden-Pro beginnt. Er ist besonders wichtig, wenn die Stunden vorher anders geführt wurden – zum Beispiel in einer alten Software, in einer Tabelle oder auf Papier – und der bisherige Stand übernommen werden soll. Auch bereits geleistete Stunden aus einer Probearbeit oder aus einer vorherigen Beschäftigungszeit können hier als Ausgangswert eingetragen werden. Ein positiver Wert bedeutet vorhandenes Zeitguthaben, ein negativer Wert bestehende Minusstunden.</div>
                 </div>
                 <div></div>
               </div>
-              <div class="help-title-row" style="margin-top:-4px;margin-bottom:8px;"><span></span><button type="button" class="help-btn" aria-label="Hilfe anzeigen" title="Hilfe" onclick="toggleInlineHelp('helpStartsaldo')">💡</button></div><div id="helpStartsaldo" class="help-inline"><strong>Was ist der Startsaldo?</strong><br>Der Startsaldo ist der Stundenstand, mit dem eine Person in Stunden-Pro beginnt. Er ist besonders wichtig, wenn die Stunden vorher anders geführt wurden – zum Beispiel in einer alten Software, in einer Tabelle oder auf Papier – und der bisherige Stand übernommen werden soll. Auch bereits geleistete Stunden aus einer Probearbeit oder aus einer vorherigen Beschäftigungszeit können hier als Ausgangswert eingetragen werden. Ein positiver Wert bedeutet vorhandenes Zeitguthaben, ein negativer Wert bestehende Minusstunden.</div>
 
               <div class="verwaltung-actions">
                 <button id="btnVerwaltungSpeichern" onclick="verwaltungPersonSpeichern()">💾 Speichern</button>
-                <button id="btnVerwaltungArchivieren" class="btn-archive" onclick="verwaltungPersonArchivieren()" style="display:none;">📦 Archivieren</button>
+                <div id="verwaltungArchivierenWrap" class="action-help-wrap" style="display:none;">
+                  <button id="btnVerwaltungArchivieren" class="btn-archive" onclick="verwaltungPersonArchivieren()">📦 Archivieren</button>
+                  <button type="button" class="help-btn" aria-label="Hilfe zum Archivieren anzeigen" title="Hilfe" onclick="toggleInlineHelp('helpArchiv')">💡</button>
+                  <div id="helpArchiv" class="help-inline action-help-box"><strong>Was passiert beim Archivieren?</strong><br>Wenn ein Mitarbeiter nicht mehr aktiv beschäftigt ist, kannst du ihn archivieren. Die Person verschwindet aus den aktiven Mitarbeiterlisten, ihre bereits gespeicherten Stunden- und Verlaufsdaten bleiben aber im Archiv erhalten. Beim Archivieren wird zusätzlich das Austrittsdatum erfasst.<br><br>Über das Archiv kannst du die bisherigen Daten später weiterhin ansehen. Wird die Person erneut beschäftigt, kann sie aus dem Archiv wieder aktiviert werden.</div>
+                </div>
               </div>
             </div>
           </div>
@@ -1464,8 +1548,16 @@ body.dark-mode .help-warning{background:#3b2113;border-color:#9a5b2b;color:#fed7
             <div>
               <h3 style="margin:0 0 10px 0;">Datensicherung & Exporte</h3>
               <div style="display:flex; gap:10px; flex-wrap:wrap;">
-                <button class="btn-pdf" onclick="exportAuszahlungenPDF()">📄 Auszahlungen PDF</button>
-                <button class="btn-pdf" onclick="exportAushilfenGezahltPDF()">📄 Aushilfen PDF</button>
+                <div class="export-help-wrap">
+                  <button class="btn-pdf" onclick="exportAuszahlungenPDF()">📄 Auszahlungen PDF</button>
+                  <button type="button" class="help-btn" aria-label="Hilfe zu Auszahlungen PDF anzeigen" title="Hilfe" onclick="toggleInlineHelp('helpAuszahlungenPDF')">💡</button>
+                  <div id="helpAuszahlungenPDF" class="help-inline export-help-box"><strong>Auszahlungen PDF:</strong><br>Erstellt für den abgefragten Monat eine Übersicht der bei Festangestellten eingetragenen Überstunden-Auszahlungen inklusive Gesamtsumme.</div>
+                </div>
+                <div class="export-help-wrap">
+                  <button class="btn-pdf" onclick="exportAushilfenGezahltPDF()">📄 Aushilfen PDF</button>
+                  <button type="button" class="help-btn" aria-label="Hilfe zu Aushilfen PDF anzeigen" title="Hilfe" onclick="toggleInlineHelp('helpAushilfenPDF')">💡</button>
+                  <div id="helpAushilfenPDF" class="help-inline export-help-box"><strong>Aushilfen PDF:</strong><br>Erstellt für den abgefragten Monat eine Abrechnungsübersicht der Aushilfen mit den hinterlegten gearbeiteten und gezahlten Stunden.</div>
+                </div>
                 <button class="btn-secondary" onclick="exportBackup()">📥 Backup erstellen</button>
                 <button class="btn-secondary" onclick="document.getElementById('importFile').click()">📤 Backup importieren</button>
                 <input type="file" id="importFile" style="display:none" accept=".json" onchange="importBackup(this)">
@@ -1486,9 +1578,7 @@ body.dark-mode .help-warning{background:#3b2113;border-color:#9a5b2b;color:#fed7
           <div class="archiv-toggle-wrap">
             <div class="help-title-row" style="margin-bottom:10px;">
               <button type="button" id="btnArchivToggle" class="btn-secondary archiv-toggle" onclick="toggleArchiv()" aria-expanded="false" aria-controls="archivPanel">📦 Archiv <span id="archivToggleCount">(0)</span></button>
-              <button type="button" class="help-btn" aria-label="Hilfe zum Archiv anzeigen" title="Hilfe" onclick="toggleInlineHelp('helpArchiv')">💡</button>
             </div>
-            <div id="helpArchiv" class="help-inline"><strong>Was passiert beim Archivieren?</strong><br>Wenn ein Mitarbeiter nicht mehr aktiv beschäftigt ist, kannst du ihn archivieren. Die Person verschwindet dadurch aus den aktiven Mitarbeiterlisten, ihre bereits gespeicherten Stunden- und Verlaufsdaten bleiben aber im Archiv erhalten. Beim Archivieren wird zusätzlich das Austrittsdatum erfasst.<br><br>Über das Archiv kannst du die bisherigen Daten später weiterhin ansehen. Wird die Person erneut beschäftigt, kann sie aus dem Archiv wieder aktiviert werden.</div>
             <div id="archivPanel" class="archiv-panel">
               <div class="archiv-header">
                 <h3 style="margin:0;">📦 Archivierte Mitarbeiter</h3>
@@ -1504,7 +1594,7 @@ body.dark-mode .help-warning{background:#3b2113;border-color:#9a5b2b;color:#fed7
     <div id="pageUebersicht" class="page active">
       <div class="overview-panel">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 15px;">
-          <div><div class="help-title-row"><h3 style="margin:0;">Jahresübersicht aller Mitarbeiter</h3><button type="button" class="help-btn" aria-label="Hilfe anzeigen" title="Hilfe" onclick="toggleInlineHelp('helpUebersicht')">💡</button></div><div id="helpUebersicht" class="help-inline"><strong>Jahresübersicht verstehen:</strong> „Gesamt“ zeigt den aktuellen gesamten Stundenstand einschließlich Startsaldo und aller gespeicherten Jahre. „Jahressaldo“ zeigt die Veränderung innerhalb des ausgewählten Jahres. Bei Festangestellten werden zusätzlich Urlaub und Krankheit summiert. Die Monatsspalten zeigen den jeweiligen Monatswert.</div></div>
+          <div><div class="help-title-row"><h3 style="margin:0;">Jahresübersicht aller Mitarbeiter</h3><button type="button" class="help-btn" aria-label="Hilfe anzeigen" title="Hilfe" onclick="toggleInlineHelp('helpUebersicht')">💡</button></div><div id="helpUebersicht" class="help-inline"><strong>Jahresübersicht verstehen:</strong><br><strong>Gesamt:</strong> aktueller gesamter Stundenstand einschließlich Startsaldo und aller gespeicherten Jahre.<br><strong>Jahressaldo:</strong> Veränderung des Stundenkontos innerhalb des ausgewählten Jahres.<br><strong>Urlaub:</strong> Summe der im ausgewählten Jahr gebuchten Urlaubstage bei Festangestellten.<br><strong>Krank:</strong> Summe der im ausgewählten Jahr gebuchten Krankheitstage bei Festangestellten.<br><strong>Monate:</strong> zeigen die gespeicherten Monatswerte und die jeweilige Veränderung des Stundenkontos. Bei Aushilfen werden entsprechend die gearbeiteten und gezahlten Stunden ausgewertet.</div></div>
           <div style="width: 150px;">
             <label>Jahr filtern</label>
             <select id="uebersichtJahrFilter" onchange="baueUebersichtstabelle()" style="margin:0;"></select>
@@ -1584,7 +1674,7 @@ body.dark-mode .help-warning{background:#3b2113;border-color:#9a5b2b;color:#fed7
 
         <div class="urlaub-calendar-panel">
           <div class="calendar-header">
-            <div class="help-title-row"><h2 id="ucMonthYearDisplay">Monat Jahr</h2><button type="button" class="help-btn" aria-label="Hilfe anzeigen" title="Hilfe" onclick="toggleInlineHelp('helpUrlaubKalender')">💡</button></div><div id="helpUrlaubKalender" class="help-inline">Der Kalender zeigt eingetragene Abwesenheiten nach Kategorie. Küche, Service und Schulblock sind farblich getrennt. Klicke auf einen belegten Tag, um Details zu sehen.</div>
+            <div class="help-title-row"><h2 id="ucMonthYearDisplay">Monat Jahr</h2><button type="button" class="help-btn" aria-label="Hilfe anzeigen" title="Hilfe" onclick="toggleInlineHelp('helpUrlaubKalender')">💡</button></div><div id="helpUrlaubKalender" class="help-inline">Der Kalender zeigt eingetragene Abwesenheiten nach Kategorie. Küche, Service und Schulblock sind farblich getrennt. <strong>Sonntage und gesetzliche Feiertage in Schleswig-Holstein</strong> werden zusätzlich als geschlossen markiert. Klicke auf einen Tag, um Details zu sehen.</div>
             <div class="calendar-nav-buttons">
               <button onclick="urlaubKalenderBlattern(-1)">&lt;</button>
               <button onclick="urlaubKalenderBlattern(1)">&gt;</button>
@@ -1706,6 +1796,8 @@ document.addEventListener('keydown',e=>{ if(e.key==='Escape') toggleHelpModal(fa
     let archiviertePersonen = {};
     // Urlaubskonten je Festangestelltem und Jahr: { Name: { "2026": { anspruch: 30 } } }
     let urlaubsKonten = {};
+    // Historische Snapshots bei einem Wechsel zwischen Aushilfe und Fest.
+    let statusWechselHistorie = [];
     let istBearbeitungsModus = false, alterNameFuerBearbeitung = "";
     let istAushilfeBearbeitungsModus = false, alterAushilfeNameFuerBearbeitung = "";
     
@@ -1758,6 +1850,7 @@ async function datenLaden() {
           teamUrlaube = d.teamUrlaube || [];
           urlaubsKonten = d.urlaubsKonten || {};
           archiviertePersonen = d.archiviertePersonen || {};
+          statusWechselHistorie = d.statusWechselHistorie || [];
         }
         document.getElementById("loadingOverlay").style.display = "none";
         initApp();
@@ -1769,7 +1862,7 @@ async function datenLaden() {
         await db.collection("porterhouse").doc("stundendaten").set({
           mitarbeiter, sollStundenSpeicher, verlaufDetails, startSalden,
           aushilfen, aushilfenSollStundenSpeicher, aushilfenVerlaufDetails, aushilfenStartSalden,
-          teamUrlaube, urlaubsKonten, archiviertePersonen, lastChange: new Date().toISOString()
+          teamUrlaube, urlaubsKonten, archiviertePersonen, statusWechselHistorie, lastChange: new Date().toISOString()
         });
       } catch (err) { alert("Cloud-Fehler!"); }
     }
@@ -2024,14 +2117,16 @@ function zeitZuMinuten(zeit) {
       const name=document.getElementById("verwaltungPersonName");
       const start=document.getElementById("verwaltungPersonStartSaldo");
       const archiveBtn=document.getElementById("btnVerwaltungArchivieren");
+      const archiveWrap=document.getElementById("verwaltungArchivierenWrap");
       if(!sel||!form||!typ||!name||!start) return;
 
       const value=sel.value || "neu";
       const isNew=value === "neu";
       form.style.display="block";
       aktualisiereUrlaubsanspruchSichtbarkeit();
-      if(archiveBtn) archiveBtn.style.display=isNew ? "none" : "inline-flex";
-      typ.disabled=!isNew;
+      if(archiveBtn) archiveBtn.style.display="inline-flex";
+      if(archiveWrap) archiveWrap.style.display=isNew ? "none" : "grid";
+      typ.disabled=false;
 
       if(isNew){
         typ.value="fest";
@@ -2057,9 +2152,92 @@ function zeitZuMinuten(zeit) {
       urlaubAnspruchLaden();
     }
 
+
+    // Monatsdaten beim Wechsel der Beschäftigungsart in das jeweils andere
+    // Datenmodell übernehmen, damit die Historie in der normalen Übersicht erhalten bleibt.
+    function konvertiereAushilfeVerlaufZuFest(verlauf){
+      const ziel = {};
+      Object.entries(verlauf || {}).forEach(([jahr, monate]) => {
+        ziel[jahr] = {};
+        Object.entries(monate || {}).forEach(([monat, d]) => {
+          ziel[jahr][monat] = {
+            ist: d?.gearbeitet || "00:00",
+            soll: d?.gezahlt || "00:00",
+            auszahlung: "00:00",
+            urlaub: 0,
+            krank: 0,
+            schule: 0,
+            feiertage: 0,
+            raucherpausen: Math.max(0, parseInt(d?.raucherpausen, 10) || 0)
+          };
+        });
+      });
+      return ziel;
+    }
+
+    function konvertiereFestVerlaufZuAushilfe(verlauf){
+      const ziel = {};
+      Object.entries(verlauf || {}).forEach(([jahr, monate]) => {
+        ziel[jahr] = {};
+        Object.entries(monate || {}).forEach(([monat, d]) => {
+          // Bei Festangestellten werden Urlaub/Krank/Schule/Feiertage bereits beim
+          // Speichern als Zeitgutschrift in "ist" eingerechnet. Dadurch bleiben diese
+          // Abwesenheiten beim Wechsel zur Aushilfe im historischen Monat berücksichtigt.
+          // Eine eventuelle Auszahlung wird zu "gezahlt" addiert, damit der Monatssaldo
+          // beim Wechsel exakt erhalten bleibt.
+          const gezahltMinuten =
+            zeitZuMinuten(d?.soll || "00:00") +
+            zeitZuMinuten(d?.auszahlung || "00:00");
+
+          ziel[jahr][monat] = {
+            gearbeitet: d?.ist || "00:00",
+            gezahlt: minutenZuZeit(gezahltMinuten),
+            raucherpausen: Math.max(0, parseInt(d?.raucherpausen, 10) || 0)
+          };
+        });
+      });
+      return ziel;
+    }
+
     function verwaltungPersonTypGeaendert(){
       const sel=document.getElementById("verwaltungPersonSelect");
-      if(sel && sel.value !== "neu") return;
+      const typEl=document.getElementById("verwaltungPersonTyp");
+      const startEl=document.getElementById("verwaltungPersonStartSaldo");
+
+      if(sel && sel.value !== "neu"){
+        const [oldTyp,...parts]=sel.value.split("|");
+        const oldName=decodeURIComponent(parts.join("|"));
+        const neuerTyp=typEl.value;
+
+        if(oldTyp !== neuerTyp){
+          const oldLabel = oldTyp === "fest" ? "Fest" : "Aushilfe";
+          const neuLabel = neuerTyp === "fest" ? "Fest" : "Aushilfe";
+          const bestaetigt = confirm(
+            `Art von "${oldName}" wirklich von ${oldLabel} auf ${neuLabel} ändern?
+
+` +
+            `Die vorhandenen Monatsbuchungen werden dabei in die neue Art übernommen.`
+          );
+
+          if(!bestaetigt){
+            typEl.value=oldTyp;
+            aktualisiereUrlaubsanspruchSichtbarkeit();
+            return;
+          }
+
+          // Nicht den aktuellen Saldo als neuen Startsaldo verwenden:
+          // Der ursprüngliche Startsaldo bleibt bestehen, die Monatsdaten werden konvertiert.
+          const alterStartsaldo = oldTyp === "fest"
+            ? (startSalden[oldName] || 0)
+            : (aushilfenStartSalden[oldName] || 0);
+
+          if(startEl) startEl.value=minutenZuZeit(alterStartsaldo);
+        }
+        aktualisiereUrlaubsanspruchSichtbarkeit();
+        return;
+      }
+
+      aktualisiereUrlaubsanspruchSichtbarkeit();
       document.getElementById("verwaltungPersonName").focus();
     }
 
@@ -2090,11 +2268,41 @@ function zeitZuMinuten(zeit) {
       } else {
         const [oldTyp,...parts]=sel.value.split("|");
         const oldName=decodeURIComponent(parts.join("|"));
-        if(oldTyp !== typ) return alert("Die Art einer bestehenden Person kann nicht geändert werden. Bitte dafür eine neue Person anlegen.");
-
         if(name !== oldName && (mitarbeiter[name] !== undefined || aushilfen[name] !== undefined || archivNameVorhanden(name))) return alert("Dieser Name existiert bereits – eventuell im Archiv.");
 
-        if(typ === "fest"){
+        if(oldTyp !== typ){
+          const snapshot = {
+            name: oldName, neuerName: name, von: oldTyp, zu: typ, gewechseltAm: new Date().toISOString(),
+            saldoBeimWechsel: oldTyp === "fest" ? (mitarbeiter[oldName] || 0) : (aushilfen[oldName] || 0),
+            startSaldoAlt: oldTyp === "fest" ? (startSalden[oldName] || 0) : (aushilfenStartSalden[oldName] || 0),
+            sollAlt: oldTyp === "fest" ? (sollStundenSpeicher[oldName] || "") : (aushilfenSollStundenSpeicher[oldName] || ""),
+            verlauf: oldTyp === "fest" ? (verlaufDetails[oldName] || {}) : (aushilfenVerlaufDetails[oldName] || {}),
+            urlaubsKonto: oldTyp === "fest" ? (urlaubsKonten[oldName] || null) : null
+          };
+          statusWechselHistorie.push(JSON.parse(JSON.stringify(snapshot)));
+          if(oldTyp === "fest"){
+            delete mitarbeiter[oldName]; delete startSalden[oldName]; delete sollStundenSpeicher[oldName]; delete verlaufDetails[oldName];
+            if(urlaubsKonten[oldName] !== undefined) delete urlaubsKonten[oldName];
+          } else {
+            delete aushilfen[oldName]; delete aushilfenStartSalden[oldName]; delete aushilfenSollStundenSpeicher[oldName]; delete aushilfenVerlaufDetails[oldName];
+          }
+          if(typ === "fest"){
+            // Aushilfe -> Fest:
+            // gearbeitet => Ist, gezahlt => Soll; ursprünglicher Startsaldo bleibt erhalten.
+            mitarbeiter[name]=snapshot.saldoBeimWechsel;
+            startSalden[name]=snapshot.startSaldoAlt;
+            sollStundenSpeicher[name]=snapshot.sollAlt || "";
+            verlaufDetails[name]=konvertiereAushilfeVerlaufZuFest(snapshot.verlauf);
+          } else {
+            // Fest -> Aushilfe:
+            // Ist => gearbeitet, Soll (+ evtl. Auszahlung) => gezahlt.
+            // Abwesenheiten bleiben enthalten, da sie beim Fest-Monat bereits in Ist eingerechnet wurden.
+            aushilfen[name]=snapshot.saldoBeimWechsel;
+            aushilfenStartSalden[name]=snapshot.startSaldoAlt;
+            aushilfenSollStundenSpeicher[name]=snapshot.sollAlt || "";
+            aushilfenVerlaufDetails[name]=konvertiereFestVerlaufZuAushilfe(snapshot.verlauf);
+          }
+        } else if(typ === "fest"){
           const verlauf=verlaufDetails[oldName] || {};
           const urlaub=urlaubsKonten[oldName];
           const sollAlt=sollStundenSpeicher[oldName] || "";
@@ -2121,13 +2329,13 @@ function zeitZuMinuten(zeit) {
         }
         teamUrlaube.forEach(u=>{ if(u.name===oldName) u.name=name; });
 
-        if(typ === "fest"){
+        if(oldTyp === typ && typ === "fest"){
           let saldo=start;
           Object.values(verlaufDetails[name]||{}).forEach(y=>Object.values(y).forEach(m=>{
             saldo += zeitZuMinuten(m.ist)-zeitZuMinuten(m.soll)-zeitZuMinuten(m.auszahlung||"00:00")-raucherpausenMinuten(m);
           }));
           mitarbeiter[name]=saldo;
-        } else {
+        } else if(oldTyp === typ) {
           let saldo=start;
           Object.values(aushilfenVerlaufDetails[name]||{}).forEach(y=>Object.values(y).forEach(m=>{
             saldo += zeitZuMinuten(m.gearbeitet)-zeitZuMinuten(m.gezahlt)-raucherpausenMinuten(m);
@@ -3308,6 +3516,57 @@ function exportBackup() {
       });
     }
 
+
+    function datumZuISO(datum){
+      return `${datum.getFullYear()}-${String(datum.getMonth()+1).padStart(2,'0')}-${String(datum.getDate()).padStart(2,'0')}`;
+    }
+
+    function datumMitOffset(datum, tage){
+      const d = new Date(datum.getFullYear(), datum.getMonth(), datum.getDate());
+      d.setDate(d.getDate() + tage);
+      return d;
+    }
+
+    // Gregorianisches Osterdatum nach Meeus/Jones/Butcher.
+    // Davon werden die beweglichen gesetzlichen Feiertage in Schleswig-Holstein abgeleitet.
+    function ostersonntag(jahr){
+      const a = jahr % 19;
+      const b = Math.floor(jahr / 100);
+      const c = jahr % 100;
+      const d = Math.floor(b / 4);
+      const e = b % 4;
+      const f = Math.floor((b + 8) / 25);
+      const g = Math.floor((b - f + 1) / 3);
+      const h = (19 * a + b - d - g + 15) % 30;
+      const i = Math.floor(c / 4);
+      const k = c % 4;
+      const l = (32 + 2 * e + 2 * i - h - k) % 7;
+      const m = Math.floor((a + 11 * h + 22 * l) / 451);
+      const monat = Math.floor((h + l - 7 * m + 114) / 31);
+      const tag = ((h + l - 7 * m + 114) % 31) + 1;
+      return new Date(jahr, monat - 1, tag);
+    }
+
+    function feiertageSchleswigHolstein(jahr){
+      const ostern = ostersonntag(jahr);
+      const tage = new Map();
+
+      const add = (datum, name) => tage.set(datumZuISO(datum), name);
+      add(new Date(jahr, 0, 1), "Neujahr");
+      add(datumMitOffset(ostern, -2), "Karfreitag");
+      add(ostern, "Ostersonntag");
+      add(datumMitOffset(ostern, 1), "Ostermontag");
+      add(new Date(jahr, 4, 1), "Tag der Arbeit");
+      add(datumMitOffset(ostern, 39), "Christi Himmelfahrt");
+      add(datumMitOffset(ostern, 50), "Pfingstmontag");
+      add(new Date(jahr, 9, 3), "Tag der Deutschen Einheit");
+      add(new Date(jahr, 9, 31), "Reformationstag");
+      add(new Date(jahr, 11, 25), "1. Weihnachtstag");
+      add(new Date(jahr, 11, 26), "2. Weihnachtstag");
+
+      return tage;
+    }
+
     function renderUrlaubKalender() {
       const grid = document.getElementById('urlaubCalendarGrid');
       const cells = grid.querySelectorAll('.uc-day, .uc-empty');
@@ -3319,6 +3578,7 @@ function exportBackup() {
       const firstDayIndex = new Date(ucYear, ucMonth, 1).getDay();
       const startOffset = firstDayIndex === 0 ? 6 : firstDayIndex - 1;
       const totalDays = new Date(ucYear, ucMonth + 1, 0).getDate();
+      const feiertage = feiertageSchleswigHolstein(ucYear);
 
       for (let i = 0; i < startOffset; i++) {
         let div = document.createElement('div');
@@ -3339,9 +3599,22 @@ function exportBackup() {
         let wDay = checkDate.getDay();
         let infoText = `${d}. ${monatsNamen[ucMonth]} ${ucYear}`;
 
-        if (wDay === 0 || wDay === 6) {
-          div.classList.add('uc-wochenende');
-          infoText += " (Wochenende)";
+        const feiertagsName = feiertage.get(dateString) || "";
+        const istSonntag = wDay === 0;
+        const istGeschlossen = istSonntag || !!feiertagsName;
+
+        if (istGeschlossen) {
+          div.classList.add('uc-geschlossen');
+          if (istSonntag) div.classList.add('uc-wochenende');
+
+          const closedInfo = document.createElement('span');
+          closedInfo.className = 'uc-closed-info';
+          closedInfo.textContent = feiertagsName ? feiertagsName : 'Geschlossen';
+          closedInfo.title = feiertagsName || 'Sonntag – geschlossen';
+          div.appendChild(closedInfo);
+
+          if (feiertagsName) infoText += ` · ${feiertagsName} – geschlossen`;
+          else infoText += " · Sonntag – geschlossen";
         }
 
         let urlaubeAnDiesemTag = werHatUrlaubDetails(dateString);
@@ -3352,7 +3625,10 @@ function exportBackup() {
           let istSchule = abteilungen.includes('Schule');
           let anzeigenNamen = urlaubeAnDiesemTag.map(u => `${u.name} (${u.abt || 'Küche'})`).join(", ");
 
-          infoText = istSchule ? `📚 Schulblock: ${anzeigenNamen}` : `🌴 Urlaub: ${anzeigenNamen}`;
+          const geschlossenText = istGeschlossen
+            ? (feiertagsName ? ` · ${feiertagsName} – geschlossen` : " · Sonntag – geschlossen")
+            : "";
+          infoText = (istSchule ? `📚 Schulblock: ${anzeigenNamen}` : `🌴 Urlaub: ${anzeigenNamen}`) + geschlossenText;
           if (istSchule) div.classList.add('uc-schule');
           else if (istKueche && istService) div.classList.add('uc-mixed');
           else if (istService) div.classList.add('uc-service');
