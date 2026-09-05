@@ -1256,6 +1256,23 @@ body.dark-mode .uc-day.uc-geschlossen{
   background:rgba(155,40,28,.18) !important;
   border-color:rgba(214,74,59,.72) !important;
 }
+
+/* Dänische Schulferien (Sønderborg / Grenzregion): dezenter Nachfrage-Marker */
+.dk-ferie-marker{
+  position:absolute;
+  top:8px;
+  right:8px;
+  width:7px;
+  height:7px;
+  border-radius:50%;
+  background:#d4a84f;
+  box-shadow:0 0 0 2px rgba(212,168,79,.16);
+  pointer-events:none;
+}
+body.dark-mode .dk-ferie-marker{
+  background:#e0b65b;
+  box-shadow:0 0 0 2px rgba(224,182,91,.18);
+}
 @media(max-width:768px){
   .action-help-wrap{width:100%;}
   .export-help-wrap{width:100%;grid-template-columns:minmax(0,1fr) auto;}
@@ -1674,7 +1691,7 @@ body.dark-mode .uc-day.uc-geschlossen{
 
         <div class="urlaub-calendar-panel">
           <div class="calendar-header">
-            <div class="help-title-row"><h2 id="ucMonthYearDisplay">Monat Jahr</h2><button type="button" class="help-btn" aria-label="Hilfe anzeigen" title="Hilfe" onclick="toggleInlineHelp('helpUrlaubKalender')">💡</button></div><div id="helpUrlaubKalender" class="help-inline">Der Kalender zeigt eingetragene Abwesenheiten nach Kategorie. Küche, Service und Schulblock sind farblich getrennt. <strong>Sonntage und gesetzliche Feiertage in Schleswig-Holstein</strong> werden zusätzlich als geschlossen markiert. Klicke auf einen Tag, um Details zu sehen.</div>
+            <div class="help-title-row"><h2 id="ucMonthYearDisplay">Monat Jahr</h2><button type="button" class="help-btn" aria-label="Hilfe anzeigen" title="Hilfe" onclick="toggleInlineHelp('helpUrlaubKalender')">💡</button></div><div id="helpUrlaubKalender" class="help-inline">Der Kalender zeigt eingetragene Abwesenheiten nach Kategorie. Küche, Service und Schulblock sind farblich getrennt. <strong>Sonntage und gesetzliche Feiertage in Schleswig-Holstein</strong> werden zusätzlich als geschlossen markiert. Ein kleiner goldener Punkt kennzeichnet ausgewählte dänische Schulferien der Grenzregion (Sønderborg) als Hinweis auf mögliche erhöhte Nachfrage. Klicke auf einen Tag, um Details zu sehen.</div>
             <div class="calendar-nav-buttons">
               <button onclick="urlaubKalenderBlattern(-1)">&lt;</button>
               <button onclick="urlaubKalenderBlattern(1)">&gt;</button>
@@ -3567,6 +3584,28 @@ function exportBackup() {
       return tage;
     }
 
+
+    // Ausgewählte dänische Schulferien für die deutsch-dänische Grenzregion.
+    // Referenz: Sønderborg Kommune. Diese Einträge sind reine Kalenderhinweise
+    // und beeinflussen weder "geschlossen" noch Stunden-/Urlaubsberechnungen.
+    const daenischeFerienGrenzregion = [
+      { von: '2026-03-28', bis: '2026-04-06', name: 'Osterferien' },
+      { von: '2026-06-27', bis: '2026-08-10', name: 'Sommerferien' },
+      { von: '2026-10-10', bis: '2026-10-18', name: 'Herbstferien' },
+      { von: '2027-02-13', bis: '2027-02-21', name: 'Skiferien' },
+      { von: '2027-03-20', bis: '2027-03-29', name: 'Osterferien' },
+      { von: '2027-06-26', bis: '2027-08-08', name: 'Sommerferien' },
+      { von: '2027-10-16', bis: '2027-10-24', name: 'Herbstferien' },
+      { von: '2028-02-12', bis: '2028-02-20', name: 'Skiferien' },
+      { von: '2028-04-08', bis: '2028-04-17', name: 'Osterferien' },
+      { von: '2028-06-24', bis: '2028-08-13', name: 'Sommerferien' },
+      { von: '2028-10-14', bis: '2028-10-22', name: 'Herbstferien' }
+    ];
+
+    function daenischeFerienInfo(dateString){
+      return daenischeFerienGrenzregion.find(f => dateString >= f.von && dateString <= f.bis) || null;
+    }
+
     function renderUrlaubKalender() {
       const grid = document.getElementById('urlaubCalendarGrid');
       const cells = grid.querySelectorAll('.uc-day, .uc-empty');
@@ -3603,6 +3642,8 @@ function exportBackup() {
         const istSonntag = wDay === 0;
         const istGeschlossen = istSonntag || !!feiertagsName;
 
+        const dkFerien = daenischeFerienInfo(dateString);
+
         if (istGeschlossen) {
           div.classList.add('uc-geschlossen');
           if (istSonntag) div.classList.add('uc-wochenende');
@@ -3615,6 +3656,14 @@ function exportBackup() {
 
           if (feiertagsName) infoText += ` · ${feiertagsName} – geschlossen`;
           else infoText += " · Sonntag – geschlossen";
+        }
+
+
+        if (dkFerien) {
+          const marker = document.createElement('span');
+          marker.className = 'dk-ferie-marker';
+          marker.title = `Dänische Schulferien – ${dkFerien.name}`;
+          div.appendChild(marker);
         }
 
         let urlaubeAnDiesemTag = werHatUrlaubDetails(dateString);
@@ -3647,6 +3696,10 @@ function exportBackup() {
             infoSpan.style.color = 'white';
             div.appendChild(infoSpan);
           });
+        }
+
+        if (dkFerien) {
+          infoText += ` · 🇩🇰 Dänische Schulferien – ${dkFerien.name}`;
         }
 
         div.addEventListener('click', () => {
